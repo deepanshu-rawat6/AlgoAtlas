@@ -46,9 +46,19 @@ for (const slug of allSlugs) {
     const src = path.join(srcDir, file);
     if (!fs.existsSync(src)) continue;
     let content = fs.readFileSync(src, 'utf8');
-    // Fix mermaid v11 syntax: <br> → <br/> and \n → <br/> inside mermaid blocks
+    // Fix mermaid v11 syntax inside mermaid blocks
     content = content.replace(/```mermaid\n([\s\S]*?)```/g, (_, block) => {
-      const fixed = block.replace(/<br>/g, '<br/>').replace(/\\n/g, '<br/>');
+      let fixed = block
+        .replace(/<br>/g, '<br/>')   // bare <br> → <br/>
+        .replace(/\\n/g, '<br/>');   // literal \n → <br/>
+      // Quote unquoted diamond labels {text} with special chars
+      fixed = fixed.replace(/\{([^"{}][^{}]*)\}/g, (m, inner) =>
+        /[()[\]\/<>]/.test(inner) ? `{"${inner}"}` : m
+      );
+      // Quote unquoted square node labels [text] with special chars
+      fixed = fixed.replace(/\[([^"\]<][^\]]*)\]/g, (m, inner) =>
+        /[()[\]\/]/.test(inner) && !inner.startsWith('"') ? `["${inner}"]` : m
+      );
       return '```mermaid\n' + fixed + '```';
     });
     fs.writeFileSync(path.join(dataDestDir, file), content);
