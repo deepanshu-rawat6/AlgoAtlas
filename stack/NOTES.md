@@ -21,7 +21,7 @@ flowchart TD
     B --> E[Evaluate expression / simulate]
     B --> F[Track running min/max]
 
-    C --> C1[Push open, pop & validate on close]
+    C --> C1["Push open, pop and validate on close"]
     D --> D1{Direction?}
     D1 --> D2[Next Greater: increasing stack, pop when cur > top]
     D1 --> D3[Next Smaller: decreasing stack, pop when cur < top]

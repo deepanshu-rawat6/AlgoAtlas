@@ -11,17 +11,17 @@ Operate directly on binary representations. Key tricks:
 
 ```mermaid
 flowchart TD
-    A[Bit Manipulation Problem] --> B{What's the goal?}
-    B -->|Find unique element| C[XOR all elementsduplicates cancelSingle Number]
+    A["Bit Manipulation Problem"] --> B{"What's the goal?"}
+    B -->|Find unique element| C["XOR all elements<br/>duplicates cancel<br/>Single Number"]
     B -->|Count set bits| D{Single number or array?}
-    D -->|Single| E[n & n-1 loopor bin popcountNumber of 1 Bits]
-    D -->|Array 0..n| F[DP: bits[i] = bits[i>>1] + i&1Counting Bits]
-    B -->|Find missing number| G[XOR with indices 0..nor math sumMissing Number]
-    B -->|Arithmetic without operators| H[XOR for sum bitsAND+shift for carrySum Two Integers]
-    B -->|Reverse bits| I[Extract LSB, shift into resultReverse Bits]
-    B -->|String binary addition| J[Simulate with carryAdd Binary]
-    B -->|Range AND| K[Right-shift until equalBitwise AND Range]
-    B -->|Construct number| L[Bit-by-bit constructionMin Array End, Reverse Integer]
+    D -->|Single| E["n AND (n-1) loop<br/>Number of 1 Bits"]
+    D -->|Array 0..n| F["DP: bits[i] = bits[i>>1] + (i AND 1)<br/>Counting Bits"]
+    B -->|Find missing number| G["XOR with indices 0..n<br/>Missing Number"]
+    B -->|Arithmetic without operators| H["XOR for sum bits<br/>AND+shift for carry<br/>Sum Two Integers"]
+    B -->|Reverse bits| I["Extract LSB, shift into result<br/>Reverse Bits"]
+    B -->|String binary addition| J["Simulate with carry<br/>Add Binary"]
+    B -->|Range AND| K["Right-shift until equal<br/>Bitwise AND Range"]
+    B -->|Construct number| L["Bit-by-bit construction<br/>Min Array End"]
 ```
 
 ## Problems
