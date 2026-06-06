@@ -1,0 +1,210 @@
+---
+import { getCollection } from 'astro:content';
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Visualizer from '../../components/visualizers/Visualizer';
+import fs from 'fs';
+import path from 'path';
+import { unified } from 'unified';
+import rehypeExternalLinks from 'rehype-external-links';
+import rehypeStringify from 'rehype-stringify';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import remarkRehype from 'remark-rehype';
+
+export async function getStaticPaths() {
+  const patterns = await getCollection('patterns');
+  return patterns.map(p => ({ params: { slug: p.data.slug }, props: { pattern: p.data } }));
+}
+
+const { pattern } = Astro.props;
+const { slug, title, phase } = pattern;
+
+const dataDir = path.resolve('src/data/patterns', slug);
+
+function readFile(file: string) {
+  const p = path.join(dataDir, file);
+  return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
+}
+
+const readmeRaw = readFile('README.md');
+const notesRaw = readFile('NOTES.md');
+
+async function renderMd(src: string | null): Promise<string> {
+  if (!src) return '';
+  const file = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] })
+    .use(rehypeStringify, { allowDangerousHtml: true })
+    .process(src);
+  return String(file);
+}
+
+// For Problems tab: extract only the problem table section from README
+function extractProblems(md: string | null): string | null {
+  if (!md) return null;
+  // Find lines with the markdown table (| header | ...)
+  const lines = md.split('\n');
+  const tableStart = lines.findIndex(l => l.trim().startsWith('|'));
+  if (tableStart === -1) return null;
+  // Find end of table
+  let tableEnd = tableStart;
+  while (tableEnd < lines.length && (lines[tableEnd].trim().startsWith('|') || lines[tableEnd].trim() === '')) {
+    tableEnd++;
+  }
+  return lines.slice(tableStart, tableEnd).join('\n');
+}
+
+const problemsMd = extractProblems(readmeRaw);
+const readmeHtml = await renderMd(readmeRaw);
+const notesHtml = await renderMd(notesRaw);
+const problemsHtml = await renderMd(problemsMd);
+
+// Read solutions
+const solutionsDir = path.join(dataDir, 'solutions');
+const solutions: { name: string; code: string }[] = [];
+if (fs.existsSync(solutionsDir)) {
+  const files = fs.readdirSync(solutionsDir).filter(f => f.endsWith('.py')).sort();
+  for (const file of files) {
+    const name = file.replace('.py', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const code = fs.readFileSync(path.join(solutionsDir, file), 'utf8');
+    solutions.push({ name, code });
+  }
+}
+
+const VISUALIZER_PATTERNS = new Set([
+  'sliding_window', 'two_pointers', 'graphs', 'binary_search', 'advanced_graphs',
+  'arrays_and_hashing', 'stack', 'linked_list', 'trees', 'heap', 'intervals',
+  '1d_dp', '2d_dp', 'backtracking', 'greedy', 'tries', 'bit_manipulation',
+  'recursion', 'algorithms', 'strings', 'math_and_geometry',
+]);
+const hasVisualizer = VISUALIZER_PATTERNS.has(slug);
+
+const phaseBadge: Record<number, string> = {
+  1: 'bg-blue-900 text-blue-300',
+  2: 'bg-purple-900 text-purple-300',
+  3: 'bg-emerald-900 text-emerald-300',
+};
+
+const tabs = ['overview', 'notes', 'problems', 'solutions', ...(hasVisualizer ? ['visualizer'] : [])];
+---
+
+<BaseLayout title={title}>
+  <div class="mb-6 flex items-center gap-3">
+    <h1 class="text-2xl font-bold text-slate-100">{title}</h1>
+    <span class={`text-xs px-2 py-1 rounded font-medium ${phaseBadge[phase]}`}>Phase {phase}</span>
+    {solutions.length > 0 && (
+      <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">{solutions.length} solutions</span>
+    )}
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b border-slate-700 mb-6">
+    <div class="flex gap-1 overflow-x-auto" id="tab-bar">
+      {tabs.map(tab => (
+        <button
+          class="tab-btn px-4 py-2 text-sm font-medium capitalize transition-colors text-slate-400 hover:text-slate-200 whitespace-nowrap"
+          data-tab={tab}
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <!-- Overview: full README (diagrams + everything) -->
+  <div id="tab-overview" class="tab-content prose max-w-none">
+    {readmeRaw
+      ? <Fragment set:html={readmeHtml} />
+      : <p class="text-slate-500">No overview available.</p>
+    }
+  </div>
+
+  <!-- Notes: NOTES.md content -->
+  <div id="tab-notes" class="tab-content prose max-w-none">
+    {notesRaw
+      ? <Fragment set:html={notesHtml} />
+      : <p class="text-slate-500">No notes available for this pattern.</p>
+    }
+  </div>
+
+  <!-- Problems: just the problem table from README -->
+  <div id="tab-problems" class="tab-content">
+    {problemsMd
+      ? <Fragment set:html={problemsHtml} class="prose max-w-none" />
+      : <div class="prose max-w-none"><Fragment set:html={readmeHtml} /></div>
+    }
+  </div>
+
+  <!-- Solutions: syntax-highlighted code accordions -->
+  <div id="tab-solutions" class="tab-content">
+    {solutions.length === 0
+      ? <p class="text-slate-500 py-4">No solutions available for this pattern.</p>
+      : (
+        <div class="space-y-2">
+          {solutions.map(s => (
+            <details class="border border-slate-700 rounded-lg overflow-hidden group">
+              <summary class="px-4 py-3 bg-slate-800 text-slate-200 font-medium text-sm cursor-pointer hover:bg-slate-700 select-none flex items-center justify-between">
+                <span>{s.name}</span>
+                <span class="text-slate-500 text-xs group-open:hidden">▼ expand</span>
+              </summary>
+              <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <Code code={s.code} lang="python" theme="github-dark" />
+              </div>
+            </details>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Visualizer: React island mounted client-side -->
+  {hasVisualizer && (
+    <div id="tab-visualizer" class="tab-content min-h-96">
+      <Visualizer slug={slug} client:visible />
+    </div>
+  )}
+</BaseLayout>
+
+<script>
+  function initTabs() {
+    const tabs = document.querySelectorAll<HTMLButtonElement>('.tab-btn');
+    const contents = document.querySelectorAll<HTMLElement>('.tab-content');
+
+    function activate(id: string) {
+      const validIds = Array.from(tabs).map(t => t.dataset.tab!);
+      const target = validIds.includes(id) ? id : validIds[0];
+      tabs.forEach(t => {
+        const active = t.dataset.tab === target;
+        t.classList.toggle('text-blue-400', active);
+        t.classList.toggle('border-b-2', active);
+        t.classList.toggle('border-blue-400', active);
+        t.classList.toggle('text-slate-400', !active);
+        t.classList.toggle('text-slate-200', active);
+      });
+      contents.forEach(c => {
+        c.classList.toggle('active', c.id === `tab-${target}`);
+      });
+    }
+
+    tabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab!;
+        history.replaceState(null, '', `#${tab}`);
+        activate(tab);
+      });
+    });
+
+    const hash = location.hash.replace('#', '');
+    activate(hash || 'overview');
+  }
+
+  document.addEventListener('DOMContentLoaded', initTabs);
+</script>
+
+<style>
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>

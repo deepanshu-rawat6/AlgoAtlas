@@ -1,0 +1,99 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const patterns = await getCollection('patterns');
+const sorted = patterns.sort((a, b) => a.data.phase - b.data.phase || a.data.title.localeCompare(b.data.title));
+
+const phaseLabels: Record<number, string> = {
+  1: 'Phase 1 — The Core 50%',
+  2: 'Phase 2 — Infrastructure Set (~30%)',
+  3: 'Phase 3 — Differentiators (~20%)',
+};
+
+const phaseColors: Record<number, string> = {
+  1: 'bg-blue-900/40 border-blue-700/50 hover:border-blue-500',
+  2: 'bg-purple-900/40 border-purple-700/50 hover:border-purple-500',
+  3: 'bg-emerald-900/40 border-emerald-700/50 hover:border-emerald-500',
+};
+
+const phaseBadge: Record<number, string> = {
+  1: 'bg-blue-900 text-blue-300',
+  2: 'bg-purple-900 text-purple-300',
+  3: 'bg-emerald-900 text-emerald-300',
+};
+---
+
+<BaseLayout title="AlgoAtlas">
+  <div class="max-w-6xl mx-auto">
+    <!-- Hero -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-100 mb-2">AlgoAtlas</h1>
+      <p class="text-slate-400">343 problems across 20 patterns. Learn with diagrams, visualize the intuition, solve with confidence.</p>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-8">
+      <input
+        type="text"
+        id="pattern-search"
+        placeholder="Search patterns..."
+        class="w-full max-w-md bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+        oninput="filterPatterns(this.value)"
+      />
+    </div>
+
+    <!-- Frequency chart -->
+    <div class="mb-10 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+      <h2 class="text-lg font-semibold text-slate-300 mb-4">📊 Interview Frequency Map</h2>
+      <pre><code class="language-mermaid">pie title Interview Frequency (Backend Engineering)
+    "Trees & Graphs (BFS/DFS)" : 25
+    "Arrays, Strings & Hashing" : 15
+    "Two Pointers & Sliding Window" : 10
+    "Priority Queues / Heaps" : 10
+    "Binary Search (Modified)" : 10
+    "Linked Lists & Stacks" : 10
+    "Dynamic Programming" : 10
+    "Backtracking & Greedy" : 10</code></pre>
+    </div>
+
+    <!-- Pattern grid by phase -->
+    {[1, 2, 3].map(phase => (
+      <div class="mb-10" data-phase={phase}>
+        <h2 class="text-lg font-semibold text-slate-300 mb-4 border-b border-slate-800 pb-2">
+          {phaseLabels[phase]}
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sorted.filter(p => p.data.phase === phase).map(p => (
+            <a
+              href={`/pattern/${p.data.slug}`}
+              class={`pattern-card block rounded-xl border p-4 transition-all duration-200 ${phaseColors[phase]}`}
+              data-title={p.data.title.toLowerCase()}
+            >
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="font-semibold text-slate-100 text-sm">{p.data.title}</h3>
+                <span class={`shrink-0 text-xs px-2 py-0.5 rounded font-medium ${phaseBadge[phase]}`}>
+                  P{phase}
+                </span>
+              </div>
+              {p.data.problemCount > 0 && (
+                <p class="text-xs text-slate-500 mt-2">{p.data.problemCount} problems</p>
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <script>
+    function filterPatterns(query: string) {
+      const q = query.toLowerCase().trim();
+      document.querySelectorAll<HTMLElement>('.pattern-card').forEach(card => {
+        const title = card.dataset.title || '';
+        card.style.display = !q || title.includes(q) ? '' : 'none';
+      });
+    }
+    (window as any).filterPatterns = filterPatterns;
+  </script>
+</BaseLayout>

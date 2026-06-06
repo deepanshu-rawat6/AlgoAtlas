@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+  }
+}
+
+/* ── Prose (dark) ──────────────────────────────────────────── */
+.prose {
+  --tw-prose-body: #cbd5e1;
+  --tw-prose-headings: #f1f5f9;
+  --tw-prose-lead: #94a3b8;
+  --tw-prose-links: #60a5fa;
+  --tw-prose-bold: #f1f5f9;
+  --tw-prose-counters: #64748b;
+  --tw-prose-bullets: #60a5fa;
+  --tw-prose-hr: #1e293b;
+  --tw-prose-quotes: #94a3b8;
+  --tw-prose-quote-borders: #334155;
+  --tw-prose-captions: #64748b;
+  --tw-prose-code: #e2e8f0;
+  --tw-prose-pre-code: #e2e8f0;
+  --tw-prose-pre-bg: #1e293b;
+  --tw-prose-th-borders: #334155;
+  --tw-prose-td-borders: #1e293b;
+}
+
+/* Tables */
+.prose table {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+.prose thead { background: #1e293b; }
+.prose th { padding: 0.6rem 1rem; text-align: left; font-weight: 600; color: #94a3b8; border-bottom: 1px solid #334155; }
+.prose td { padding: 0.55rem 1rem; border-bottom: 1px solid #1e293b40; vertical-align: middle; }
+.prose tr:hover td { background: rgba(30,41,59,0.5); }
+.prose a { color: #60a5fa; text-decoration: none; }
+.prose a:hover { text-decoration: underline; }
+
+/* Code blocks */
+.prose pre { background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; }
+.prose code:not(pre code) { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.85em; color: #e2e8f0; }
+
+/* ── Difficulty badges ──────────────────────────────────────── */
+/* Replace emoji with styled pill spans via CSS targeting */
+.badge-easy   { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: #14532d; color: #86efac; }
+.badge-medium { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: #713f12; color: #fde68a; }
+.badge-hard   { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: #7f1d1d; color: #fca5a5; }
+
+/* ── Mermaid ────────────────────────────────────────────────── */
+.mermaid svg { max-width: 100%; height: auto; }
+.mermaid { margin: 1.5rem 0; }
+
+/* ── Tab content ────────────────────────────────────────────── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Shiki code blocks ──────────────────────────────────────── */
+.astro-code { border-radius: 0; padding: 1rem; font-size: 0.8125rem; line-height: 1.6; }
+
+/* ── Details/summary accordion ─────────────────────────────── */
+details summary::-webkit-details-marker { display: none; }
