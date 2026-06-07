@@ -8,9 +8,9 @@ const CONTENT_DIR = path.resolve(__dirname, '../src/content/patterns');
 const DATA_DIR = path.resolve(__dirname, '../src/data/patterns');
 
 const PHASE_MAP = {
-  1: ['arrays_and_hashing', 'two_pointers', 'sliding_window', 'stack', 'binary_search', 'linked_list', 'trees', 'tries', 'heap', 'intervals'],
-  2: ['graphs', 'advanced_graphs', 'backtracking', 'greedy', '1d_dp', '2d_dp'],
-  3: ['math_and_geometry', 'bit_manipulation', 'strings', 'recursion', 'algorithms', 'utilities'],
+  1: ['arrays_and_hashing', 'two_pointers', 'sliding_window', 'trees', 'graphs', 'advanced_graphs'],
+  2: ['heap', 'binary_search', 'linked_list', 'stack', 'tries', 'intervals'],
+  3: ['1d_dp', '2d_dp', 'backtracking', 'greedy', 'strings', 'bit_manipulation', 'math_and_geometry', 'recursion', 'algorithms', 'utilities'],
 };
 
 const PHASE_BY_SLUG = {};
