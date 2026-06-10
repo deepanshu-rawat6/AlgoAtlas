@@ -171,6 +171,13 @@ flowchart TD
 - **Common mistakes:** Using a list index without making it mutable (nonlocal or iterator). Forgetting null markers.
 - **Time:** O(n) | **Space:** O(n)
 
+### 24. Two Sum BSTs — LC 1214 | Medium (Premium)
+- **Key insight:** Inorder of each BST gives a sorted array → classic Two Sum II with two pointers (i from left of tree1's inorder, j from right of tree2's inorder).
+- **Tricky:** Unlike LC 653 (single BST), you need two structures. Can't do a single-pass hash scan across both trees simultaneously.
+- **Alternative:** For each node in tree1, BST-search for `target - val` in tree2. O(n·log m) but O(h) space.
+- **Common mistakes:** Using LC 653's hash-set approach — works but doesn't exploit the two-BST structure optimally.
+- **Time:** O(n+m) inorder approach | **Space:** O(n+m)
+
 ---
 
 ## Edge Cases to Watch For
