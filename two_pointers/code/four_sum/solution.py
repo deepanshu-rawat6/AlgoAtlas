@@ -1,31 +1,30 @@
+"""
+## LC 18 — 4Sum
+
+Given an array `nums` of `n` integers and an integer `target`, return all unique
+quadruplets `[nums[a], nums[b], nums[c], nums[d]]` such that all indices are distinct
+and `nums[a] + nums[b] + nums[c] + nums[d] == target`.
+
+### Examples
+
+```text
+Input:  nums = [1, 0, -1, 0, -2, 2], target = 0
+Output: [[-2, -1, 1, 2], [-2, 0, 0, 2], [-1, 0, 0, 1]]
+
+Input:  nums = [2, 2, 2, 2, 2], target = 8
+Output: [[2, 2, 2, 2]]
+```
+
+### Constraints
+
+- 1 <= nums.length <= 200
+- -10^9 <= nums[i] <= 10^9
+- -10^9 <= target <= 10^9
+"""
 from typing import List
 
 
 class Solution:
-    """
-    ## LC 18 — 4Sum
-
-    Given an array `nums` of `n` integers and an integer `target`, return all unique
-    quadruplets `[nums[a], nums[b], nums[c], nums[d]]` such that all indices are distinct
-    and `nums[a] + nums[b] + nums[c] + nums[d] == target`.
-
-    ### Examples
-
-    ```text
-    Input:  nums = [1, 0, -1, 0, -2, 2], target = 0
-    Output: [[-2, -1, 1, 2], [-2, 0, 0, 2], [-1, 0, 0, 1]]
-
-    Input:  nums = [2, 2, 2, 2, 2], target = 8
-    Output: [[2, 2, 2, 2]]
-    ```
-
-    ### Constraints
-
-    - 1 <= nums.length <= 200
-    - -10^9 <= nums[i] <= 10^9
-    - -10^9 <= target <= 10^9
-    """
-
     def method_brute_force(self, nums: List[int], target: int) -> List[List[int]]:
         """O(n^4) time | O(n) space (result)"""
         # Try all quadruplets — O(n^4); use set to deduplicate

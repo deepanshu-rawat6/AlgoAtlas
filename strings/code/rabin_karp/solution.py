@@ -1,3 +1,29 @@
+"""
+# Rabin-Karp Rolling Hash (LC 28 variant)
+
+Implement the Rabin-Karp algorithm for substring search using a rolling hash.
+Given strings `haystack` and `needle`, return the index of the first occurrence of
+`needle` in `haystack`, or `-1` if not found.
+
+## Examples
+
+```text
+Input:  haystack = "hello", needle = "ll"
+Output: 2
+
+Input:  haystack = "aaaaa", needle = "bba"
+Output: -1
+
+Input:  haystack = "mississippi", needle = "issip"
+Output: 4
+```
+
+## Constraints
+- 0 <= haystack.length, needle.length <= 5 * 10^4
+- haystack and needle consist of only lowercase English letters
+"""
+
+
 class Solution:
     def strStr(self, haystack: str, needle: str) -> int:
         """

@@ -1,3 +1,25 @@
+"""
+# LC 1614: Maximum Nesting Depth of the Parentheses
+
+A valid parentheses string (VPS) has a nesting depth defined as the maximum number
+of nested open parentheses. Given a VPS `s`, return the *nesting depth* of `s`.
+
+## Examples
+
+```text
+Input:  s = "(1+(2*3)+((8)/4))+1"
+Output: 3
+
+Input:  s = "1+(2*3)/(2-1)"
+Output: 1
+```
+
+## Constraints
+- 1 <= s.length <= 100
+- s consists of digits, `+`, `-`, `*`, `/`, `(`, and `)` and is a valid VPS
+"""
+
+
 class Solution:
     def maxDepth(self, s: str) -> int:
         depth = max_depth = 0

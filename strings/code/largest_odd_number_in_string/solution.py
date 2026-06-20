@@ -1,3 +1,29 @@
+"""
+# LC 1903: Largest Odd Number in String
+
+Given a string `num` representing a large integer, return the largest-valued odd
+integer (as a string) that is a non-empty substring of `num`, or `""` if no odd
+integer exists. A substring is a contiguous sequence of characters.
+
+## Examples
+
+```text
+Input:  num = "52"
+Output: "5"
+
+Input:  num = "4206"
+Output: ""
+
+Input:  num = "35427"
+Output: "35427"
+```
+
+## Constraints
+- 1 <= num.length <= 10^5
+- num only consists of digits and does not contain any leading zeros
+"""
+
+
 class Solution:
     def largestOddNumber(self, num: str) -> str:
         # Scan from right; first odd digit found → return prefix up to that index

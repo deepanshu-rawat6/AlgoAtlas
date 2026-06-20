@@ -1,30 +1,31 @@
+"""
+## LC 680: Valid Palindrome II
+
+Given a string `s`, return `true` if the `s` can be palindrome after deleting
+at most one character from it.
+
+### Examples
+
+```text
+Input:  s = "aba"
+Output: true
+
+Input:  s = "abca"
+Output: true
+Explanation: Delete 'c' to get "aba".
+
+Input:  s = "abc"
+Output: false
+```
+
+### Constraints
+
+- `1 <= s.length <= 10^5`
+- `s` consists of lowercase English letters.
+"""
+
+
 class Solution:
-    """
-    ## LC 680: Valid Palindrome II
-
-    Given a string `s`, return `true` if the `s` can be palindrome after deleting
-    at most one character from it.
-
-    ### Examples
-
-    ```text
-    Input:  s = "aba"
-    Output: true
-
-    Input:  s = "abca"
-    Output: true
-    Explanation: Delete 'c' to get "aba".
-
-    Input:  s = "abc"
-    Output: false
-    ```
-
-    ### Constraints
-
-    - `1 <= s.length <= 10^5`
-    - `s` consists of lowercase English letters.
-    """
-
     def method_brute_force(self, s: str) -> bool:
         """O(n^2) time — try removing each character."""
         # Try removing each character and check if result is palindrome

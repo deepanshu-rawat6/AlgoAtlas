@@ -1,3 +1,27 @@
+"""
+# LC 151: Reverse Words in a String
+
+Given a string `s`, reverse the order of the words. A word is defined as a sequence
+of non-space characters. Multiple spaces between words are collapsed to a single
+space, and leading/trailing spaces are removed.
+
+## Examples
+
+```text
+Input:  s = "  hello world  "
+Output: "world hello"
+
+Input:  s = "a good   example"
+Output: "example good a"
+```
+
+## Constraints
+- 1 <= s.length <= 10^4
+- s contains English letters, digits, and spaces
+- There is at least one word in s
+"""
+
+
 class Solution:
     # Approach 1: split + reverse — O(n) time, O(n) space
     def reverseWords(self, s: str) -> str:

@@ -1,3 +1,27 @@
+"""
+# LC 796: Rotate String
+
+Given two strings `s` and `goal`, return `true` if and only if `s` can become
+`goal` after some number of *shifts* (rotating left by one position moves the first
+character to the end).
+
+## Examples
+
+```text
+Input:  s = "abcde", goal = "cdeab"
+Output: true
+
+Input:  s = "abcde", goal = "abced"
+Output: false
+```
+
+## Constraints
+- 1 <= s.length <= 100
+- s.length == goal.length
+- s and goal consist of lowercase English letters
+"""
+
+
 class Solution:
     # Approach 1: try all rotations — O(n^2)
     def rotateString_brute(self, s: str, goal: str) -> bool:

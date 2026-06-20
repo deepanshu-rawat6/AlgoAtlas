@@ -1,3 +1,25 @@
+"""
+# Count Substrings with Exactly K Distinct Characters
+
+Given a string `s` and an integer `k`, return the count of substrings that contain
+exactly `k` distinct characters.
+
+## Examples
+
+```text
+Input:  s = "aba", k = 2
+Output: 3
+Explanation: "ab", "ba", "aba"
+
+Input:  s = "aaa", k = 1
+Output: 6
+Explanation: all substrings have exactly 1 distinct character
+```
+
+## Constraints
+- 1 <= s.length <= 10^4
+- 1 <= k <= 26
+"""
 from collections import defaultdict
 
 class Solution:

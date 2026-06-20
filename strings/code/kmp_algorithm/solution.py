@@ -1,3 +1,28 @@
+"""
+# KMP Pattern Matching (LC 28 variant)
+
+Implement the Knuth-Morris-Pratt (KMP) algorithm for substring search. Given a
+`text` and a `pattern`, return the index of the first occurrence of `pattern` in
+`text`, or `-1` if not found. The algorithm uses an LPS (Longest Proper Prefix
+which is also Suffix) array to achieve O(n + m) time complexity.
+
+## Examples
+
+```text
+Input:  text = "hello", pattern = "ll"
+Output: 2
+
+Input:  text = "aaaaa", pattern = "bba"
+Output: -1
+
+Input:  text = "AABAACAADAABAABA", pattern = "AABA"
+Output: 0
+```
+
+## Constraints
+- 0 <= text.length, pattern.length <= 10^4
+- text and pattern consist of lowercase or uppercase English letters
+"""
 from typing import List
 
 

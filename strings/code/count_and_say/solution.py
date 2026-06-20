@@ -1,3 +1,26 @@
+"""
+# LC 38: Count and Say
+
+The count-and-say sequence is a sequence of digit strings defined by the recursive
+formula: `countAndSay(1) = "1"` and `countAndSay(n)` is the run-length encoding of
+`countAndSay(n - 1)`. Return the `n`-th term of the sequence.
+
+## Examples
+
+```text
+Input:  n = 1
+Output: "1"
+
+Input:  n = 4
+Output: "1211"
+
+Input:  n = 5
+Output: "111221"
+```
+
+## Constraints
+- 1 <= n <= 30
+"""
 from itertools import groupby
 
 

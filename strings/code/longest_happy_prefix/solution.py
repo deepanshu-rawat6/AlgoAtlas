@@ -1,3 +1,29 @@
+"""
+# LC 1392: Longest Happy Prefix
+
+A string is called a *happy prefix* if it is a non-empty prefix which is also a
+suffix (excluding the string itself). Given a string `s`, return the longest happy
+prefix of `s`, or `""` if no such prefix exists.
+
+## Examples
+
+```text
+Input:  s = "level"
+Output: "l"
+
+Input:  s = "ababab"
+Output: "abab"
+
+Input:  s = "a"
+Output: ""
+```
+
+## Constraints
+- 1 <= s.length <= 10^5
+- s contains only lowercase English letters
+"""
+
+
 class Solution:
     def longestPrefix(self, s: str) -> str:
         """

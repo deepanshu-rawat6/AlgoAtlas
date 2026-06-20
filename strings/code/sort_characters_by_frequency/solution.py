@@ -1,3 +1,27 @@
+"""
+# LC 451: Sort Characters By Frequency
+
+Given a string `s`, sort it in decreasing order based on the frequency of
+characters. If two characters have the same frequency, either order is acceptable.
+Return the sorted string.
+
+## Examples
+
+```text
+Input:  s = "tree"
+Output: "eert"
+
+Input:  s = "cccaaa"
+Output: "cccaaa"
+
+Input:  s = "Aabb"
+Output: "bbAa"
+```
+
+## Constraints
+- 1 <= s.length <= 5 * 10^5
+- s consists of uppercase and lowercase English letters and digits
+"""
 from collections import Counter
 
 class Solution:

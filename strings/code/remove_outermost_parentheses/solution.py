@@ -1,3 +1,29 @@
+"""
+# LC 1021: Remove Outermost Parentheses
+
+A valid parentheses string (VPS) can be decomposed into primitive parts — VPS
+substrings that cannot be split further. Remove the outermost parentheses of every
+primitive string in the primitive decomposition of `s`.
+
+## Examples
+
+```text
+Input:  s = "(()())(())"
+Output: "()()()"
+
+Input:  s = "(()())(())(()(()))"
+Output: "()()()()(())"
+
+Input:  s = "()()"
+Output: ""
+```
+
+## Constraints
+- 1 <= s.length <= 10^5
+- s is a valid parentheses string
+"""
+
+
 class Solution:
     def removeOuterParentheses(self, s: str) -> str:
         # Track depth; skip char when transitioning 0->1 (open) or 1->0 (close)

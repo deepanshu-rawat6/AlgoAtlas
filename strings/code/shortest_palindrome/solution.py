@@ -1,3 +1,25 @@
+"""
+# LC 214: Shortest Palindrome
+
+Given a string `s`, you can add characters in front of it. Return the shortest
+palindrome you can form by performing this operation.
+
+## Examples
+
+```text
+Input:  s = "aacecaaa"
+Output: "aaacecaaa"
+
+Input:  s = "abcd"
+Output: "dcbabcd"
+```
+
+## Constraints
+- 0 <= s.length <= 5 * 10^4
+- s consists of lowercase English letters only
+"""
+
+
 class Solution:
     def shortestPalindrome(self, s: str) -> str:
         """

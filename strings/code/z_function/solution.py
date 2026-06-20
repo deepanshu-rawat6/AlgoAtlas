@@ -1,3 +1,24 @@
+"""
+# Z-Function Pattern Matching
+
+Compute the Z-array for string `s`, where `Z[i]` is the length of the longest
+substring starting at `s[i]` that matches a prefix of `s`. Used for O(n + m)
+pattern matching by building `pattern + '#' + text` and checking where `Z[i] == m`.
+
+## Examples
+
+```text
+Input:  s = "aabxaa"
+Output: Z = [0, 1, 0, 0, 2, 1]
+
+Input:  text = "AABAACAADAABAABA", pattern = "AABA"
+Output: match indices = [0, 9, 12]
+```
+
+## Constraints
+- 0 <= s.length <= 10^5
+- s consists of uppercase or lowercase English letters
+"""
 from typing import List
 
 

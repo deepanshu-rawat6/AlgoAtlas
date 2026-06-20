@@ -1,3 +1,26 @@
+"""
+# LC 730: Count Different Palindromic Subsequences
+
+Given a string `s` that contains only the characters `'a'`, `'b'`, `'c'`, and `'d'`,
+return the number of distinct non-empty palindromic subsequences of `s`. Since the
+answer may be very large, return it modulo `10^9 + 7`.
+
+## Examples
+
+```text
+Input:  s = "bccb"
+Output: 6
+
+Input:  s = "abcdabcdabcdabcdabcdabcdabcdabcddcbadcbadcbadcbadcbadcbadcbadcba"
+Output: 104860361
+```
+
+## Constraints
+- 1 <= s.length <= 1000
+- s consists of only the characters 'a', 'b', 'c', and 'd'
+"""
+
+
 class Solution:
     def countPalindromicSubsequences(self, s: str) -> int:
         """

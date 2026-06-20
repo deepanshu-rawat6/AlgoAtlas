@@ -1,3 +1,26 @@
+"""
+# LC 1781: Sum of Beauty of All Substrings
+
+The *beauty* of a string is the difference between the maximum frequency and the
+minimum frequency of any character in it. Return the sum of beauty of all substrings
+of `s`.
+
+## Examples
+
+```text
+Input:  s = "aabcb"
+Output: 5
+
+Input:  s = "aabcbaa"
+Output: 17
+```
+
+## Constraints
+- 1 <= s.length <= 500
+- s consists of lowercase English letters only
+"""
+
+
 class Solution:
     def beautySum(self, s: str) -> int:
         total = 0

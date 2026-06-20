@@ -1,54 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-interface Call { id: string; n: number; result: number | null; parentId: string | null; depth: number; }
+const TAB_BTN = (active: boolean) =>
+  `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
 
-function buildCalls(n: number): Call[] {
-  const calls: Call[] = [];
-  let idCounter = 0;
+// ── Fibonacci ────────────────────────────────────────────────────────────────
+
+interface FibCall { id: string; n: number; result: number | null; parentId: string | null; depth: number; }
+
+function buildCalls(n: number): FibCall[] {
+  const calls: FibCall[] = [];
+  let id = 0;
   function fib(n: number, parentId: string | null, depth: number): number {
-    const id = String(idCounter++);
-    calls.push({ id, n, result: null, parentId, depth });
+    const cid = String(id++);
+    calls.push({ id: cid, n, result: null, parentId, depth });
     if (n <= 1) { calls[calls.length - 1].result = n; return n; }
-    const l = fib(n - 1, id, depth + 1);
-    const r = fib(n - 2, id, depth + 1);
+    const l = fib(n - 1, cid, depth + 1);
+    const r = fib(n - 2, cid, depth + 1);
     const res = l + r;
-    calls.find(c => c.id === id)!.result = res;
+    calls.find(c => c.id === cid)!.result = res;
     return res;
   }
   fib(n, null, 0);
   return calls;
 }
 
-export default function RecursionViz() {
+function FibonacciViz() {
   const [n, setN] = useState(5);
-  const [calls, setCalls] = useState<Call[]>([]);
+  const [calls, setCalls] = useState<FibCall[]>([]);
   const [step, setStep] = useState(-1);
   const [started, setStarted] = useState(false);
 
-  function start() {
-    const c = buildCalls(Math.min(n, 7));
-    setCalls(c); setStep(0); setStarted(true);
-  }
-
-  function next() { if (step < calls.length - 1) setStep(s => s + 1); }
-  function prev() { if (step > 0) setStep(s => s - 1); }
+  function start() { const c = buildCalls(Math.min(n, 7)); setCalls(c); setStep(0); setStarted(true); }
 
   const visible = calls.slice(0, step + 1);
   const current = calls[step];
-
-  const byDepth: Record<number, Call[]> = {};
-  for (const c of visible) {
-    byDepth[c.depth] = byDepth[c.depth] || [];
-    byDepth[c.depth].push(c);
-  }
+  const byDepth: Record<number, FibCall[]> = {};
+  for (const c of visible) { byDepth[c.depth] = byDepth[c.depth] || []; byDepth[c.depth].push(c); }
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Recursion Tree — Fibonacci</h3>
-        <p className="text-sm text-slate-400">Visualize overlapping subproblems (why memoization helps)</p>
-      </div>
-
+    <div className="space-y-6">
+      <p className="text-sm text-slate-400">Visualize overlapping subproblems (why memoization helps)</p>
       <div className="flex gap-3 items-end flex-wrap">
         <div>
           <label className="block text-xs text-slate-400 mb-1">n (max 7)</label>
@@ -58,8 +49,6 @@ export default function RecursionViz() {
         </div>
         <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Build Tree</button>
       </div>
-
-      {/* Recursion calls by depth */}
       {started && (
         <div className="bg-slate-900/60 rounded-lg p-4 space-y-3 max-h-72 overflow-y-auto">
           {Object.entries(byDepth).map(([depth, depthCalls]) => (
@@ -79,18 +68,175 @@ export default function RecursionViz() {
           ))}
         </div>
       )}
-
       {started && (
         <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300">
           {current ? `Call ${step + 1}/${calls.length}: fib(${current.n})${current.result !== null ? ` = ${current.result}` : ' (computing...)'}` : ''}
           {step === calls.length - 1 && ` | Total calls: ${calls.length} (naive)`}
         </div>
       )}
-
       <div className="flex gap-3">
-        <button onClick={prev} disabled={!started || step <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
-        <button onClick={next} disabled={!started || step >= calls.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
+        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={!started || step <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
+        <button onClick={() => setStep(s => Math.min(calls.length - 1, s + 1))} disabled={!started || step >= calls.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
       </div>
+    </div>
+  );
+}
+
+// ── Tower of Hanoi ───────────────────────────────────────────────────────────
+
+interface HanoiMove { disk: number; from: string; to: string; }
+
+function computeHanoi(n: number, from: string, to: string, aux: string, moves: HanoiMove[]) {
+  if (n === 0) return;
+  computeHanoi(n - 1, from, aux, to, moves);
+  moves.push({ disk: n, from, to });
+  computeHanoi(n - 1, aux, to, from, moves);
+}
+
+type Pegs = Record<string, number[]>;
+
+function applyMove(pegs: Pegs, move: HanoiMove): Pegs {
+  const next: Pegs = { A: [...pegs.A], B: [...pegs.B], C: [...pegs.C] };
+  const disk = next[move.from].pop()!;
+  next[move.to].push(disk);
+  return next;
+}
+
+function HanoiViz() {
+  const [n, setN] = useState(3);
+  const [moves, setMoves] = useState<HanoiMove[]>([]);
+  const [stepIdx, setStepIdx] = useState(-1);
+  const [pegState, setPegState] = useState<Pegs>({ A: [], B: [], C: [] });
+  const [allStates, setAllStates] = useState<Pegs[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function start() {
+    const disks = Math.min(Math.max(n, 1), 5);
+    const ms: HanoiMove[] = [];
+    computeHanoi(disks, 'A', 'C', 'B', ms);
+    // Build all states
+    const initial: Pegs = { A: Array.from({ length: disks }, (_, i) => disks - i), B: [], C: [] };
+    const states: Pegs[] = [initial];
+    let cur = initial;
+    for (const m of ms) { cur = applyMove(cur, m); states.push(cur); }
+    setMoves(ms); setAllStates(states); setStepIdx(0); setPegState(initial);
+    setPlaying(false);
+  }
+
+  function goTo(idx: number) {
+    if (idx < 0 || idx >= allStates.length) return;
+    setStepIdx(idx); setPegState(allStates[idx]);
+  }
+
+  useEffect(() => {
+    if (playing) {
+      timerRef.current = setInterval(() => {
+        setStepIdx(s => {
+          const next = s + 1;
+          if (next >= allStates.length) { setPlaying(false); clearInterval(timerRef.current!); return s; }
+          setPegState(allStates[next]);
+          return next;
+        });
+      }, 500);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [playing, allStates]);
+
+  const SVG_W = 300, SVG_H = 140;
+  const PEG_POSITIONS = [50, 150, 250];
+  const PEG_LABELS = ['A', 'B', 'C'];
+  const maxDisk = n;
+  const diskH = 14, diskGap = 2;
+  const maxDiskW = 60;
+  const DISK_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#22c55e'];
+  const move = moves[stepIdx - 1] ?? null;
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-slate-400">Classic recursion: move n disks from A to C using B as auxiliary</p>
+      <div className="flex gap-3 items-end flex-wrap">
+        <div>
+          <label className="block text-xs text-slate-400 mb-1">Disks (1–5)</label>
+          <input type="number" min="1" max="5"
+            className="w-20 bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            value={n} onChange={e => setN(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))} />
+        </div>
+        <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button>
+      </div>
+
+      {allStates.length > 0 && (
+        <>
+          <div className="bg-slate-900/60 rounded-lg p-4">
+            <svg width={SVG_W} height={SVG_H}>
+              {/* Base line */}
+              <line x1={10} y1={SVG_H - 10} x2={SVG_W - 10} y2={SVG_H - 10} stroke="#475569" strokeWidth={2} />
+              {PEG_POSITIONS.map((px, pi) => {
+                const label = PEG_LABELS[pi];
+                const stack = pegState[label] ?? [];
+                const pegH = maxDisk * (diskH + diskGap) + 10;
+                return (
+                  <g key={label}>
+                    {/* Peg pole */}
+                    <rect x={px - 3} y={SVG_H - 10 - pegH} width={6} height={pegH} rx={2} fill="#64748b" />
+                    {/* Label */}
+                    <text x={px} y={SVG_H - 1} textAnchor="middle" fontSize={10} fill="#94a3b8">{label}</text>
+                    {/* Disks */}
+                    {stack.map((disk, di) => {
+                      const w = (disk / maxDisk) * maxDiskW;
+                      const y = SVG_H - 10 - (di + 1) * (diskH + diskGap);
+                      const isMoving = move && (move.from === label || move.to === label) && disk === move.disk;
+                      return (
+                        <rect key={disk} x={px - w / 2} y={y} width={w} height={diskH} rx={3}
+                          fill={DISK_COLORS[(disk - 1) % DISK_COLORS.length]}
+                          stroke={isMoving ? '#fbbf24' : 'transparent'} strokeWidth={2} opacity={0.9} />
+                      );
+                    })}
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300">
+            {stepIdx === 0
+              ? `Initial state: ${n} disks on peg A. Total moves: ${moves.length}`
+              : move
+                ? `Move ${stepIdx}/${moves.length}: Move disk ${move.disk}: ${move.from} → ${move.to}`
+                : ''}
+          </div>
+
+          <div className="flex gap-3 items-center flex-wrap">
+            <button onClick={() => { setPlaying(false); goTo(stepIdx - 1); }} disabled={stepIdx <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Prev</button>
+            <button onClick={() => { setPlaying(false); goTo(stepIdx + 1); }} disabled={stepIdx >= allStates.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next →</button>
+            <button onClick={() => setPlaying(p => !p)} disabled={stepIdx >= allStates.length - 1}
+              className="px-4 py-2 bg-violet-700 hover:bg-violet-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">
+              {playing ? '⏸ Pause' : '▶ Auto Play'}
+            </button>
+            <span className="text-xs text-slate-500">{stepIdx} / {moves.length} moves</span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Root ─────────────────────────────────────────────────────────────────────
+
+export default function RecursionViz() {
+  const [tab, setTab] = useState<'fib' | 'hanoi'>('fib');
+  return (
+    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-slate-100 mb-3">Recursion</h3>
+        <div className="flex gap-2">
+          <button className={TAB_BTN(tab === 'fib')} onClick={() => setTab('fib')}>Fibonacci</button>
+          <button className={TAB_BTN(tab === 'hanoi')} onClick={() => setTab('hanoi')}>Tower of Hanoi</button>
+        </div>
+      </div>
+      {tab === 'fib' ? <FibonacciViz /> : <HanoiViz />}
     </div>
   );
 }

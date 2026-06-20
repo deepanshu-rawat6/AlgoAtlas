@@ -1,3 +1,31 @@
+"""
+# LC 205: Isomorphic Strings
+
+Given two strings `s` and `t`, determine if they are isomorphic. Two strings are
+isomorphic if the characters in `s` can be replaced to get `t` such that all
+occurrences of a character map to the same character (bijection — no two characters
+may map to the same character).
+
+## Examples
+
+```text
+Input:  s = "egg", t = "add"
+Output: true
+
+Input:  s = "foo", t = "bar"
+Output: false
+
+Input:  s = "paper", t = "title"
+Output: true
+```
+
+## Constraints
+- 1 <= s.length <= 5 * 10^4
+- t.length == s.length
+- s and t consist of any valid ASCII characters
+"""
+
+
 class Solution:
     def isIsomorphic(self, s: str, t: str) -> bool:
         # Two maps enforce bijection: s->t and t->s

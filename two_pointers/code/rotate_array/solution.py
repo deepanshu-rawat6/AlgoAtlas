@@ -1,30 +1,29 @@
+"""
+## LC 189 — Rotate Array
+
+Given an integer array `nums`, rotate the array to the right by `k` steps,
+where `k` is non-negative. Modify `nums` in-place.
+
+### Examples
+
+```text
+Input:  nums = [1, 2, 3, 4, 5, 6, 7], k = 3
+Output: [5, 6, 7, 1, 2, 3, 4]
+
+Input:  nums = [-1, -100, 3, 99], k = 2
+Output: [3, 99, -1, -100]
+```
+
+### Constraints
+
+- 1 <= nums.length <= 10^5
+- -2^31 <= nums[i] <= 2^31 - 1
+- 0 <= k <= 10^5
+"""
 from typing import List
 
 
 class Solution:
-    """
-    ## LC 189 — Rotate Array
-
-    Given an integer array `nums`, rotate the array to the right by `k` steps,
-    where `k` is non-negative. Modify `nums` in-place.
-
-    ### Examples
-
-    ```text
-    Input:  nums = [1, 2, 3, 4, 5, 6, 7], k = 3
-    Output: [5, 6, 7, 1, 2, 3, 4]
-
-    Input:  nums = [-1, -100, 3, 99], k = 2
-    Output: [3, 99, -1, -100]
-    ```
-
-    ### Constraints
-
-    - 1 <= nums.length <= 10^5
-    - -2^31 <= nums[i] <= 2^31 - 1
-    - 0 <= k <= 10^5
-    """
-
     def method_brute_force(self, nums: List[int], k: int) -> None:
         """O(n*k) time | O(1) space — rotate one step at a time"""
         # Rotate one step at a time by shifting all elements right — O(n*k)

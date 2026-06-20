@@ -1,3 +1,27 @@
+"""
+# Minimum Bracket Reversals
+
+Given a bracket string consisting of `'{'` and `'}'`, find the minimum number of
+bracket reversals needed to make the string balanced. Return `-1` if it is
+impossible (odd-length strings can never be balanced).
+
+## Examples
+
+```text
+Input:  s = "}{"
+Output: 2
+
+Input:  s = "{{}}"
+Output: 0
+
+Input:  s = "{{{"
+Output: -1
+```
+
+## Constraints
+- 1 <= s.length <= 10^5
+- s contains only '{' and '}'
+"""
 from math import ceil
 
 

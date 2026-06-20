@@ -1,33 +1,34 @@
+"""
+## LC 125: Valid Palindrome
+
+A phrase is a palindrome if, after converting all uppercase letters into lowercase
+letters and removing all non-alphanumeric characters, it reads the same forward
+and backward.
+
+Given a string `s`, return `true` if it is a palindrome, or `false` otherwise.
+
+### Examples
+
+```text
+Input:  s = "A man, a plan, a canal: Panama"
+Output: true
+Explanation: "amanaplanacanalpanama" is a palindrome.
+
+Input:  s = "race a car"
+Output: false
+
+Input:  s = " "
+Output: true
+```
+
+### Constraints
+
+- `1 <= s.length <= 2 * 10^5`
+- `s` consists only of printable ASCII characters.
+"""
+
+
 class Solution:
-    """
-    ## LC 125: Valid Palindrome
-
-    A phrase is a palindrome if, after converting all uppercase letters into lowercase
-    letters and removing all non-alphanumeric characters, it reads the same forward
-    and backward.
-
-    Given a string `s`, return `true` if it is a palindrome, or `false` otherwise.
-
-    ### Examples
-
-    ```text
-    Input:  s = "A man, a plan, a canal: Panama"
-    Output: true
-    Explanation: "amanaplanacanalpanama" is a palindrome.
-
-    Input:  s = "race a car"
-    Output: false
-
-    Input:  s = " "
-    Output: true
-    ```
-
-    ### Constraints
-
-    - `1 <= s.length <= 2 * 10^5`
-    - `s` consists only of printable ASCII characters.
-    """
-
     def method_filter(self, s: str) -> bool:
         """O(n) time, O(n) space."""
         # Strip non-alphanumeric chars and lowercase, then compare to reverse
