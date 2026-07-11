@@ -1,3 +1,26 @@
+"""
+# LC 17: Letter Combinations of a Phone Number
+
+Given a string containing digits from 2-9, return all possible letter combinations that
+the number could represent, using the standard telephone keypad mapping. Answer may be
+returned in any order.
+
+## Examples
+```text
+Input:  digits = "23"
+Output: ["ad","ae","af","bd","be","bf","cd","ce","cf"]
+
+Input:  digits = ""
+Output: []
+
+Input:  digits = "2"
+Output: ["a","b","c"]
+```
+
+## Constraints
+- 0 <= digits.length <= 4
+- digits[i] is a digit in the range ['2', '9'].
+"""
 from typing import List
 from collections import deque
 

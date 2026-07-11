@@ -1,3 +1,20 @@
+"""
+# Tower of Hanoi
+
+Transfer `n` disks from the `src` peg to the `dest` peg using `aux` as a helper.
+Move one disk at a time and never place a larger disk on a smaller one. Return
+the list of moves as strings like `"A->C"`.
+
+## Examples
+```text
+Input:  n = 2, src = "A", dest = "C", aux = "B"
+Output: ["A->B","A->C","B->C"]
+```
+
+## Constraints
+- n >= 1.
+- The minimum number of moves is 2^n - 1.
+"""
 from typing import List
 
 

@@ -1,3 +1,22 @@
+"""
+# LC 333: Largest BST Subtree
+
+Given the root of a binary tree, find the largest subtree that is also a valid BST and
+return its size (number of nodes).
+
+## Examples
+```text
+Input:  root = [10, 5, 15, 1, 8, null, 7]
+Output: 3
+
+Input:  root = [4, 2, 7, 2, 3, 5, null, 2, null, null, null, null, null, 1]
+Output: 2
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 10^4].
+- -10^4 <= Node.val <= 10^4
+"""
 from __future__ import annotations
 from typing import Optional, Tuple
 from collections import deque

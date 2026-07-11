@@ -1,3 +1,23 @@
+"""
+# LC 1325: Delete Leaves With a Given Value
+
+Delete all leaf nodes with value equal to `target`. Repeat until no such leaves remain
+(a node that becomes a leaf after deletion should also be deleted if its value equals
+`target`).
+
+## Examples
+```text
+Input:  root = [1, 2, 3, 2, null, 2, 4], target = 2
+Output: [1, null, 3, null, 4]
+
+Input:  root = [1, 3, 3, 3, 2], target = 3
+Output: [1, 3, null, null, 2]
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 3000].
+- 1 <= Node.val, target <= 1000
+"""
 from typing import Optional, List
 from collections import deque
 

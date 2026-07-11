@@ -1,3 +1,21 @@
+"""
+# LC 230: Kth Smallest Element in a BST
+
+Return the k-th smallest value (1-indexed) in a BST.
+
+## Examples
+```text
+Input:  root = [3, 1, 4, null, 2], k = 1
+Output: 1
+
+Input:  root = [5, 3, 6, 2, 4, null, null, 1], k = 3
+Output: 3
+```
+
+## Constraints
+- The number of nodes in the tree is n, with 1 <= k <= n <= 10^4.
+- 0 <= Node.val <= 10^4
+"""
 from typing import Optional, List
 from collections import deque
 

@@ -1,3 +1,23 @@
+"""
+# LC 1020: Number of Enclaves
+
+Count land cells (`1`s) from which you cannot walk off the boundary of the
+grid by moving 4-directionally.
+
+## Examples
+```text
+Input: grid = [[0,0,0,0],[1,0,1,0],[0,1,1,0],[0,0,0,0]]
+Output: 3
+
+Input: grid = [[0,1,1,0],[0,0,1,0],[0,0,1,0],[0,0,0,0]]
+Output: 0
+```
+
+## Constraints
+- If no land touches the boundary, all land cells are enclaves.
+- If all land connects to the boundary, the answer is 0.
+- A grid with no land yields 0.
+"""
 from typing import List
 from collections import deque
 
@@ -25,3 +45,10 @@ class Solution:
 
         # remaining 1s are enclaves (not reachable from boundary)
         return sum(grid[r][c] for r in range(rows) for c in range(cols))
+
+
+if __name__ == "__main__":
+    s = Solution()
+    assert s.numEnclaves([[0,0,0,0],[1,0,1,0],[0,1,1,0],[0,0,0,0]]) == 3
+    assert s.numEnclaves([[0,1,1,0],[0,0,1,0],[0,0,1,0],[0,0,0,0]]) == 0
+    print("All tests passed.")

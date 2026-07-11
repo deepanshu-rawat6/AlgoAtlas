@@ -1,3 +1,22 @@
+"""
+# LC 99: Recover Binary Search Tree
+
+Two nodes of a BST are swapped by mistake. Recover the tree without changing its
+structure (fix the values in-place).
+
+## Examples
+```text
+Input:  root = [1, 3, null, null, 2]
+Output: [3, 1, null, null, 2]
+
+Input:  root = [3, 1, 4, null, null, 2]
+Output: [2, 1, 4, null, null, 3]
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [2, 1000].
+- -2^31 <= Node.val <= 2^31 - 1
+"""
 from __future__ import annotations
 from typing import Optional
 from collections import deque

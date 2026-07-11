@@ -1,3 +1,21 @@
+"""
+# LC 1192: Critical Connections in a Network (Bridges)
+
+Find all edges whose removal increases the number of connected components
+(bridges) of an undirected graph.
+
+## Examples
+```text
+Input: n=4, connections=[[0,1],[1,2],[2,0],[1,3]]
+Output: [[1,3]]
+# 0-1-2 form a cycle (no bridge among them); edge (1,3) is a bridge.
+```
+
+## Constraints
+- Edge (u,v) is a bridge if low[v] > disc[u]
+- Pass parent to avoid treating the tree edge back to parent as a back edge
+- Graph may be disconnected; run DFS from every unvisited node
+"""
 from typing import List
 
 class Solution:
@@ -31,3 +49,22 @@ class Solution:
                 dfs(i, -1)
 
         return bridges
+
+
+if __name__ == "__main__":
+    sol = Solution()
+
+    def norm(bridges):
+        # normalize: sort each edge, then sort the list (order not deterministic)
+        return sorted(sorted(edge) for edge in bridges)
+
+    # Example from README: only edge (1,3) is a bridge
+    assert norm(sol.criticalConnections(4, [[0, 1], [1, 2], [2, 0], [1, 3]])) == [[1, 3]]
+
+    # A path 0-1-2-3: every edge is a bridge
+    assert norm(sol.criticalConnections(4, [[0, 1], [1, 2], [2, 3]])) == [[0, 1], [1, 2], [2, 3]]
+
+    # Triangle cycle: no bridges
+    assert norm(sol.criticalConnections(3, [[0, 1], [1, 2], [2, 0]])) == []
+
+    print("All tests passed.")

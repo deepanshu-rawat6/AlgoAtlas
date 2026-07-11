@@ -1,3 +1,23 @@
+"""
+# LC 285 / 510: Inorder Successor and Predecessor in BST
+
+Given a BST and a node `p`, find the inorder successor (smallest value greater than
+`p.val`) and the inorder predecessor (largest value less than `p.val`). Return None
+when no such node exists.
+
+## Examples
+```text
+Input:  BST = [5, 3, 6, 2, 4, null, null, 1], p = 3
+Output: successor = 4, predecessor = 2
+
+Input:  BST = [5, 3, 6, 2, 4, null, null, 1], p = 6
+Output: successor = None, predecessor = 5
+```
+
+## Constraints
+- The tree is a valid BST.
+- Returns None when the successor/predecessor does not exist.
+"""
 from __future__ import annotations
 from typing import Optional
 from collections import deque

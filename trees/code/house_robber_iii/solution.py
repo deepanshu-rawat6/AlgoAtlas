@@ -1,3 +1,22 @@
+"""
+# LC 337: House Robber III
+
+Houses are arranged in a binary tree. Adjacent (directly linked) houses cannot both be
+robbed. Return the maximum amount that can be robbed without alerting the police.
+
+## Examples
+```text
+Input:  root = [3, 2, 3, null, 3, null, 1]
+Output: 7
+
+Input:  root = [3, 4, 5, 1, 3, null, 1]
+Output: 9
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 10^4].
+- 0 <= Node.val <= 10^4
+"""
 from typing import Optional, List
 from collections import deque
 

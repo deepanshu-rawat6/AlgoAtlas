@@ -1,3 +1,22 @@
+"""
+# Floor and Ceil in a BST
+
+Given a BST and a target key, find the floor (largest value <= key) and the ceil
+(smallest value >= key). Return -1 when no floor/ceil exists.
+
+## Examples
+```text
+Input:  BST = [8, 4, 12, 2, 6, 10, 14], key = 5
+Output: floor = 4, ceil = 6
+
+Input:  BST = [8, 4, 12, 2, 6, 10, 14], key = 8
+Output: floor = 8, ceil = 8
+```
+
+## Constraints
+- The tree is a valid BST.
+- Floor/ceil return -1 when no qualifying value exists.
+"""
 from __future__ import annotations
 from typing import Optional
 from collections import deque

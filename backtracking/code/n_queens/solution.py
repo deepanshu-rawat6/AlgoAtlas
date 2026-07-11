@@ -1,3 +1,23 @@
+"""
+# LC 51: N-Queens
+
+The n-queens puzzle is the problem of placing `n` queens on an `n x n` chessboard so
+that no two queens attack each other. Given an integer `n`, return all distinct
+solutions. Each solution is a board configuration where 'Q' marks a queen and '.'
+marks an empty cell.
+
+## Examples
+```text
+Input:  n = 4
+Output: [[".Q..","...Q","Q...","..Q."],["..Q.","Q...","...Q",".Q.."]]
+
+Input:  n = 1
+Output: [["Q"]]
+```
+
+## Constraints
+- 1 <= n <= 9
+"""
 from typing import List
 
 

@@ -1,3 +1,20 @@
+"""
+# LC 22: Generate Parentheses
+
+Given `n` pairs of parentheses, generate all combinations of well-formed parentheses.
+
+## Examples
+```text
+Input:  n = 3
+Output: ["((()))","(()())","(())()","()(())","()()()"]
+
+Input:  n = 1
+Output: ["()"]
+```
+
+## Constraints
+- 1 <= n <= 8
+"""
 from typing import List
 
 

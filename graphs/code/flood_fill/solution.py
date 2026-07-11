@@ -1,3 +1,23 @@
+"""
+# LC 733: Flood Fill
+
+Starting from pixel `(sr, sc)`, change all 4-directionally connected pixels
+that share the same original color to `color`, and return the image.
+
+## Examples
+```text
+Input: image = [[1,1,1],[1,1,0],[1,0,1]], sr = 1, sc = 1, color = 2
+Output: [[2,2,2],[2,2,0],[2,0,1]]
+
+Input: image = [[0,0,0],[0,0,0]], sr = 0, sc = 0, color = 0
+Output: [[0,0,0],[0,0,0]]
+```
+
+## Constraints
+- If the starting pixel already has the target color, return as-is (no-op).
+- A single-pixel image just changes that pixel.
+- Only pixels connected to the start with the original color are repainted.
+"""
 from typing import List
 
 class Solution:
@@ -22,3 +42,10 @@ class Solution:
 
         dfs(sr, sc)
         return image
+
+
+if __name__ == "__main__":
+    s = Solution()
+    assert s.floodFill([[1,1,1],[1,1,0],[1,0,1]], 1, 1, 2) == [[2,2,2],[2,2,0],[2,0,1]]
+    assert s.floodFill([[0,0,0],[0,0,0]], 0, 0, 0) == [[0,0,0],[0,0,0]]
+    print("All tests passed.")

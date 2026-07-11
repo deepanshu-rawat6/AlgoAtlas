@@ -1,3 +1,22 @@
+"""
+# 22: Generate All Balanced Parentheses
+
+Given `n` pairs of parentheses, generate all combinations of well-formed
+(balanced) parentheses strings.
+
+## Examples
+```text
+Input:  n = 3
+Output: ["((()))","(()())","(())()","()(())","()()()"]
+
+Input:  n = 1
+Output: ["()"]
+```
+
+## Constraints
+- 1 <= n <= 8 (typical).
+- The number of valid combinations equals the nth Catalan number.
+"""
 from typing import List
 
 

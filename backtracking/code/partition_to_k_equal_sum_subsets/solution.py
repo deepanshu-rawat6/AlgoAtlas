@@ -1,3 +1,23 @@
+"""
+# LC 698: Partition to K Equal Sum Subsets
+
+Given an integer array `nums` and an integer `k`, return true if it is possible to
+divide the array into `k` non-empty subsets whose sums are all equal.
+
+## Examples
+```text
+Input:  nums = [4, 3, 2, 3, 5, 2, 1], k = 4
+Output: true
+
+Input:  nums = [1, 2, 3, 4], k = 3
+Output: false
+```
+
+## Constraints
+- 1 <= k <= nums.length <= 16
+- 1 <= nums[i] <= 10^4
+- The frequency of each element is in the range [1, 4].
+"""
 from typing import List
 
 

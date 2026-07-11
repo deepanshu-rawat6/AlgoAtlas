@@ -1,3 +1,22 @@
+"""
+# Check Palindrome (Recursive)
+
+Given a string `s`, return `True` if it reads the same forwards and backwards,
+`False` otherwise. Solved with recursion — no loops, no reversal.
+
+## Examples
+```text
+Input:  s = "racecar"
+Output: True
+
+Input:  s = "abc"
+Output: False
+```
+
+## Constraints
+- Compare the outer characters, then recurse on the middle substring.
+- Empty string and single characters are palindromes.
+"""
 class Solution:
     def isPalindrome(self, s: str) -> bool:
         # Base case: empty string or single char is always a palindrome

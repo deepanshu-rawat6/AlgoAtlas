@@ -1,3 +1,23 @@
+"""
+# LC 105: Construct Binary Tree from Preorder and Inorder Traversal
+
+Given preorder and inorder traversal arrays of a binary tree (all values unique),
+reconstruct and return the tree.
+
+## Examples
+```text
+Input:  preorder = [3, 9, 20, 15, 7], inorder = [9, 3, 15, 20, 7]
+Output: [3, 9, 20, null, null, 15, 7]
+
+Input:  preorder = [-1], inorder = [-1]
+Output: [-1]
+```
+
+## Constraints
+- 1 <= preorder.length <= 3000
+- inorder.length == preorder.length
+- preorder and inorder consist of unique values.
+"""
 from typing import Optional, List
 from collections import deque
 

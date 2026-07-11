@@ -1,3 +1,19 @@
+"""
+# Power Set (Recursive)
+
+Given an array `nums`, return all possible subsets (the power set). The
+solution set must not contain duplicate subsets.
+
+## Examples
+```text
+Input:  nums = [1,2,3]
+Output: [[],[1],[2],[3],[1,2],[1,3],[2,3],[1,2,3]]
+```
+
+## Constraints
+- Uses the include/exclude decision pattern at each index.
+- Produces 2^n subsets; input is assumed to contain distinct elements.
+"""
 from typing import List
 
 

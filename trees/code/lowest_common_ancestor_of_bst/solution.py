@@ -1,3 +1,22 @@
+"""
+# LC 235: Lowest Common Ancestor of a Binary Search Tree
+
+Find the lowest common ancestor (LCA) of two nodes p and q in a BST. The LCA is the
+deepest node that has both p and q as descendants (a node is a descendant of itself).
+
+## Examples
+```text
+Input:  root = [6, 2, 8, 0, 4, 7, 9, null, null, 3, 5], p = 2, q = 8
+Output: 6
+
+Input:  root = [6, 2, 8, 0, 4, 7, 9, null, null, 3, 5], p = 2, q = 4
+Output: 2
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [2, 10^5].
+- All Node.val are unique; p and q exist in the BST.
+"""
 from typing import Optional, List
 from collections import deque
 

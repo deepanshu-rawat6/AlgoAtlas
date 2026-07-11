@@ -1,3 +1,26 @@
+"""
+# LC 126: Word Ladder II
+
+Find all shortest transformation sequences from `beginWord` to `endWord`,
+changing one letter at a time, where each intermediate word must exist in
+`wordList`.
+
+## Examples
+```text
+Input: beginWord = "hit", endWord = "cog",
+       wordList = ["hot","dot","dog","lot","log","cog"]
+Output: [["hit","hot","dot","dog","cog"],["hit","hot","lot","log","cog"]]
+
+Input: beginWord = "hit", endWord = "cog",
+       wordList = ["hot","dot","dog","lot","log"]
+Output: []
+```
+
+## Constraints
+- If `endWord` is not in `wordList`, return `[]`.
+- If no transformation path exists, return `[]`.
+- The order of returned paths is not significant.
+"""
 from typing import List
 from collections import defaultdict, deque
 
@@ -43,3 +66,13 @@ class Solution:
 
         dfs(endWord, [endWord])
         return result
+
+
+if __name__ == "__main__":
+    s = Solution()
+    result = s.findLadders("hit", "cog", ["hot","dot","dog","lot","log","cog"])
+    expected = [["hit","hot","dot","dog","cog"], ["hit","hot","lot","log","cog"]]
+    # path order is non-deterministic; compare as sorted lists of paths
+    assert sorted(result) == sorted(expected)
+    assert s.findLadders("hit", "cog", ["hot","dot","dog","lot","log"]) == []
+    print("All tests passed.")

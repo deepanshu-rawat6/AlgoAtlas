@@ -1,3 +1,22 @@
+"""
+# LC 543: Diameter of Binary Tree
+
+Return the length of the longest path between any two nodes in a binary tree. The path
+may or may not pass through the root. Length is measured as the number of edges.
+
+## Examples
+```text
+Input:  root = [1, 2, 3, 4, 5]
+Output: 3
+
+Input:  root = [1, 2]
+Output: 1
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 10^4].
+- -100 <= Node.val <= 100
+"""
 from typing import Optional, List
 from collections import deque
 

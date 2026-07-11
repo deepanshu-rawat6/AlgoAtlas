@@ -1,3 +1,22 @@
+"""
+# LC 124: Binary Tree Maximum Path Sum
+
+Find the maximum sum of any path in a binary tree. A path is any sequence of nodes
+connected by edges; it does not need to pass through the root.
+
+## Examples
+```text
+Input:  root = [1, 2, 3]
+Output: 6
+
+Input:  root = [-10, 9, 20, null, null, 15, 7]
+Output: 42
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 3 * 10^4].
+- -1000 <= Node.val <= 1000
+"""
 from typing import Optional, List
 from collections import deque
 

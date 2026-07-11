@@ -1,3 +1,22 @@
+"""
+# String to Integer (Recursive)
+
+Convert a string of digit characters to its integer value without using
+`int()`, `atoi`, or any built-in conversion. Solved with pure recursion.
+
+## Examples
+```text
+Input:  s = "1234"
+Output: 1234
+
+Input:  s = "007"
+Output: 7
+```
+
+## Constraints
+- Input consists of digit characters only.
+- Negative numbers and non-digit characters are not handled.
+"""
 class Solution:
     def strToInt(self, s: str) -> int:
         # Recursive approach: process one digit at a time from left to right.

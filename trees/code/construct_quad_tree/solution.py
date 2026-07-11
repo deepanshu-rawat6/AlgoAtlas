@@ -1,3 +1,24 @@
+"""
+# LC 427: Construct Quad Tree
+
+Given an n x n binary grid (n is a power of 2), construct a Quad-Tree. Each node is a
+leaf if its region is uniform (all 0s or all 1s); otherwise split into four equal
+quadrants and recurse.
+
+## Examples
+```text
+Input:  grid = [[0, 1], [1, 0]]
+Output: [[0, 1], [1, 0], [1, 1], [1, 1], [1, 0]]
+
+Input:  grid = [[1, 1], [1, 1]]
+Output: [[1, 1]]
+```
+
+## Constraints
+- n == grid.length == grid[i].length
+- n == 2^x where 0 <= x <= 6
+- grid[i][j] is 0 or 1.
+"""
 from typing import Optional, List
 from collections import deque
 

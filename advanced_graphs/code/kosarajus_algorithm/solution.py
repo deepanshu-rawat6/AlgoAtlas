@@ -1,3 +1,21 @@
+"""
+# Kosaraju's Algorithm — Strongly Connected Components
+
+Find all Strongly Connected Components (SCCs) in a directed graph. An SCC is a
+maximal set of nodes where every node is reachable from every other node.
+
+## Examples
+```text
+Input: n=5, edges=[[0,1],[1,2],[2,0],[1,3],[3,4]]
+Output: [[0,1,2],[3],[4]]
+# 0->1->2->0 form a cycle (one SCC); 3 and 4 are singletons.
+```
+
+## Constraints
+- Two-pass DFS — O(V+E)
+- Pass 1 records finish order on the original graph
+- Pass 2 runs DFS on the transposed graph in reverse finish order
+"""
 from typing import List
 from collections import defaultdict
 
@@ -44,3 +62,18 @@ class Solution:
                 sccs.append(sorted(component))
 
         return sccs
+
+
+if __name__ == "__main__":
+    sol = Solution()
+
+    # SCC order in the outer list is not deterministic → compare sorted list of components
+    assert sorted(sol.findSCCs(5, [[0, 1], [1, 2], [2, 0], [1, 3], [3, 4]])) == [[0, 1, 2], [3], [4]]
+
+    # Single cycle over all nodes → one SCC
+    assert sorted(sol.findSCCs(3, [[0, 1], [1, 2], [2, 0]])) == [[0, 1, 2]]
+
+    # DAG → every node is its own SCC
+    assert sorted(sol.findSCCs(3, [[0, 1], [1, 2]])) == [[0], [1], [2]]
+
+    print("All tests passed.")

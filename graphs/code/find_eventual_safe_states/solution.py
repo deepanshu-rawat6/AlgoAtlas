@@ -1,3 +1,23 @@
+"""
+# LC 802: Find Eventual Safe States
+
+Return, in ascending order, all nodes of a directed graph from which every
+path eventually leads to a terminal node (no cycle is reachable).
+
+## Examples
+```text
+Input: graph = [[1,2],[2,3],[5],[0],[5],[],[]]
+Output: [2,4,5,6]
+
+Input: graph = [[1,2,3,4],[1,2],[3,4],[0,4],[]]
+Output: [4]
+```
+
+## Constraints
+- A node with no outgoing edges is always safe (terminal).
+- If all nodes form one cycle, return `[]`.
+- Handle disconnected components.
+"""
 from typing import List
 from collections import deque
 
@@ -43,3 +63,12 @@ class Solution:
                     queue.append(parent)
 
         return sorted(safe)
+
+
+if __name__ == "__main__":
+    s = Solution()
+    assert s.eventualSafeNodes([[1,2],[2,3],[5],[0],[5],[],[]]) == [2,4,5,6]
+    assert s.eventualSafeNodes([[1,2,3,4],[1,2],[3,4],[0,4],[]]) == [4]
+    assert s.eventualSafeNodes_topo([[1,2],[2,3],[5],[0],[5],[],[]]) == [2,4,5,6]
+    assert s.eventualSafeNodes_topo([[1,2,3,4],[1,2],[3,4],[0,4],[]]) == [4]
+    print("All tests passed.")

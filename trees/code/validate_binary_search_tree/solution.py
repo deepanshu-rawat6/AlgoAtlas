@@ -1,3 +1,22 @@
+"""
+# LC 98: Validate Binary Search Tree
+
+Determine if a binary tree is a valid BST: the left subtree contains only values
+strictly less than the node, the right subtree only strictly greater, recursively.
+
+## Examples
+```text
+Input:  root = [2, 1, 3]
+Output: true
+
+Input:  root = [5, 1, 4, null, null, 3, 6]
+Output: false
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 10^4].
+- -2^31 <= Node.val <= 2^31 - 1
+"""
 from typing import Optional, List
 from collections import deque
 

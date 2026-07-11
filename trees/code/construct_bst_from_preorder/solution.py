@@ -1,3 +1,20 @@
+"""
+# LC 1008: Construct BST from Preorder Traversal
+
+Given an array of integers `preorder` representing the preorder traversal of a BST,
+construct and return the BST.
+
+## Examples
+```text
+Input:  preorder = [8, 5, 1, 7, 10, 12]
+Output: [8, 5, 10, 1, 7, null, 12]
+```
+
+## Constraints
+- 1 <= preorder.length <= 100
+- 1 <= preorder[i] <= 1000
+- All the values of preorder are unique.
+"""
 from __future__ import annotations
 from typing import Optional, List
 from collections import deque

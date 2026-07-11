@@ -1,3 +1,24 @@
+"""
+# LC 1863: Sum of All Subset XOR Totals
+
+The XOR total of an array is the bitwise XOR of all its elements, or 0 if the array is
+empty. Given an array `nums`, return the sum of all XOR totals for every subset of
+`nums`. Subsets with the same elements at different indices are counted separately.
+
+## Examples
+```text
+Input:  nums = [1, 3]
+Output: 6
+Explanation: subsets [], [1], [3], [1,3] have XOR totals 0, 1, 3, 2 -> sum = 6
+
+Input:  nums = [5, 1, 6]
+Output: 28
+```
+
+## Constraints
+- 1 <= nums.length <= 12
+- 1 <= nums[i] <= 20
+"""
 from typing import List
 
 

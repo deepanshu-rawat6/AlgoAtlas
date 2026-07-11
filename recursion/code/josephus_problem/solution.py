@@ -1,3 +1,22 @@
+"""
+# Josephus Problem
+
+Given `n` people standing in a circle (0-indexed), every `k`th person is
+eliminated until only one remains. Return the 0-indexed position of the survivor.
+
+## Examples
+```text
+Input:  n = 7, k = 3
+Output: 3
+
+Input:  n = 5, k = 2
+Output: 2
+```
+
+## Constraints
+- n >= 1, k >= 1.
+- Recurrence: J(1, k) = 0; J(n, k) = (J(n-1, k) + k) % n.
+"""
 from typing import List
 
 

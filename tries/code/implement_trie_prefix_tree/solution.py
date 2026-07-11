@@ -1,3 +1,21 @@
+"""
+# 208: Implement Trie (Prefix Tree)
+
+Implement a trie (prefix tree) supporting insertion, exact-match search, and
+prefix search: `insert(word)`, `search(word)`, and `startsWith(prefix)`.
+
+## Examples
+```text
+Input:  insert("apple"); search("apple"); search("app")
+        startsWith("app"); insert("app"); search("app")
+Output: True; False; True; True
+```
+
+## Constraints
+- 1 <= word.length, prefix.length <= 2000
+- word and prefix consist only of lowercase English letters.
+- At most 3 * 10^4 calls in total.
+"""
 class TrieNode:
     def __init__(self):
         self.children = {}

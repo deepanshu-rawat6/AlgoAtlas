@@ -1,3 +1,23 @@
+"""
+# LC 701: Insert into a Binary Search Tree
+
+Insert a value into a BST and return the root. The value is guaranteed not to already
+exist in the tree; any valid BST resulting from the insertion is accepted.
+
+## Examples
+```text
+Input:  root = [4, 2, 7, 1, 3], val = 5
+Output: [4, 2, 7, 1, 3, 5]
+
+Input:  root = [40, 20, 60, 10, 30, 50, 70], val = 25
+Output: [40, 20, 60, 10, 30, 50, 70, null, null, 25]
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 10^4].
+- -10^8 <= Node.val <= 10^8
+- val does not exist in the original BST.
+"""
 from typing import Optional, List
 from collections import deque
 

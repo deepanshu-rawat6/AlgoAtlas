@@ -1,3 +1,20 @@
+"""
+# 733: Flood Fill (Recursive)
+
+Given a 2D `image` grid, a starting cell `(sr, sc)`, and a new `color`, perform
+a flood fill: change the starting cell and all 4-directionally connected cells
+of the same original color to `color`.
+
+## Examples
+```text
+Input:  image = [[1,1,1],[1,1,0],[1,0,1]], sr = 1, sc = 1, color = 2
+Output: [[2,2,2],[2,2,0],[2,0,1]]
+```
+
+## Constraints
+- Connectivity is 4-directional (up, down, left, right).
+- If the starting cell already has the target color, return the image unchanged.
+"""
 from typing import List
 
 

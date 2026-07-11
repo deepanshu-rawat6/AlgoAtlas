@@ -1,3 +1,22 @@
+"""
+# 139: Word Break (Recursive)
+
+Given a string `s` and a list of words `wordDict`, return `True` if `s` can be
+segmented into a space-separated sequence of one or more dictionary words.
+
+## Examples
+```text
+Input:  s = "leetcode", wordDict = ["leet","code"]
+Output: True
+
+Input:  s = "catsandog", wordDict = ["cats","dog","sand","and","cat"]
+Output: False
+```
+
+## Constraints
+- Dictionary words may be reused any number of times.
+- Solved with recursion plus memoization on the start index.
+"""
 from typing import List
 
 

@@ -1,3 +1,24 @@
+"""
+# LC 145: Binary Tree Postorder Traversal
+
+Return the postorder traversal (left -> right -> root) of a binary tree's node values.
+
+## Examples
+```text
+Input:  root = [1, null, 2, 3]
+Output: [3, 2, 1]
+
+Input:  root = []
+Output: []
+
+Input:  root = [1]
+Output: [1]
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 100].
+- -100 <= Node.val <= 100
+"""
 from typing import Optional, List
 from collections import deque
 

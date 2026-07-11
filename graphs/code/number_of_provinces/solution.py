@@ -1,3 +1,23 @@
+"""
+# LC 547: Number of Provinces
+
+Count connected components in an adjacency matrix where `isConnected[i][j] = 1`
+means city `i` and city `j` are directly connected.
+
+## Examples
+```text
+Input: isConnected = [[1,1,0],[1,1,0],[0,0,1]]
+Output: 2
+
+Input: isConnected = [[1,0,0],[0,1,0],[0,0,1]]
+Output: 3
+```
+
+## Constraints
+- A single city yields 1 province.
+- If all cities are connected, the answer is 1.
+- The identity matrix (no connections) yields `n`.
+"""
 from typing import List
 
 class Solution:
@@ -50,3 +70,12 @@ class Solution:
                     if union(i, j):
                         components -= 1  # merging two components
         return components
+
+
+if __name__ == "__main__":
+    s = Solution()
+    assert s.findCircleNum([[1,1,0],[1,1,0],[0,0,1]]) == 2
+    assert s.findCircleNum([[1,0,0],[0,1,0],[0,0,1]]) == 3
+    assert s.findCircleNum_uf([[1,1,0],[1,1,0],[0,0,1]]) == 2
+    assert s.findCircleNum_uf([[1,0,0],[0,1,0],[0,0,1]]) == 3
+    print("All tests passed.")

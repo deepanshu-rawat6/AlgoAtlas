@@ -1,3 +1,25 @@
+"""
+# LC 1448: Count Good Nodes in Binary Tree
+
+A node X is "good" if no node on the path from root to X has a value greater than X.
+Return the count of good nodes in the tree.
+
+## Examples
+```text
+Input:  root = [3, 1, 4, 3, null, 1, 5]
+Output: 4
+
+Input:  root = [3, 3, null, 4, 2]
+Output: 3
+
+Input:  root = [1]
+Output: 1
+```
+
+## Constraints
+- The number of nodes in the binary tree is in the range [1, 10^5].
+- Each node's value is between [-10^4, 10^4].
+"""
 from typing import Optional, List
 from collections import deque
 

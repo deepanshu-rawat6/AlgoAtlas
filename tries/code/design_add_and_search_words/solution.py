@@ -1,3 +1,23 @@
+"""
+# 211: Design Add and Search Words Data Structure
+
+Design a data structure that supports adding new words and finding whether a
+string matches any previously added string, where the search word may contain
+`'.'` wildcards that each match any single letter.
+
+## Examples
+```text
+Input:  addWord("bad"); addWord("dad"); addWord("mad")
+        search("pad"); search("bad"); search(".ad"); search("b..")
+Output: False; True; True; True
+```
+
+## Constraints
+- 1 <= word.length <= 25
+- Words in addWord consist of lowercase English letters.
+- Words in search consist of '.' or lowercase English letters.
+- At most 10^4 calls to addWord and search.
+"""
 class TrieNode:
     def __init__(self):
         self.children = {}

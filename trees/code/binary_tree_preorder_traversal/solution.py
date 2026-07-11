@@ -1,3 +1,24 @@
+"""
+# LC 144: Binary Tree Preorder Traversal
+
+Return the preorder traversal (root -> left -> right) of a binary tree's node values.
+
+## Examples
+```text
+Input:  root = [1, null, 2, 3]
+Output: [1, 2, 3]
+
+Input:  root = []
+Output: []
+
+Input:  root = [1]
+Output: [1]
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 100].
+- -100 <= Node.val <= 100
+"""
 from typing import Optional, List
 from collections import deque
 

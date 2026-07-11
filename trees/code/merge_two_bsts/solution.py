@@ -1,3 +1,22 @@
+"""
+# Merge Two BSTs into a Balanced BST
+
+Given the roots of two BSTs, merge them into a single height-balanced BST containing
+all elements from both trees.
+
+## Examples
+```text
+Input:  BST1 = [3, 1, 5], BST2 = [4, 2, 6]
+Output: balanced BST with inorder [1, 2, 3, 4, 5, 6]
+
+Input:  BST1 = [], BST2 = [4, 2, 6]
+Output: balanced BST with inorder [2, 4, 6]
+```
+
+## Constraints
+- Both inputs are valid BSTs (either may be empty).
+- Output must be a height-balanced BST containing every element of both inputs.
+"""
 from __future__ import annotations
 from typing import Optional
 from collections import deque

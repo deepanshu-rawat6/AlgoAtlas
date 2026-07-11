@@ -1,3 +1,23 @@
+"""
+# LC 700: Search in a Binary Search Tree
+
+Given the root of a BST and an integer `val`, return the subtree rooted at the node
+whose value equals `val`. If no such node exists, return None.
+
+## Examples
+```text
+Input:  root = [4, 2, 7, 1, 3], val = 2
+Output: [2, 1, 3]
+
+Input:  root = [4, 2, 7, 1, 3], val = 5
+Output: []
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 5000].
+- 1 <= Node.val <= 10^7
+- root is a valid BST and 1 <= val <= 10^7.
+"""
 from __future__ import annotations
 from typing import Optional
 from collections import deque

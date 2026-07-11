@@ -1,3 +1,25 @@
+"""
+# LC 110: Balanced Binary Tree
+
+Given a binary tree, determine if it is height-balanced — every node's left and
+right subtrees differ in height by at most 1.
+
+## Examples
+```text
+Input:  root = [3, 9, 20, null, null, 15, 7]
+Output: true
+
+Input:  root = [1, 2, 2, 3, 3, null, null, 4, 4]
+Output: false
+
+Input:  root = []
+Output: true
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 5000].
+- -10^4 <= Node.val <= 10^4
+"""
 from typing import Optional, List
 from collections import deque
 

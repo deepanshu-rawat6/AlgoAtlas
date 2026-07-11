@@ -1,3 +1,23 @@
+"""
+# LC 542: 01 Matrix (Distance of Nearest 0)
+
+For each cell in a binary matrix, find the distance to the nearest `0`, where
+distance is the number of 4-directional steps.
+
+## Examples
+```text
+Input: mat = [[0,0,0],[0,1,0],[1,1,1]]
+Output: [[0,0,0],[0,1,0],[1,2,1]]
+
+Input: mat = [[0,0,0],[0,1,0],[0,0,0]]
+Output: [[0,0,0],[0,1,0],[0,0,0]]
+```
+
+## Constraints
+- A cell that is already `0` has distance 0.
+- Use multi-source BFS from all `0` cells simultaneously.
+- At least one `0` is present in the matrix.
+"""
 from typing import List
 from collections import deque
 
@@ -26,3 +46,10 @@ class Solution:
                         queue.append((nr, nc))
 
         return dist
+
+
+if __name__ == "__main__":
+    s = Solution()
+    assert s.updateMatrix([[0,0,0],[0,1,0],[1,1,1]]) == [[0,0,0],[0,1,0],[1,2,1]]
+    assert s.updateMatrix([[0,0,0],[0,1,0],[0,0,0]]) == [[0,0,0],[0,1,0],[0,0,0]]
+    print("All tests passed.")

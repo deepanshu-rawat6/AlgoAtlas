@@ -1,3 +1,23 @@
+"""
+# LC 473: Matchsticks to Square
+
+Given an array `matchsticks` of stick lengths, determine whether you can use every
+matchstick exactly once to form a square (each of the four sides equal in length).
+You may not break any stick. Return true if a square can be formed, otherwise false.
+
+## Examples
+```text
+Input:  matchsticks = [1, 1, 2, 2, 2]
+Output: true
+
+Input:  matchsticks = [3, 3, 3, 3, 4]
+Output: false
+```
+
+## Constraints
+- 1 <= matchsticks.length <= 15
+- 1 <= matchsticks[i] <= 10^8
+"""
 from typing import List
 
 

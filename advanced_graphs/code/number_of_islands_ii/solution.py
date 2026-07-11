@@ -1,3 +1,21 @@
+"""
+# LC 305: Number of Islands II
+
+Given an m x n grid, add land cells one at a time from `positions`. After each
+addition, return the current number of islands (4-directionally connected).
+
+## Examples
+```text
+Input: m=3, n=3, positions=[[0,0],[0,1],[1,2],[2,1]]
+Output: [1,1,2,3]
+# (0,1) merges with (0,0); the last two additions are isolated.
+```
+
+## Constraints
+- Online Union-Find with lazy initialization — O(k * alpha(mn))
+- Encode a cell (r,c) as r*n + c
+- Duplicate positions leave the island count unchanged
+"""
 from typing import List
 
 class Solution:
@@ -43,3 +61,21 @@ class Solution:
 
             result.append(count)
         return result
+
+
+if __name__ == "__main__":
+    sol = Solution()
+
+    # Example from README
+    assert sol.numIslands2(3, 3, [[0, 0], [0, 1], [1, 2], [2, 1]]) == [1, 1, 2, 3]
+
+    # LC classic example
+    assert sol.numIslands2(3, 3, [[0, 0], [0, 1], [1, 2], [2, 1]]) == [1, 1, 2, 3]
+
+    # Duplicate position leaves count unchanged
+    assert sol.numIslands2(2, 2, [[0, 0], [0, 0], [1, 1]]) == [1, 1, 2]
+
+    # Chain that eventually merges into one island
+    assert sol.numIslands2(1, 3, [[0, 0], [0, 2], [0, 1]]) == [1, 2, 1]
+
+    print("All tests passed.")

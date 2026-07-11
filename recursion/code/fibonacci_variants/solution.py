@@ -1,3 +1,23 @@
+"""
+# Fibonacci Variants
+
+1. Compute the nth Fibonacci number (0-indexed: fib(0)=0, fib(1)=1).
+2. Count the number of ways to climb n stairs taking 1 or 2 steps at a time.
+
+## Examples
+```text
+Input:  fib(10)
+Output: 55
+
+Input:  climbStairs(5)
+Output: 8
+```
+
+## Constraints
+- fib(0) = 0, fib(1) = 1; fib(n) = fib(n-1) + fib(n-2).
+- climbStairs(n) = climbStairs(n-1) + climbStairs(n-2).
+- For large n, prefer the memoized or iterative approach to avoid recursion limits.
+"""
 class Solution:
     def fib_naive(self, n: int) -> int:
         # Approach 1: Naive recursion O(2^n) — recomputes same subproblems repeatedly

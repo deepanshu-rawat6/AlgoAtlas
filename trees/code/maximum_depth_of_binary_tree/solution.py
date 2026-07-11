@@ -1,3 +1,22 @@
+"""
+# LC 104: Maximum Depth of Binary Tree
+
+Return the maximum depth (number of nodes along the longest root-to-leaf path) of a
+binary tree.
+
+## Examples
+```text
+Input:  root = [3, 9, 20, null, null, 15, 7]
+Output: 3
+
+Input:  root = [1, null, 2]
+Output: 2
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 10^4].
+- -100 <= Node.val <= 100
+"""
 from typing import Optional, List
 from collections import deque
 

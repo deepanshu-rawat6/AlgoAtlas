@@ -1,3 +1,22 @@
+"""
+# LC 297: Serialize and Deserialize Binary Tree
+
+Design an algorithm to convert a binary tree to a string and reconstruct the original
+tree from that string.
+
+## Examples
+```text
+Input:  root = [1, 2, 3, null, null, 4, 5]
+Output: [1, 2, 3, null, null, 4, 5]
+
+Input:  root = []
+Output: []
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 10^4].
+- -1000 <= Node.val <= 1000
+"""
 from typing import Optional, List
 from collections import deque
 

@@ -1,3 +1,25 @@
+"""
+# LC 199: Binary Tree Right Side View
+
+Return the values of nodes visible when looking at the tree from the right side,
+ordered top to bottom.
+
+## Examples
+```text
+Input:  root = [1, 2, 3, null, 5, null, 4]
+Output: [1, 3, 4]
+
+Input:  root = [1, null, 3]
+Output: [1, 3]
+
+Input:  root = []
+Output: []
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 100].
+- -100 <= Node.val <= 100
+"""
 from typing import Optional, List
 from collections import deque
 

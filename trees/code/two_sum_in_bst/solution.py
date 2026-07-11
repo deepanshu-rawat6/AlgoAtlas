@@ -1,3 +1,23 @@
+"""
+# LC 653: Two Sum IV - Input is a BST
+
+Given the root of a BST and an integer `k`, return true if there exist two distinct
+elements in the BST whose values sum to `k`.
+
+## Examples
+```text
+Input:  root = [5, 3, 6, 2, 4, null, 7], k = 9
+Output: true
+
+Input:  root = [5, 3, 6, 2, 4, null, 7], k = 28
+Output: false
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [1, 10^4].
+- -10^4 <= Node.val <= 10^4
+- -10^5 <= k <= 10^5
+"""
 from __future__ import annotations
 from typing import Optional
 from collections import deque

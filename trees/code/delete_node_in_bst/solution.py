@@ -1,3 +1,26 @@
+"""
+# LC 450: Delete Node in a BST
+
+Delete the node with a given key from a BST and return the (possibly new) root while
+keeping the BST property intact.
+
+## Examples
+```text
+Input:  root = [5, 3, 6, 2, 4, null, 7], key = 3
+Output: [5, 4, 6, 2, null, null, 7]
+
+Input:  root = [5, 3, 6, 2, 4, null, 7], key = 0
+Output: [5, 3, 6, 2, 4, null, 7]
+
+Input:  root = [], key = 0
+Output: []
+```
+
+## Constraints
+- The number of nodes in the tree is in the range [0, 10^4].
+- -10^5 <= Node.val <= 10^5
+- Each node has a unique value; root is a valid BST.
+"""
 from typing import Optional, List
 from collections import deque
 
