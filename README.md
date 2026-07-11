@@ -31,6 +31,22 @@ pie title Interview Frequency (Backend Engineering)
 
 ---
 
+## ▶️ Running & Testing
+
+- **Requirements:** Python 3.10+ — solutions use only the standard library (no third-party runtime deps).
+- **Run one solution:** `python3 <pattern>/code/<problem>/solution.py` — most files carry `assert`-based self-tests in their `if __name__ == "__main__":` block and print `All tests passed.` on success.
+- **Run the whole suite:** install the dev tooling and invoke pytest from the repo root:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest            # discovers and executes every solution.py
+```
+
+CI runs the same suite on Python 3.10–3.13 via GitHub Actions (`.github/workflows/tests.yml`).
+
+---
+
 # Phase 1: The Core 50%
 
 ---
@@ -338,7 +354,7 @@ gantt
 ## 🗂️ Directory Structure
 
 ```
-dsa/leetcode/
+dsa/
 ├── README.md                          ← YOU ARE HERE
 ├── utilities/README.md                ← Python DSA cheat sheet
 ├── algorithms/                        ← Reference implementations (25 files)
