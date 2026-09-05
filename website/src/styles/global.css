@@ -5,7 +5,13 @@
   body {
     background-color: #0f172a;
     color: #e2e8f0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
   }
+
+  h1 { font-size: 1.75rem; line-height: 1.25; font-weight: 700; }
+  h2 { font-size: 1.25rem; line-height: 1.35; font-weight: 600; }
+  h3 { font-size: 1.05rem; line-height: 1.4;  font-weight: 600; }
 }
 
 /* ── Prose (dark) ──────────────────────────────────────────── */
@@ -37,16 +43,15 @@
 .prose thead { background: #1e293b; }
 .prose th { padding: 0.6rem 1rem; text-align: left; font-weight: 600; color: #94a3b8; border-bottom: 1px solid #334155; }
 .prose td { padding: 0.55rem 1rem; border-bottom: 1px solid #1e293b40; vertical-align: middle; }
-.prose tr:hover td { background: rgba(30,41,59,0.5); }
-.prose a { color: #60a5fa; text-decoration: none; }
-.prose a:hover { text-decoration: underline; }
+.prose tr:hover td { background: rgba(30,41,59,0.5); transition: background 0.15s; }
+.prose a { color: #60a5fa; text-decoration: none; transition: color 0.15s; }
+.prose a:hover { text-decoration: underline; color: #93c5fd; }
 
 /* Code blocks */
 .prose pre { background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; }
 .prose code:not(pre code) { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.85em; color: #e2e8f0; }
 
 /* ── Difficulty badges ──────────────────────────────────────── */
-/* Replace emoji with styled pill spans via CSS targeting */
 .badge-easy   { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: #14532d; color: #86efac; }
 .badge-medium { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: #713f12; color: #fde68a; }
 .badge-hard   { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; background: #7f1d1d; color: #fca5a5; }
@@ -57,10 +62,49 @@
 
 /* ── Tab content ────────────────────────────────────────────── */
 .tab-content { display: none; }
-.tab-content.active { display: block; }
+.tab-content.active { display: block; animation: fadeIn 0.15s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ── Shiki code blocks ──────────────────────────────────────── */
 .astro-code { border-radius: 0; padding: 1rem; font-size: 0.8125rem; line-height: 1.6; }
 
 /* ── Details/summary accordion ─────────────────────────────── */
 details summary::-webkit-details-marker { display: none; }
+details summary { list-style: none; }
+
+/* ── Pattern cards ──────────────────────────────────────────── */
+.pattern-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.pattern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* ── Visualizer cells — smooth color transitions ────────────── */
+[class*="bg-yellow-"], [class*="bg-blue-"], [class*="bg-green-"],
+[class*="bg-purple-"], [class*="bg-red-"], [class*="bg-emerald-"] {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Speed slider ───────────────────────────────────────────── */
+input[type="range"].speed-slider {
+  -webkit-appearance: none;
+  height: 4px;
+  background: #334155;
+  border-radius: 9999px;
+  outline: none;
+}
+input[type="range"].speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+input[type="range"].speed-slider::-webkit-slider-thumb:hover { background: #60a5fa; }

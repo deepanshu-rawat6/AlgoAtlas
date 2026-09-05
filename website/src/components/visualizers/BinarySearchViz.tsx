@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ── Classic Binary Search tab ─────────────────────────────────────────────────
 
@@ -38,11 +38,65 @@ function ClassicBSTab() {
   const [arrayInput, setArrayInput] = useState(DEFAULT_ARRAY.join(', '));
   const [targetInput, setTargetInput] = useState(String(DEFAULT_TARGET));
   const [state, setState] = useState<BSState>(() => initBS(DEFAULT_ARRAY, DEFAULT_TARGET));
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<BSState[]>([]);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function reset() {
+    stopPlay();
+    setHistory([]);
     const arr = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     setState(initBS(arr.length ? arr : DEFAULT_ARRAY, parseInt(targetInput) || DEFAULT_TARGET));
   }
+
+  function nextStep() {
+    if (done) return;
+    setHistory(h => [...h, state]);
+    setState(stepBS(state));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    if (history.length === 0) return;
+    const prev = [...history];
+    const s = prev.pop()!;
+    setState(s);
+    setHistory(prev);
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setState(prev => {
+        if (prev.phase === 'found' || prev.phase === 'done') { stopPlay(); return prev; }
+        setHistory(h => [...h, prev]);
+        return stepBS(prev);
+      });
+    }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerRef.current = setInterval(() => {
+      setState(prev => {
+        if (prev.phase === 'found' || prev.phase === 'done') { stopPlay(); return prev; }
+        setHistory(h => [...h, prev]);
+        return stepBS(prev);
+      });
+    }, 1100 - speed * 200);
+  }, [speed]);
 
   const { array, lo, hi, mid, phase, message } = state;
   const done = phase === 'found' || phase === 'done';
@@ -100,10 +154,23 @@ function ClassicBSTab() {
         {message}
       </div>
 
-      <button onClick={() => setState(prev => done ? prev : stepBS(prev))} disabled={done}
-        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={togglePlay} disabled={done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -158,6 +225,35 @@ const KOKO_STEPS = buildKokoSteps();
 
 function KokoTab() {
   const [stepIdx, setStepIdx] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setStepIdx(s => { if (s >= KOKO_STEPS.length - 1) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const kokoMountedRef = useRef(false);
+  useEffect(() => {
+    if (!kokoMountedRef.current) { kokoMountedRef.current = true; return; }
+    if (!playing) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerRef.current = setInterval(() => {
+      setStepIdx(s => { if (s >= KOKO_STEPS.length - 1) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }, [speed]);
+
   const step = KOKO_STEPS[stepIdx];
 
   return (
@@ -223,15 +319,22 @@ function KokoTab() {
         {step.msg}
       </div>
 
-      <div className="flex gap-3">
-        <button onClick={() => setStepIdx(s => Math.max(0, s - 1))} disabled={stepIdx === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          ← Prev
-        </button>
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setStepIdx(s => Math.min(KOKO_STEPS.length - 1, s + 1))} disabled={stepIdx === KOKO_STEPS.length - 1}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next →
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={() => { if (playing) stopPlay(); setStepIdx(s => Math.max(0, s - 1)); }} disabled={stepIdx === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={togglePlay} disabled={stepIdx === KOKO_STEPS.length - 1}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
         </button>
+        <button onClick={() => { stopPlay(); setStepIdx(0); }}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

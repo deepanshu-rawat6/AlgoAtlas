@@ -29,8 +29,67 @@ function FibonacciViz() {
   const [calls, setCalls] = useState<FibCall[]>([]);
   const [step, setStep] = useState(-1);
   const [started, setStarted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const callsRef = useRef<FibCall[]>([]);
 
-  function start() { const c = buildCalls(Math.min(n, 7)); setCalls(c); setStep(0); setStarted(true); }
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function startInterval(spd: number) {
+    timerRef.current = setInterval(() => {
+      setStep(s => {
+        const next = s + 1;
+        if (next >= callsRef.current.length) { stopPlay(); return s; }
+        return next;
+      });
+    }, 1100 - spd * 200);
+  }
+
+  function start() {
+    stopPlay();
+    const c = buildCalls(Math.min(n, 7));
+    callsRef.current = c;
+    setCalls(c); setStep(0); setStarted(true);
+  }
+
+  function reset() {
+    stopPlay();
+    setCalls([]); callsRef.current = []; setStep(-1); setStarted(false);
+  }
+
+  const isDone = started && step >= calls.length - 1;
+
+  function nextStep() {
+    if (isDone) return;
+    setStep(s => Math.min(calls.length - 1, s + 1));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setStep(s => Math.max(0, s - 1));
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    if (isDone) return;
+    setPlaying(true);
+    startInterval(speed);
+  }
+
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    startInterval(speed);
+  }, [speed]);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const visible = calls.slice(0, step + 1);
   const current = calls[step];
@@ -74,9 +133,22 @@ function FibonacciViz() {
           {step === calls.length - 1 && ` | Total calls: ${calls.length} (naive)`}
         </div>
       )}
-      <div className="flex gap-3">
-        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={!started || step <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
-        <button onClick={() => setStep(s => Math.min(calls.length - 1, s + 1))} disabled={!started || step >= calls.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={!started || isDone}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={!started || step <= 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={togglePlay} disabled={!started || isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -109,13 +181,13 @@ function HanoiViz() {
   const [pegState, setPegState] = useState<Pegs>({ A: [], B: [], C: [] });
   const [allStates, setAllStates] = useState<Pegs[]>([]);
   const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function start() {
     const disks = Math.min(Math.max(n, 1), 5);
     const ms: HanoiMove[] = [];
     computeHanoi(disks, 'A', 'C', 'B', ms);
-    // Build all states
     const initial: Pegs = { A: Array.from({ length: disks }, (_, i) => disks - i), B: [], C: [] };
     const states: Pegs[] = [initial];
     let cur = initial;
@@ -124,9 +196,9 @@ function HanoiViz() {
     setPlaying(false);
   }
 
-  function goTo(idx: number) {
-    if (idx < 0 || idx >= allStates.length) return;
-    setStepIdx(idx); setPegState(allStates[idx]);
+  function goTo(idx: number, states: Pegs[] = allStates) {
+    if (idx < 0 || idx >= states.length) return;
+    setStepIdx(idx); setPegState(states[idx]);
   }
 
   useEffect(() => {
@@ -138,12 +210,12 @@ function HanoiViz() {
           setPegState(allStates[next]);
           return next;
         });
-      }, 500);
+      }, 1100 - speed * 200);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [playing, allStates]);
+  }, [playing, allStates, speed]);
 
   const SVG_W = 300, SVG_H = 140;
   const PEG_POSITIONS = [50, 150, 250];
@@ -153,6 +225,7 @@ function HanoiViz() {
   const maxDiskW = 60;
   const DISK_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#22c55e'];
   const move = moves[stepIdx - 1] ?? null;
+  const isDone = allStates.length > 0 && stepIdx >= allStates.length - 1;
 
   return (
     <div className="space-y-6">
@@ -208,13 +281,22 @@ function HanoiViz() {
                 : ''}
           </div>
 
-          <div className="flex gap-3 items-center flex-wrap">
-            <button onClick={() => { setPlaying(false); goTo(stepIdx - 1); }} disabled={stepIdx <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Prev</button>
-            <button onClick={() => { setPlaying(false); goTo(stepIdx + 1); }} disabled={stepIdx >= allStates.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next →</button>
-            <button onClick={() => setPlaying(p => !p)} disabled={stepIdx >= allStates.length - 1}
-              className="px-4 py-2 bg-violet-700 hover:bg-violet-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">
-              {playing ? '⏸ Pause' : '▶ Auto Play'}
+          <div className="flex flex-wrap items-center gap-3">
+            <button onClick={() => goTo(stepIdx + 1)} disabled={isDone}
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+            <button onClick={() => { setPlaying(false); goTo(stepIdx - 1); }} disabled={stepIdx <= 0}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+            <button onClick={() => setPlaying(p => !p)} disabled={isDone}
+              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+              {playing ? 'Pause' : '▶ Play'}
             </button>
+            <button onClick={start}
+              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Speed</span>
+              <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+              <span className="text-xs text-slate-400">{speed}x</span>
+            </div>
             <span className="text-xs text-slate-500">{stepIdx} / {moves.length} moves</span>
           </div>
         </>

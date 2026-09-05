@@ -75,11 +75,18 @@ for (const slug of allSlugs) {
     problemCount = problems.length;
 
     const solutionsDir = path.join(dataDestDir, 'solutions');
+    const LANG_FILES = [
+      { file: 'solution.py',   ext: '.py' },
+      { file: 'solution.cpp',  ext: '.cpp' },
+      { file: 'Solution.java', ext: '.java' },
+    ];
     for (const problem of problems) {
-      const solutionSrc = path.join(codeDir, problem, 'solution.py');
-      if (fs.existsSync(solutionSrc)) {
-        fs.mkdirSync(solutionsDir, { recursive: true });
-        fs.copyFileSync(solutionSrc, path.join(solutionsDir, `${problem}.py`));
+      for (const { file, ext } of LANG_FILES) {
+        const solutionSrc = path.join(codeDir, problem, file);
+        if (fs.existsSync(solutionSrc)) {
+          fs.mkdirSync(solutionsDir, { recursive: true });
+          fs.copyFileSync(solutionSrc, path.join(solutionsDir, `${problem}${ext}`));
+        }
       }
     }
   }

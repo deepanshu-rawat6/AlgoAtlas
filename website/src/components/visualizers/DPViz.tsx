@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const DEFAULT_COINS = [1, 3, 5];
 const DEFAULT_AMOUNT = 7;
@@ -16,34 +16,77 @@ function CoinChange() {
   const [step, setStep] = useState(-1);
   const [msg, setMsg] = useState('Coin Change DP. Press "Start" to initialize the table.');
   const [started, setStarted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<Array<{ dp: (number | null)[], step: number, msg: string }>>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+  const mountedRef = useRef(false);
 
   const coins = coinsInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
   const amount = parseInt(amtInput) || DEFAULT_AMOUNT;
+  const done = step > amount;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function start() {
+    stopPlay();
     const table = Array(amount + 1).fill(null) as (number | null)[];
     table[0] = 0;
-    setDp(table); setStep(1); setStarted(true);
+    setDp(table); setStep(1); setStarted(true); setHistory([]);
     setMsg(`dp[0] = 0 (base case). Filling dp[1..${amount}] using coins [${coins.join(', ')}].`);
   }
 
   function next() {
-    if (step > amount) return;
+    if (!started || done) { stopPlay(); return; }
+    setHistory(h => [...h, { dp: [...dp], step, msg }]);
     const table = [...dp];
     const best = coins
       .filter(c => c <= step && table[step - c] !== null)
       .map(c => (table[step - c] as number) + 1);
     table[step] = best.length ? Math.min(...best) : Infinity;
     const usedCoins = coins.filter(c => c <= step && table[step - c] !== null && (table[step - c] as number) + 1 === table[step]);
-    setDp(table); setStep(step + 1);
+    const newStep = step + 1;
+    setDp(table); setStep(newStep);
     if (table[step] === Infinity) {
       setMsg(`dp[${step}] = ∞ (not reachable with coins [${coins.join(', ')}])`);
     } else {
       setMsg(`dp[${step}] = ${table[step]} → used coin ${usedCoins[0]} from dp[${step - usedCoins[0]}] + 1`);
     }
+    if (newStep > amount) stopPlay();
   }
 
-  const done = step > amount;
+  useEffect(() => { nextStepRef.current = next; });
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setDp(s.dp); setStep(s.step); setMsg(s.msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]);
 
   return (
     <div className="space-y-6">
@@ -90,10 +133,26 @@ function CoinChange() {
         </div>
       )}
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
-      <button onClick={next} disabled={!started || done}
-        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={!started || done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -105,34 +164,77 @@ function HouseRobber() {
   const [step, setStep] = useState(-1);
   const [started, setStarted] = useState(false);
   const [msg, setMsg] = useState('House Robber DP. Press "Start" to begin.');
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<Array<{ dp: (number | null)[], step: number, msg: string }>>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+  const mountedRef = useRef(false);
 
   const nums = numsInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+  const done = started && step >= nums.length;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function start() {
+    stopPlay();
     const table: (number | null)[] = Array(nums.length).fill(null);
     if (nums.length === 0) return;
     table[0] = nums[0];
     if (nums.length > 1) table[1] = Math.max(nums[0], nums[1]);
     const initStep = nums.length === 1 ? 1 : 2;
-    setDp(table); setStep(initStep); setStarted(true);
+    setDp(table); setStep(initStep); setStarted(true); setHistory([]);
     setMsg(nums.length === 1
       ? `dp[0] = ${nums[0]} (only one house)`
       : `dp[0]=${nums[0]}, dp[1]=max(${nums[0]},${nums[1]})=${table[1]}`);
   }
 
   function next() {
-    if (!started || step >= nums.length) return;
+    if (!started || step >= nums.length) { stopPlay(); return; }
+    setHistory(h => [...h, { dp: [...dp], step, msg }]);
     const table = [...dp];
     const prev1 = table[step - 1] as number;
     const prev2 = table[step - 2] as number;
     const opt2 = prev2 + nums[step];
     table[step] = Math.max(prev1, opt2);
+    const newStep = step + 1;
     setDp(table);
     setMsg(`dp[${step}] = max(dp[${step-1}]=${prev1}, dp[${step-2}]+nums[${step}]=${prev2}+${nums[step]}=${opt2}) = ${table[step]}`);
-    setStep(step + 1);
+    setStep(newStep);
+    if (newStep >= nums.length) stopPlay();
   }
 
-  const done = started && step >= nums.length;
+  useEffect(() => { nextStepRef.current = next; });
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setDp(s.dp); setStep(s.step); setMsg(s.msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]);
 
   return (
     <div className="space-y-6">
@@ -202,10 +304,26 @@ function HouseRobber() {
         </div>
       )}
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
-      <button onClick={next} disabled={!started || done}
-        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={!started || done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }

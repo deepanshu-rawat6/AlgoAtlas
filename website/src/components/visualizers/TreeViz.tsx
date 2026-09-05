@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // Tree: [3, 9, 20, null, null, 15, 7]
 const TREE = [3, 9, 20, null, null, 15, 7];
@@ -34,23 +34,50 @@ export default function TreeViz() {
   const [tab, setTab] = useState<Tab>('level');
   const [step, setStep] = useState(0);   // 0 = nothing visited yet; step N = first N nodes visited
   const [started, setStarted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
 
   const seq = SEQUENCES[tab];
   const visitedIndices = seq.slice(0, step);
   const currentIdx = step < seq.length ? seq[step] : -1;
   const done = started && step >= seq.length;
 
-  function switchTab(t: Tab) { setTab(t); setStep(0); setStarted(false); }
-  function reset() { setStep(0); setStarted(false); }
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+  function switchTab(t: Tab) { stopPlay(); setTab(t); setStep(0); setStarted(false); }
+  function reset() { stopPlay(); setStep(0); setStarted(false); }
   function start() { setStarted(true); setStep(0); }
   function nextStep() {
     if (!started || done) return;
     setStep(s => Math.min(seq.length, s + 1));
   }
   function prevStep() {
+    if (playing) stopPlay();
     if (!started) return;
     setStep(s => Math.max(0, s - 1));
   }
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setStep(s => { if (s >= seq.length) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerRef.current = setInterval(() => {
+      setStep(s => { if (s >= seq.length) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }, [speed]);
 
   function nodeColor(i: number) {
     if (currentIdx === i) return '#ca8a04';  // yellow — current
@@ -124,15 +151,24 @@ export default function TreeViz() {
 
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {!started
           ? <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg">Start</button>
           : <>
-              <button onClick={prevStep} disabled={step === 0}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
               <button onClick={nextStep} disabled={done}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next Step →</button>
-              <button onClick={reset} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">Reset</button>
+                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+              <button onClick={prevStep} disabled={step === 0}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+              <button onClick={togglePlay} disabled={done}
+                className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+                {playing ? 'Pause' : '▶ Play'}
+              </button>
+              <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">Speed</span>
+                <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+                <span className="text-xs text-slate-400">{speed}x</span>
+              </div>
             </>
         }
       </div>

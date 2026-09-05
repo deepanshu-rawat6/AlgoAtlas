@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const TAB_BTN = (active: boolean) =>
   `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
@@ -6,6 +6,8 @@ const TAB_BTN = (active: boolean) =>
 // ── Jump Game ────────────────────────────────────────────────────────────────
 
 const DEFAULT_JUMP = [2, 3, 1, 1, 4];
+
+interface JumpSnap { i: number; maxReach: number; started: boolean; done: boolean; canJump: boolean | null; msg: string; }
 
 function JumpGame() {
   const [arrInput, setArrInput] = useState(DEFAULT_JUMP.join(', '));
@@ -15,16 +17,31 @@ function JumpGame() {
   const [done, setDone] = useState(false);
   const [canJump, setCanJump] = useState<boolean | null>(null);
   const [msg, setMsg] = useState('Jump Game: can you reach the last index? Press "Start".');
+  const [history, setHistory] = useState<JumpSnap[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const nextRef = useRef<() => void>(() => {});
 
   const arr = arrInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
 
   function start() {
+    setPlaying(false);
+    setHistory([]);
     setI(0); setMaxReach(arr[0] ?? 0); setStarted(true); setDone(false); setCanJump(null);
     setMsg(`Start at i=0, maxReach = arr[0] = ${arr[0]}. Press "Next Step".`);
   }
 
+  function reset() {
+    setPlaying(false);
+    setHistory([]);
+    setI(-1); setMaxReach(0); setStarted(false); setDone(false); setCanJump(null);
+    setMsg('Jump Game: can you reach the last index? Press "Start".');
+  }
+
   function next() {
     if (!started || done) return;
+    // snapshot before advancing
+    setHistory(h => [...h, { i, maxReach, started, done, canJump, msg }]);
     const ni = i + 1;
     if (ni >= arr.length) {
       setDone(true); setCanJump(maxReach >= arr.length - 1);
@@ -45,7 +62,28 @@ function JumpGame() {
     }
   }
 
-  function reset() { setI(-1); setMaxReach(0); setStarted(false); setDone(false); setCanJump(null); setMsg('Jump Game: can you reach the last index? Press "Start".'); }
+  useEffect(() => { nextRef.current = next; });
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+    return () => clearInterval(id);
+  }, [playing, speed]);
+
+  // stop playing when done
+  useEffect(() => { if (done) setPlaying(false); }, [done]);
+
+  function stepBack() {
+    setPlaying(false);
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setI(s.i); setMaxReach(s.maxReach); setStarted(s.started);
+      setDone(s.done); setCanJump(s.canJump); setMsg(s.msg);
+      return prev;
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -58,7 +96,6 @@ function JumpGame() {
         </div>
         <div className="flex items-end gap-2">
           <button onClick={start} className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded">Start</button>
-          <button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button>
         </div>
       </div>
       <div className="flex gap-2 flex-wrap">
@@ -86,7 +123,23 @@ function JumpGame() {
         </div>
       )}
       <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${canJump === true ? 'bg-green-900/40 text-green-300' : canJump === false ? 'bg-red-900/40 text-red-300' : 'bg-slate-900/60 text-slate-300'}`}>{msg}</div>
-      <button onClick={next} disabled={!started || done} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={() => setPlaying(p => !p)} disabled={!started || done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -139,8 +192,22 @@ function MergeIntervalsViz() {
   const [input, setInput] = useState('1,3 2,6 8,10 15,18');
   const [steps, setSteps] = useState<MergeStep[]>([]);
   const [stepIdx, setStepIdx] = useState(-1);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+
+  useEffect(() => {
+    if (!playing || steps.length === 0) return;
+    const id = setInterval(() => {
+      setStepIdx(s => {
+        if (s >= steps.length - 1) { setPlaying(false); return s; }
+        return s + 1;
+      });
+    }, 1100 - speed * 200);
+    return () => clearInterval(id);
+  }, [playing, speed, steps.length]);
 
   function start() {
+    setPlaying(false);
     const ivs = parseIntervals(input);
     if (ivs.length === 0) return;
     const s = buildMergeSteps(ivs);
@@ -148,11 +215,12 @@ function MergeIntervalsViz() {
     setStepIdx(0);
   }
 
-  function reset() { setSteps([]); setStepIdx(-1); }
+  function reset() { setPlaying(false); setSteps([]); setStepIdx(-1); }
 
   const step = steps[stepIdx] ?? null;
   const allIntervals = parseIntervals(input).sort((a, b) => a[0] - b[0]);
   const maxVal = allIntervals.reduce((m, [, e]) => Math.max(m, e), 0) || 1;
+  const isDone = stepIdx >= steps.length - 1 && steps.length > 0;
 
   const SVG_W = 340, SVG_H = 20, PAD = 10;
   function bar(iv: Interval, color: string, y: number, key: string) {
@@ -172,7 +240,6 @@ function MergeIntervalsViz() {
         </div>
         <div className="flex items-end gap-2">
           <button onClick={start} className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded">Start</button>
-          <button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button>
         </div>
       </div>
 
@@ -216,9 +283,22 @@ function MergeIntervalsViz() {
 
       {step && <div className="rounded-lg px-4 py-3 text-sm font-mono bg-slate-900/60 text-slate-300">{step.msg}</div>}
 
-      <div className="flex gap-3 items-center">
-        <button onClick={() => setStepIdx(s => Math.max(0, s - 1))} disabled={stepIdx <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Prev</button>
-        <button onClick={() => setStepIdx(s => Math.min(steps.length - 1, s + 1))} disabled={stepIdx < 0 || stepIdx >= steps.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next Step →</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={() => setStepIdx(s => Math.min(steps.length - 1, s + 1))} disabled={stepIdx < 0 || isDone}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={() => { setPlaying(false); setStepIdx(s => Math.max(0, s - 1)); }} disabled={stepIdx <= 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={() => setPlaying(p => !p)} disabled={stepIdx < 0 || isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
         {steps.length > 0 && <span className="text-xs text-slate-500">{stepIdx + 1} / {steps.length}</span>}
       </div>
     </div>

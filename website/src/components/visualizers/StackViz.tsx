@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ── Monotonic Stack tab ───────────────────────────────────────────────────────
 
 const DEFAULT_TEMPS = [73, 74, 75, 71, 69, 72, 76, 73];
+
+interface MonoSnap { i: number; stack: number[]; result: number[]; msg: string; }
 
 function MonotonicStackTab() {
   const [arrInput, setArrInput] = useState(DEFAULT_TEMPS.join(', '));
@@ -10,17 +12,30 @@ function MonotonicStackTab() {
   const [stack, setStack] = useState<number[]>([]);
   const [result, setResult] = useState<number[]>([]);
   const [msg, setMsg] = useState('Monotonic Decreasing Stack — Daily Temperatures. Press "Next Step".');
+  const [history, setHistory] = useState<MonoSnap[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
 
   const arr = arrInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+  const isDone = i >= arr.length - 1;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function reset() {
-    setI(-1); setStack([]); setResult([]);
+    stopPlay();
+    setI(-1); setStack([]); setResult([]); setHistory([]);
     setMsg('Monotonic Decreasing Stack — Daily Temperatures. Press "Next Step".');
   }
 
-  function next() {
+  function nextStep() {
     const ni = i + 1;
-    if (ni >= arr.length) return;
+    if (ni >= arr.length) { stopPlay(); return; }
     const ns = [...stack], nr = [...result];
     const msgs: string[] = [];
     while (ns.length > 0 && arr[ns[ns.length - 1]] < arr[ni]) {
@@ -30,8 +45,36 @@ function MonotonicStackTab() {
     }
     ns.push(ni);
     msgs.push(`Push idx ${ni} (temp ${arr[ni]}) onto stack`);
+    setHistory(h => [...h, { i, stack, result, msg }]);
     setI(ni); setStack(ns); setResult(nr); setMsg(msgs.join(' → '));
   }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setI(s.i); setStack(s.stack); setResult(s.result); setMsg(s.msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -41,18 +84,17 @@ function MonotonicStackTab() {
           <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
             value={arrInput} onChange={e => setArrInput(e.target.value)} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
         {arr.map((v, idx) => {
           const isCurrent = idx === i;
           const inStack = stack.includes(idx);
-          const isDone = result[idx] !== undefined;
+          const isDoneIdx = result[idx] !== undefined;
           let bg = 'bg-slate-700 border-slate-600 text-slate-400';
           if (isCurrent) bg = 'bg-yellow-800 border-yellow-400 text-white';
           else if (inStack) bg = 'bg-blue-800 border-blue-500 text-white';
-          else if (isDone) bg = 'bg-slate-600 border-slate-500 text-slate-300';
+          else if (isDoneIdx) bg = 'bg-slate-600 border-slate-500 text-slate-300';
           return (
             <div key={idx} className="flex flex-col items-center gap-1">
               <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>{v}</div>
@@ -80,10 +122,30 @@ function MonotonicStackTab() {
 
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
 
-      <button onClick={next} disabled={i >= arr.length - 1}
-        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+          Reset
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -144,7 +206,45 @@ const MIN_STEPS = buildMinSteps();
 
 function MinStackTab() {
   const [stepIdx, setStepIdx] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
+
   const step = MIN_STEPS[stepIdx];
+  const isDone = stepIdx === MIN_STEPS.length - 1;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function nextStep() {
+    if (isDone) { stopPlay(); return; }
+    setStepIdx(s => Math.min(MIN_STEPS.length - 1, s + 1));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setStepIdx(s => Math.max(0, s - 1));
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -155,10 +255,10 @@ function MinStackTab() {
         {MIN_OPS.map((op, i) => {
           const si = i + 1;
           const isActive = stepIdx === si;
-          const isDone = stepIdx > si;
+          const isDoneOp = stepIdx > si;
           let cls = 'bg-slate-700 border-slate-600 text-slate-400';
           if (isActive) cls = 'bg-yellow-800 border-yellow-400 text-white';
-          else if (isDone) cls = 'bg-slate-600 border-slate-500 text-slate-300';
+          else if (isDoneOp) cls = 'bg-slate-600 border-slate-500 text-slate-300';
           return (
             <span key={i} className={`px-2 py-1 text-xs font-mono border rounded ${cls}`}>{opLabel(op)}</span>
           );
@@ -213,15 +313,25 @@ function MinStackTab() {
 
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{step.msg}</div>
 
-      <div className="flex gap-3">
-        <button onClick={() => setStepIdx(s => Math.max(0, s - 1))} disabled={stepIdx === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          ← Prev
-        </button>
-        <button onClick={() => setStepIdx(s => Math.min(MIN_STEPS.length - 1, s + 1))} disabled={stepIdx === MIN_STEPS.length - 1}
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next →
+          Next Step
         </button>
+        <button onClick={stepBack} disabled={stepIdx === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

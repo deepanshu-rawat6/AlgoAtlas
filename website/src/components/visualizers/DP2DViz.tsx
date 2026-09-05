@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
 const ACTIVE = 'bg-blue-700 text-white border-blue-500';
 const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
+
+type DP2DSnap = { dp: number[][], i: number, j: number, done: boolean, msg: string };
 
 // ── LCS ────────────────────────────────────────────────────────────────────────
 function LCS() {
@@ -14,31 +16,81 @@ function LCS() {
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
   const [msg, setMsg] = useState('LCS (Longest Common Subsequence). Press "Start".');
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<DP2DSnap[]>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+  const mountedRef = useRef(false);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function start() {
+    stopPlay();
     const rows = s1.length + 1, cols = s2.length + 1;
     const table = Array.from({ length: rows }, () => Array(cols).fill(0));
-    setDp(table); setI(1); setJ(1); setStarted(true); setDone(false);
+    setDp(table); setI(1); setJ(1); setStarted(true); setDone(false); setHistory([]);
     setMsg(`Initialized ${rows}×${cols} table with 0s. Filling cell by cell.`);
   }
 
   function next() {
-    if (!started || done) return;
+    if (!started || done) { stopPlay(); return; }
+    setHistory(h => [...h, { dp: dp.map(r => [...r]), i, j, done, msg }]);
     const table = dp.map(r => [...r]);
     const ci = i, cj = j;
+    let newDone = false;
+    let newMsg = msg;
     if (s1[ci - 1] === s2[cj - 1]) {
       table[ci][cj] = table[ci - 1][cj - 1] + 1;
-      setMsg(`s1[${ci-1}]='${s1[ci-1]}' == s2[${cj-1}]='${s2[cj-1]}' → dp[${ci}][${cj}] = dp[${ci-1}][${cj-1}]+1 = ${table[ci][cj]}`);
+      newMsg = `s1[${ci-1}]='${s1[ci-1]}' == s2[${cj-1}]='${s2[cj-1]}' → dp[${ci}][${cj}] = dp[${ci-1}][${cj-1}]+1 = ${table[ci][cj]}`;
     } else {
       table[ci][cj] = Math.max(table[ci - 1][cj], table[ci][cj - 1]);
-      setMsg(`s1[${ci-1}]='${s1[ci-1]}' ≠ s2[${cj-1}]='${s2[cj-1]}' → dp[${ci}][${cj}] = max(${table[ci-1][cj]}, ${table[ci][cj-1]}) = ${table[ci][cj]}`);
+      newMsg = `s1[${ci-1}]='${s1[ci-1]}' ≠ s2[${cj-1}]='${s2[cj-1]}' → dp[${ci}][${cj}] = max(${table[ci-1][cj]}, ${table[ci][cj-1]}) = ${table[ci][cj]}`;
     }
     setDp(table);
     let ni = ci, nj = cj + 1;
     if (nj > s2.length) { ni++; nj = 1; }
-    if (ni > s1.length) { setDone(true); setMsg(prev => `${prev} | LCS length = ${table[s1.length][s2.length]}`); return; }
-    setI(ni); setJ(nj);
+    if (ni > s1.length) {
+      newDone = true;
+      newMsg = newMsg + ` | LCS length = ${table[s1.length][s2.length]}`;
+      setDone(true); stopPlay();
+    } else {
+      setI(ni); setJ(nj);
+    }
+    setMsg(newMsg);
   }
+
+  useEffect(() => { nextStepRef.current = next; });
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setDp(s.dp); setI(s.i); setJ(s.j); setDone(s.done); setMsg(s.msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]);
 
   const maxVal = dp.length ? Math.max(...dp.flat()) : 0;
 
@@ -91,10 +143,26 @@ function LCS() {
         </div>
       )}
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
-      <button onClick={next} disabled={!started || done}
-        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={!started || done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -109,18 +177,31 @@ function EditDistance() {
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
   const [msg, setMsg] = useState('Edit Distance DP. Press "Start".');
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<DP2DSnap[]>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+  const mountedRef = useRef(false);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function start() {
+    stopPlay();
     const rows = word1.length + 1, cols = word2.length + 1;
     const table = Array.from({ length: rows }, (_, r) =>
       Array.from({ length: cols }, (_, c) => r === 0 ? c : c === 0 ? r : 0)
     );
-    setDp(table); setI(1); setJ(1); setStarted(true); setDone(false);
+    setDp(table); setI(1); setJ(1); setStarted(true); setDone(false); setHistory([]);
     setMsg(`Base cases: dp[i][0]=i, dp[0][j]=j. Filling from dp[1][1].`);
   }
 
   function next() {
-    if (!started || done) return;
+    if (!started || done) { stopPlay(); return; }
+    setHistory(h => [...h, { dp: dp.map(r => [...r]), i, j, done, msg }]);
     const table = dp.map(r => [...r]);
     const ci = i, cj = j;
     let opMsg = '';
@@ -136,16 +217,46 @@ function EditDistance() {
       opMsg = `'${word1[ci-1]}' ≠ '${word2[cj-1]}' → 1+min(del=${del},ins=${ins},rep=${rep})=${table[ci][cj]} (${op})`;
     }
     setDp(table);
-    setMsg(opMsg);
     let ni = ci, nj = cj + 1;
     if (nj > word2.length) { ni++; nj = 1; }
     if (ni > word1.length) {
       setDone(true);
       setMsg(opMsg + ` | Edit distance = ${table[word1.length][word2.length]}`);
+      stopPlay();
       return;
     }
     setI(ni); setJ(nj);
+    setMsg(opMsg);
   }
+
+  useEffect(() => { nextStepRef.current = next; });
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setDp(s.dp); setI(s.i); setJ(s.j); setDone(s.done); setMsg(s.msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]);
 
   return (
     <div className="space-y-6">
@@ -200,10 +311,26 @@ function EditDistance() {
         </div>
       )}
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
-      <button onClick={next} disabled={!started || done}
-        className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={!started || done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }

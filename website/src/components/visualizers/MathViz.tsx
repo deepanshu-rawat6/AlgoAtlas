@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const TAB_BTN = (active: boolean) =>
   `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
@@ -24,9 +24,29 @@ function SpiralTab() {
   const [frames, setFrames] = useState<ReturnType<typeof buildSpiralFrames>>([]);
   const [step, setStep] = useState(0);
   const [started, setStarted] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
 
-  function start() { const f = buildSpiralFrames(Math.min(size, 6)); setFrames(f); setStep(0); setStarted(true); }
+  // frame-index auto-play: useEffect drives interval, no timerRef needed
+  useEffect(() => {
+    if (!playing || frames.length === 0) return;
+    const id = setInterval(() => {
+      setStep(s => {
+        if (s >= frames.length - 1) { setPlaying(false); return s; }
+        return s + 1;
+      });
+    }, 1100 - speed * 200);
+    return () => clearInterval(id);
+  }, [playing, speed, frames.length]);
+
+  function start() {
+    setPlaying(false);
+    const f = buildSpiralFrames(Math.min(size, 6));
+    setFrames(f); setStep(0); setStarted(true);
+  }
+
   const frame = frames[step];
+  const isDone = started && step >= frames.length - 1;
 
   return (
     <div className="space-y-6">
@@ -65,9 +85,21 @@ function SpiralTab() {
         </div>
       )}
       {started && (
-        <div className="flex gap-3">
-          <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
-          <button onClick={() => setStep(s => Math.min(frames.length - 1, s + 1))} disabled={step >= frames.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={() => setStep(s => Math.min(frames.length - 1, s + 1))} disabled={isDone}
+            className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+          <button onClick={() => { setPlaying(false); setStep(s => Math.max(0, s - 1)); }} disabled={step === 0}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          <button onClick={() => setPlaying(p => !p)} disabled={isDone}
+            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+            {playing ? 'Pause' : '▶ Play'}
+          </button>
+          <button onClick={start} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Speed</span>
+            <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+            <span className="text-xs text-slate-400">{speed}x</span>
+          </div>
         </div>
       )}
     </div>
@@ -127,9 +159,28 @@ function RotateTab() {
   const [frames, setFrames] = useState<RotateFrame[]>([]);
   const [step, setStep] = useState(0);
   const [started, setStarted] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
 
-  function start() { setFrames(buildRotateFrames(size)); setStep(0); setStarted(true); }
+  useEffect(() => {
+    if (!playing || frames.length === 0) return;
+    const id = setInterval(() => {
+      setStep(s => {
+        if (s >= frames.length - 1) { setPlaying(false); return s; }
+        return s + 1;
+      });
+    }, 1100 - speed * 200);
+    return () => clearInterval(id);
+  }, [playing, speed, frames.length]);
+
+  function start() {
+    setPlaying(false);
+    setFrames(buildRotateFrames(size));
+    setStep(0); setStarted(true);
+  }
+
   const frame = frames[step];
+  const isDone = started && step >= frames.length - 1;
 
   // Original matrix for side-by-side (row major 1..n²)
   const original: number[][] = Array.from({ length: size }, (_, r) => Array.from({ length: size }, (_, c) => r * size + c + 1));
@@ -199,10 +250,22 @@ function RotateTab() {
       )}
 
       {started && (
-        <div className="flex gap-3">
-          <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
-          <button onClick={() => setStep(s => Math.min(frames.length - 1, s + 1))} disabled={step >= frames.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
-          <span className="text-xs text-slate-500 self-center">{step + 1}/{frames.length}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={() => setStep(s => Math.min(frames.length - 1, s + 1))} disabled={isDone}
+            className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+          <button onClick={() => { setPlaying(false); setStep(s => Math.max(0, s - 1)); }} disabled={step === 0}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          <button onClick={() => setPlaying(p => !p)} disabled={isDone}
+            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+            {playing ? 'Pause' : '▶ Play'}
+          </button>
+          <button onClick={start} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Speed</span>
+            <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+            <span className="text-xs text-slate-400">{speed}x</span>
+          </div>
+          <span className="text-xs text-slate-500">{step + 1}/{frames.length}</span>
         </div>
       )}
     </div>

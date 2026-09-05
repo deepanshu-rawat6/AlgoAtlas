@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ── Grid BFS/DFS ────────────────────────────────────────────────────────────
 const ROWS = 6, COLS = 6;
@@ -18,6 +18,15 @@ function makeGrid(): CellState[][] {
   );
 }
 
+interface GridSnapshot {
+  grid: CellState[][];
+  frontier: [number,number][];
+  visitOrder: number;
+  done: boolean;
+  message: string;
+  currentLevel: number;
+}
+
 function GridTab() {
   const [mode, setMode] = useState<GridMode>('bfs');
   const [grid, setGrid] = useState<CellState[][]>(makeGrid);
@@ -27,6 +36,16 @@ function GridTab() {
   const [done, setDone] = useState(false);
   const [message, setMessage] = useState('Click a cell to set the start point.');
   const [currentLevel, setCurrentLevel] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [gridHistory, setGridHistory] = useState<GridSnapshot[]>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function handleCellClick(r: number, c: number) {
     if (started) return;
@@ -38,11 +57,13 @@ function GridTab() {
     setDone(false);
     setVisitOrder(1);
     setCurrentLevel(0);
+    setGridHistory([]);
     setMessage(`Start: (${r},${c}). Press "Next Step" to expand ${mode.toUpperCase()}.`);
   }
 
   function nextStep() {
     if (!started || done || frontier.length === 0) return;
+    setGridHistory(h => [...h, { grid: grid.map(row => row.map(c => ({ ...c }))), frontier: [...frontier], visitOrder, done, message, currentLevel }]);
     if (mode === 'bfs') {
       const g = grid.map(row => row.map(c => ({ ...c })));
       const nextFrontier: [number,number][] = [];
@@ -93,10 +114,42 @@ function GridTab() {
   }
 
   function reset() {
+    stopPlay();
     setGrid(makeGrid()); setFrontier([]); setStarted(false); setDone(false);
-    setVisitOrder(0); setCurrentLevel(0);
+    setVisitOrder(0); setCurrentLevel(0); setGridHistory([]);
     setMessage('Click a cell to set the start point.');
   }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    if (gridHistory.length === 0) return;
+    const prev = [...gridHistory];
+    const snap = prev.pop()!;
+    setGrid(snap.grid);
+    setFrontier(snap.frontier);
+    setVisitOrder(snap.visitOrder);
+    setDone(snap.done);
+    setMessage(snap.message);
+    setCurrentLevel(snap.currentLevel);
+    setGridHistory(prev);
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextStepRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const gridMountedRef = useRef(false);
+  useEffect(() => {
+    if (!gridMountedRef.current) { gridMountedRef.current = true; return; }
+    if (!playing) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]);
 
   function switchMode(m: GridMode) { setMode(m); reset(); }
 
@@ -153,12 +206,21 @@ function GridTab() {
         )}
       </div>
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm text-slate-300 font-mono min-h-12">{message}</div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={gridHistory.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -227,6 +289,35 @@ const DIJKSTRA_STEPS = buildDijkstraSteps();
 
 function DijkstraTab() {
   const [step, setStep] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setStep(s => { if (s >= DIJKSTRA_STEPS.length - 1) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const dijkMountedRef = useRef(false);
+  useEffect(() => {
+    if (!dijkMountedRef.current) { dijkMountedRef.current = true; return; }
+    if (!playing) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerRef.current = setInterval(() => {
+      setStep(s => { if (s >= DIJKSTRA_STEPS.length - 1) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }, [speed]);
+
   const s = DIJKSTRA_STEPS[step];
   const INF = Infinity;
 
@@ -288,13 +379,22 @@ function DijkstraTab() {
 
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300 min-h-12">{s.msg}</div>
 
-      <div className="flex gap-3 items-center">
-        <button onClick={() => setStep(s => Math.max(0, s-1))} disabled={step===0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setStep(s => Math.min(DIJKSTRA_STEPS.length-1, s+1))} disabled={step===DIJKSTRA_STEPS.length-1}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
-        <button onClick={() => setStep(0)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">Reset</button>
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={() => { if (playing) stopPlay(); setStep(s => Math.max(0, s-1)); }} disabled={step===0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={togglePlay} disabled={step===DIJKSTRA_STEPS.length-1}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={() => { stopPlay(); setStep(0); }} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
         <span className="text-xs text-slate-500">{step+1}/{DIJKSTRA_STEPS.length}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

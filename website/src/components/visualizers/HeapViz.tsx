@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
 const ACTIVE = 'bg-blue-700 text-white border-blue-500';
@@ -130,6 +130,8 @@ const maxCmp = (a: number, b: number) => a > b;
 
 const DEFAULT_STREAM = [5, 15, 1, 3, 2, 8, 7, 9, 10, 6];
 
+type TwoHeapSnapshot = { small: number[], large: number[], streamIdx: number, msg: string };
+
 // ── Two Heaps Median ───────────────────────────────────────────────────────────
 function TwoHeapsMedian() {
   // small = max-heap (stored negated for intuition display), large = min-heap
@@ -138,38 +140,66 @@ function TwoHeapsMedian() {
   const [streamIdx, setStreamIdx] = useState(0);
   const [msg, setMsg] = useState('Two Heaps Median. Press "Next Step" to add each number.');
   const [stream] = useState(DEFAULT_STREAM);
+  const [history, setHistory] = useState<TwoHeapSnapshot[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const nextStepRef = useRef<() => void>(() => {});
 
   function reset() {
-    setSmall([]); setLarge([]); setStreamIdx(0);
+    setPlaying(false);
+    setSmall([]); setLarge([]); setStreamIdx(0); setHistory([]);
     setMsg('Reset. Press "Next Step" to start.');
   }
 
-  function addNum() {
-    if (streamIdx >= stream.length) return;
-    const num = stream[streamIdx];
-    const s = [...small], l = [...large];
-
-    // Step 1: push to small (max-heap)
-    heapPush(s, num, maxCmp);
-    // Step 2: balance — if small top > large top, move to large
-    if (l.length > 0 && s[0] > l[0]) {
-      heapPush(l, heapPop(s, maxCmp), minCmp);
+  function addNum(s: number[], l: number[], idx: number) {
+    const num = stream[idx];
+    const sh = [...s], lh = [...l];
+    heapPush(sh, num, maxCmp);
+    if (lh.length > 0 && sh[0] > lh[0]) {
+      heapPush(lh, heapPop(sh, maxCmp), minCmp);
     }
-    // Step 3: size balance — small can be at most 1 larger
-    if (s.length > l.length + 1) {
-      heapPush(l, heapPop(s, maxCmp), minCmp);
-    } else if (l.length > s.length) {
-      heapPush(s, heapPop(l, minCmp), maxCmp);
+    if (sh.length > lh.length + 1) {
+      heapPush(lh, heapPop(sh, maxCmp), minCmp);
+    } else if (lh.length > sh.length) {
+      heapPush(sh, heapPop(lh, minCmp), maxCmp);
     }
-
-    const median = s.length === l.length
-      ? (s[0] + l[0]) / 2
-      : s[0];
-
-    setSmall(s); setLarge(l); setStreamIdx(streamIdx + 1);
-    setMsg(`Add ${num} → small=[${s.join(',')}], large=[${l.join(',')}], median=${median}`);
+    const median = sh.length === lh.length ? (sh[0] + lh[0]) / 2 : sh[0];
+    const newMsg = `Add ${num} → small=[${sh.join(',')}], large=[${lh.join(',')}], median=${median}`;
+    setSmall(sh); setLarge(lh); setStreamIdx(idx + 1); setMsg(newMsg);
   }
 
+  function nextStep() {
+    if (streamIdx >= stream.length) { setPlaying(false); return; }
+    setHistory(h => [...h, { small: [...small], large: [...large], streamIdx, msg }]);
+    addNum(small, large, streamIdx);
+  }
+
+  function stepBack() {
+    setPlaying(false);
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setSmall(prev.small);
+    setLarge(prev.large);
+    setStreamIdx(prev.streamIdx);
+    setMsg(prev.msg);
+    setHistory(h => h.slice(0, -1));
+  }
+
+  useEffect(() => { nextStepRef.current = nextStep; });
+
+  useEffect(() => {
+    if (!playing) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      return;
+    }
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, [playing, speed]);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const isDone = streamIdx >= stream.length;
   const median = small.length === 0 ? null
     : small.length === large.length ? (small[0] + large[0]) / 2
     : small[0];
@@ -222,12 +252,26 @@ function TwoHeapsMedian() {
       )}
 
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
-      <div className="flex gap-3">
-        <button onClick={addNum} disabled={streamIdx >= stream.length}
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
           Next Step
         </button>
-        <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={() => setPlaying(p => !p)} disabled={isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

@@ -39,6 +39,9 @@ function TwoSumIITab() {
   const [state, setState] = useState<TS2State>(() => ts2Init(TS2_DEFAULT, TS2_TARGET));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<TS2State[]>([]);
+  const mountedTS2Ref = useRef(false);
 
   function stopPlay() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -46,18 +49,44 @@ function TwoSumIITab() {
   }
   function reset() {
     stopPlay();
+    setHistory([]);
     const arr = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     const tgt = parseInt(targetInput) || TS2_TARGET;
     setState(ts2Init(arr.length ? arr : TS2_DEFAULT, tgt));
   }
-  function nextStep() { setState(prev => (prev.phase === 'found' || prev.phase === 'done') ? prev : ts2Step(prev)); }
+  function nextStep() {
+    setState(prev => {
+      if (prev.phase === 'found' || prev.phase === 'done') return prev;
+      setHistory(h => [...h, prev]);
+      return ts2Step(prev);
+    });
+  }
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setState(s);
+      return prev;
+    });
+  }
   function togglePlay() {
     if (playing) { stopPlay(); return; }
     setPlaying(true);
     timerRef.current = setInterval(() => {
       setState(prev => { if (prev.phase === 'found' || prev.phase === 'done') { stopPlay(); return prev; } return ts2Step(prev); });
-    }, 700);
+    }, 1100 - speed * 200);
   }
+  useEffect(() => {
+    if (!mountedTS2Ref.current) { mountedTS2Ref.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setState(prev => { if (prev.phase === 'found' || prev.phase === 'done') { stopPlay(); return prev; } return ts2Step(prev); });
+    }, 1100 - speed * 200);
+  }, [speed]);
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const { array, left, right, phase, foundLeft, foundRight, message } = state;
@@ -103,13 +132,20 @@ function TwoSumIITab() {
 
       <div className={`rounded-lg px-4 py-3 text-sm min-h-12 font-mono ${phase === 'found' ? 'bg-green-900/40 text-green-300' : phase === 'done' ? 'bg-red-900/40 text-red-300' : 'bg-slate-900/60 text-slate-300'}`}>{message}</div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={done}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
         <button onClick={togglePlay} disabled={done}
           className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          {playing ? 'Pause' : 'Auto Play'}
+          {playing ? 'Pause' : '▶ Play'}
         </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -181,13 +217,62 @@ function ts3Step(s: TS3State): TS3State {
 function ThreeSumTab() {
   const [arrayInput, setArrayInput] = useState(TS3_DEFAULT.join(', '));
   const [state, setState] = useState<TS3State>(() => ts3Init(TS3_DEFAULT));
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<TS3State[]>([]);
+  const mountedTS3Ref = useRef(false);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
   function reset() {
+    stopPlay();
+    setHistory([]);
     const arr = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     setState(ts3Init(arr.length >= 3 ? arr : TS3_DEFAULT));
   }
 
-  function nextStep() { setState(prev => prev.done ? prev : ts3Step(prev)); }
+  function nextStep() {
+    setState(prev => {
+      if (prev.done) return prev;
+      setHistory(h => [...h, prev]);
+      return ts3Step(prev);
+    });
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setState(s);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setState(prev => { if (prev.done) { stopPlay(); return prev; } return ts3Step(prev); });
+    }, 1100 - speed * 200);
+  }
+
+  useEffect(() => {
+    if (!mountedTS3Ref.current) { mountedTS3Ref.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setState(prev => { if (prev.done) { stopPlay(); return prev; } return ts3Step(prev); });
+    }, 1100 - speed * 200);
+  }, [speed]);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const { array, i, left, right, triplets, done, message } = state;
 
@@ -237,9 +322,20 @@ function ThreeSumTab() {
 
       <div className={`rounded-lg px-4 py-3 text-sm min-h-12 font-mono ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{message}</div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={done}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={togglePlay} disabled={done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

@@ -46,6 +46,9 @@ function MinSubarrayTab() {
   const [state, setState] = useState<MSSState>(() => mssInit(MSS_DEFAULT, MSS_TARGET));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<MSSState[]>([]);
+  const mountedMSSRef = useRef(false);
 
   function stopPlay() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -54,20 +57,48 @@ function MinSubarrayTab() {
 
   function reset() {
     stopPlay();
+    setHistory([]);
     const arr = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     const tgt = parseInt(targetInput) || MSS_TARGET;
     setState(mssInit(arr.length ? arr : MSS_DEFAULT, tgt));
   }
 
-  function nextStep() { setState(prev => prev.phase === 'done' ? prev : mssStep(prev)); }
+  function nextStep() {
+    setState(prev => {
+      if (prev.phase === 'done') return prev;
+      setHistory(h => [...h, prev]);
+      return mssStep(prev);
+    });
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setState(s);
+      return prev;
+    });
+  }
 
   function togglePlay() {
     if (playing) { stopPlay(); return; }
     setPlaying(true);
     timerRef.current = setInterval(() => {
       setState(prev => { if (prev.phase === 'done') { stopPlay(); return prev; } return mssStep(prev); });
-    }, 600);
+    }, 1100 - speed * 200);
   }
+
+  useEffect(() => {
+    if (!mountedMSSRef.current) { mountedMSSRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setState(prev => { if (prev.phase === 'done') { stopPlay(); return prev; } return mssStep(prev); });
+    }, 1100 - speed * 200);
+  }, [speed]);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
@@ -110,13 +141,20 @@ function MinSubarrayTab() {
 
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm text-slate-300 min-h-12 font-mono">{message}</div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={phase === 'done'}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
         <button onClick={togglePlay} disabled={phase === 'done'}
           className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          {playing ? 'Pause' : 'Auto Play'}
+          {playing ? 'Pause' : '▶ Play'}
         </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -170,6 +208,9 @@ function LongestNoRepeatTab() {
   const [state, setState] = useState<LNRState>(() => lnrInit(LNR_DEFAULT));
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<LNRState[]>([]);
+  const mountedLNRRef = useRef(false);
 
   function stopPlay() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -178,18 +219,46 @@ function LongestNoRepeatTab() {
 
   function reset() {
     stopPlay();
+    setHistory([]);
     setState(lnrInit(strInput || LNR_DEFAULT));
   }
 
-  function nextStep() { setState(prev => prev.done ? prev : lnrStep(prev)); }
+  function nextStep() {
+    setState(prev => {
+      if (prev.done) return prev;
+      setHistory(h => [...h, prev]);
+      return lnrStep(prev);
+    });
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setState(s);
+      return prev;
+    });
+  }
 
   function togglePlay() {
     if (playing) { stopPlay(); return; }
     setPlaying(true);
     timerRef.current = setInterval(() => {
       setState(prev => { if (prev.done) { stopPlay(); return prev; } return lnrStep(prev); });
-    }, 600);
+    }, 1100 - speed * 200);
   }
+
+  useEffect(() => {
+    if (!mountedLNRRef.current) { mountedLNRRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => {
+      setState(prev => { if (prev.done) { stopPlay(); return prev; } return lnrStep(prev); });
+    }, 1100 - speed * 200);
+  }, [speed]);
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
@@ -231,13 +300,20 @@ function LongestNoRepeatTab() {
 
       <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{message}</div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={done}
           className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
         <button onClick={togglePlay} disabled={done}
           className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          {playing ? 'Pause' : 'Auto Play'}
+          {playing ? 'Pause' : '▶ Play'}
         </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const TS_DEFAULT = [2, 7, 11, 15];
 const TS_TARGET = 9;
@@ -10,6 +10,8 @@ const ACTIVE = 'bg-blue-700 text-white border-blue-500';
 const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
 
 // ── Two Sum tab ──────────────────────────────────────────────────────────────
+interface TSSnap { step: number; map: Record<number, number>; found: [number, number] | null; msg: string; }
+
 function TwoSumTab() {
   const [arrInput, setArrInput] = useState(TS_DEFAULT.join(', '));
   const [tgtInput, setTgtInput] = useState(String(TS_TARGET));
@@ -17,30 +19,59 @@ function TwoSumTab() {
   const [map, setMap] = useState<Record<number, number>>({});
   const [found, setFound] = useState<[number, number] | null>(null);
   const [msg, setMsg] = useState('Press "Next Step" to walk through Two Sum hash map lookup.');
+  const [history, setHistory] = useState<TSSnap[]>([]);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const nextRef = useRef<() => void>(() => {});
 
   const arr = arrInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
   const target = parseInt(tgtInput) || TS_TARGET;
 
   function reset() {
+    setPlaying(false);
+    setHistory([]);
     setStep(-1); setMap({}); setFound(null);
     setMsg('Press "Next Step" to walk through Two Sum hash map lookup.');
   }
 
   function next() {
     if (found || step >= arr.length - 1) return;
-    const i = step + 1;
-    const complement = target - arr[i];
+    const ni = step + 1;
+    const complement = target - arr[ni];
+    // snapshot before advancing
+    setHistory(h => [...h, { step, map, found, msg }]);
     if (map[complement] !== undefined) {
-      setFound([map[complement], i]);
-      setMsg(`✓ Found! arr[${map[complement]}]=${complement} + arr[${i}]=${arr[i]} = ${target}`);
+      setFound([map[complement], ni]);
+      setMsg(`✓ Found! arr[${map[complement]}]=${complement} + arr[${ni}]=${arr[ni]} = ${target}`);
     } else {
-      setMap(prev => ({ ...prev, [arr[i]]: i }));
-      setMsg(`i=${i}: arr[${i}]=${arr[i]}, complement=${complement} not in map → store {${arr[i]}: ${i}}`);
+      setMap(prev => ({ ...prev, [arr[ni]]: ni }));
+      setMsg(`i=${ni}: arr[${ni}]=${arr[ni]}, complement=${complement} not in map → store {${arr[ni]}: ${ni}}`);
     }
-    setStep(i);
+    setStep(ni);
   }
 
-  const done = found !== null || (step >= arr.length - 1 && !found);
+  useEffect(() => { nextRef.current = next; });
+
+  const done = found !== null || (step >= arr.length - 1 && step >= 0);
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+    return () => clearInterval(id);
+  }, [playing, speed]);
+
+  useEffect(() => { if (done) setPlaying(false); }, [done]);
+
+  function stepBack() {
+    setPlaying(false);
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setStep(s.step); setMap(s.map); setFound(s.found); setMsg(s.msg);
+      return prev;
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -55,7 +86,6 @@ function TwoSumTab() {
           <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
             value={tgtInput} onChange={e => { setTgtInput(e.target.value); reset(); }} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -88,8 +118,22 @@ function TwoSumTab() {
 
       <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${found ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{msg}</div>
 
-      <div className="flex gap-3">
-        <button onClick={next} disabled={done} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={() => setPlaying(p => !p)} disabled={done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -157,6 +201,8 @@ function buildPSSteps(arr: number[], k: number): PSStep[] {
 function PrefixSumTab() {
   const [arrInput, setArrInput] = useState(PS_DEFAULT.join(', '));
   const [kInput, setKInput] = useState(String(PS_K));
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
 
   const arr = arrInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
   const k = parseInt(kInput) || PS_K;
@@ -164,9 +210,23 @@ function PrefixSumTab() {
 
   const [stepIdx, setStepIdx] = useState(0);
 
-  function reset() { setStepIdx(0); }
+  function reset() { setPlaying(false); setStepIdx(0); }
 
   const s = steps[stepIdx];
+  const isDone = s.done;
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setStepIdx(i => {
+        if (i >= steps.length - 1) { setPlaying(false); return i; }
+        return i + 1;
+      });
+    }, 1100 - speed * 200);
+    return () => clearInterval(id);
+  }, [playing, speed, steps.length]);
+
+  useEffect(() => { if (isDone) setPlaying(false); }, [isDone]);
 
   // determine per-element highlight: current=yellow, in a found range=green
   function getBoxClass(i: number) {
@@ -191,7 +251,6 @@ function PrefixSumTab() {
           <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
             value={kInput} onChange={e => { setKInput(e.target.value); setStepIdx(0); }} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -218,11 +277,22 @@ function PrefixSumTab() {
 
       <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${s.count > 0 ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{s.msg}</div>
 
-      <div className="flex gap-3">
-        <button onClick={() => setStepIdx(i => Math.min(i + 1, steps.length - 1))} disabled={s.done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={() => setStepIdx(i => Math.min(i + 1, steps.length - 1))} disabled={isDone}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+        <button onClick={() => { setPlaying(false); setStepIdx(i => Math.max(0, i - 1)); }} disabled={stepIdx === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+        <button onClick={() => setPlaying(p => !p)} disabled={isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
         </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

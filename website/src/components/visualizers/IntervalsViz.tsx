@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const DEFAULT_MERGE: [number, number][] = [[1,3],[2,6],[8,10],[15,18]];
 const DEFAULT_INSERT_INTERVALS: [number,number][] = [[1,3],[6,9]];
@@ -8,35 +8,83 @@ const TAB_BTN = (active: boolean) =>
   `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
 
 // ── Merge Intervals ──────────────────────────────────────────────────────────
+
+interface MergeSnap { step: number; merged: [number,number][]; msg: string; }
+
 function MergeTab() {
   const [intervals] = useState<[number,number][]>(DEFAULT_MERGE);
   const [step, setStep] = useState(0);
   const [merged, setMerged] = useState<[number,number][]>([]);
   const [msg, setMsg] = useState('Intervals sorted by start. Press "Next Step" to merge.');
+  const [history, setHistory] = useState<MergeSnap[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
 
   const sorted = [...intervals].sort((a, b) => a[0] - b[0]);
   const max = Math.max(...intervals.map(i => i[1])) + 1;
   const scale = 480 / (max + 1);
+  const isDone = step >= sorted.length;
 
-  function reset() { setStep(0); setMerged([]); setMsg('Intervals sorted by start. Press "Next Step" to merge.'); }
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
 
-  function next() {
-    if (step >= sorted.length) return;
+  function reset() {
+    stopPlay();
+    setStep(0); setMerged([]); setHistory([]);
+    setMsg('Intervals sorted by start. Press "Next Step" to merge.');
+  }
+
+  function nextStep() {
+    if (isDone) { stopPlay(); return; }
     const curr = sorted[step];
     const m = [...merged];
+    let newMsg = '';
     if (m.length === 0 || m[m.length - 1][1] < curr[0]) {
       m.push([...curr]);
-      setMsg(`[${curr}] does NOT overlap with last merged → push as new interval.`);
+      newMsg = `[${curr}] does NOT overlap with last merged → push as new interval.`;
     } else {
       const last = m[m.length - 1];
       const newEnd = Math.max(last[1], curr[1]);
-      setMsg(`[${curr}] overlaps with [${last}] → merge: end = max(${last[1]}, ${curr[1]}) = ${newEnd}`);
+      newMsg = `[${curr}] overlaps with [${last}] → merge: end = max(${last[1]}, ${curr[1]}) = ${newEnd}`;
       m[m.length - 1] = [last[0], newEnd];
     }
-    setMerged(m);
-    setStep(step + 1);
-    if (step + 1 >= sorted.length) setMsg(prev => prev + `. Done! ${m.length} merged interval(s).`);
+    const newStep = step + 1;
+    if (newStep >= sorted.length) newMsg += `. Done! ${m.length} merged interval(s).`;
+    setHistory(h => [...h, { step, merged, msg }]);
+    setMerged(m); setStep(newStep); setMsg(newMsg);
   }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setStep(s.step); setMerged(s.merged); setMsg(s.msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -73,9 +121,29 @@ function MergeTab() {
         </svg>
       </div>
       <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
-      <div className="flex gap-3">
-        <button onClick={next} disabled={step >= sorted.length} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={reset} className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">Reset</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+          Reset
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -130,10 +198,47 @@ function InsertTab() {
   const [newInterval] = useState<[number,number]>(DEFAULT_NEW_INTERVAL);
   const [frames] = useState(() => buildInsertFrames(intervals, newInterval));
   const [step, setStep] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
 
   const frame = frames[step];
   const max = Math.max(...intervals.map(i => i[1]), newInterval[1]) + 2;
   const scale = 420 / (max + 1);
+  const isDone = step >= frames.length - 1;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function nextStep() {
+    if (isDone) { stopPlay(); return; }
+    setStep(s => Math.min(frames.length - 1, s + 1));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setStep(s => Math.max(0, s - 1));
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function cellColor(idx: number, phase: InsertPhase) {
     if (phase === 'done') return { fill: '#14532d', stroke: '#22c55e' };
@@ -202,10 +307,29 @@ function InsertTab() {
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
-        <button onClick={() => setStep(s => Math.min(frames.length - 1, s + 1))} disabled={step >= frames.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
-        <button onClick={() => setStep(0)} className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg">Reset</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={step === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={isDone}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={() => { stopPlay(); setStep(0); }}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+          Reset
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
         <span className="text-xs text-slate-500 self-center">{step + 1}/{frames.length}</span>
       </div>
     </div>

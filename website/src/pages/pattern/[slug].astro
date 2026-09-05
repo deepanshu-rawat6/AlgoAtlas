@@ -62,15 +62,33 @@ const readmeHtml = await renderMd(readmeRaw);
 const notesHtml = await renderMd(notesRaw);
 const problemsHtml = await renderMd(problemsMd);
 
-// Read solutions
+// Read solutions — grouped by problem, supporting multiple languages
+const LANG_EXT: Record<string, string> = { '.py': 'python', '.cpp': 'cpp', '.java': 'java' };
+const LANG_LABEL: Record<string, string> = { '.py': 'Python', '.cpp': 'C++', '.java': 'Java' };
+
+type SolutionLang = { ext: string; label: string; lang: string; code: string };
+type Solution = { name: string; langs: SolutionLang[] };
+
 const solutionsDir = path.join(dataDir, 'solutions');
-const solutions: { name: string; code: string }[] = [];
+const solutions: Solution[] = [];
+
 if (fs.existsSync(solutionsDir)) {
-  const files = fs.readdirSync(solutionsDir).filter(f => f.endsWith('.py')).sort();
-  for (const file of files) {
-    const name = file.replace('.py', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const allFiles = fs.readdirSync(solutionsDir).sort();
+  const byName = new Map<string, SolutionLang[]>();
+  for (const file of allFiles) {
+    const ext = path.extname(file);
+    if (!LANG_EXT[ext]) continue;
+    const problem = path.basename(file, ext);
+    if (!byName.has(problem)) byName.set(problem, []);
     const code = fs.readFileSync(path.join(solutionsDir, file), 'utf8');
-    solutions.push({ name, code });
+    byName.get(problem)!.push({ ext, label: LANG_LABEL[ext], lang: LANG_EXT[ext], code });
+  }
+  // Sort problems alphabetically; within each, preserve Python → C++ → Java order
+  const LANG_ORDER = ['.py', '.cpp', '.java'];
+  for (const [problem, langs] of [...byName.entries()].sort()) {
+    const name = problem.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    langs.sort((a, b) => LANG_ORDER.indexOf(a.ext) - LANG_ORDER.indexOf(b.ext));
+    solutions.push({ name, langs });
   }
 }
 
@@ -92,11 +110,18 @@ const tabs = ['overview', 'notes', 'problems', 'solutions', ...(hasVisualizer ? 
 ---
 
 <BaseLayout title={title}>
-  <div class="mb-6 flex items-center gap-3">
+  <!-- Breadcrumb -->
+  <nav class="text-xs text-slate-500 mb-4 flex items-center gap-1">
+    <a href="/" class="hover:text-blue-400 transition-colors">Home</a>
+    <span>›</span>
+    <span class="text-slate-400">{title}</span>
+  </nav>
+
+  <div class="mb-6 flex flex-wrap items-center gap-3">
     <h1 class="text-2xl font-bold text-slate-100">{title}</h1>
     <span class={`text-xs px-2 py-1 rounded font-medium ${phaseBadge[phase]}`}>Phase {phase}</span>
     {solutions.length > 0 && (
-      <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">{solutions.length} solutions</span>
+      <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">{solutions.length} problems</span>
     )}
   </div>
 
@@ -138,20 +163,43 @@ const tabs = ['overview', 'notes', 'problems', 'solutions', ...(hasVisualizer ? 
     }
   </div>
 
-  <!-- Solutions: syntax-highlighted code accordions -->
+  <!-- Solutions: syntax-highlighted code accordions with language switcher -->
   <div id="tab-solutions" class="tab-content">
     {solutions.length === 0
       ? <p class="text-slate-500 py-4">No solutions available for this pattern.</p>
       : (
         <div class="space-y-2">
-          {solutions.map(s => (
+          {solutions.map((s, si) => (
             <details class="border border-slate-700 rounded-lg overflow-hidden group">
-              <summary class="px-4 py-3 bg-slate-800 text-slate-200 font-medium text-sm cursor-pointer hover:bg-slate-700 select-none flex items-center justify-between">
-                <span>{s.name}</span>
-                <span class="text-slate-500 text-xs group-open:hidden">▼ expand</span>
+              <summary class="px-4 py-3 bg-slate-800 text-slate-200 font-medium text-sm cursor-pointer hover:bg-slate-750 select-none flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span>{s.name}</span>
+                  {s.langs.length > 1 && (
+                    <span class="text-xs text-slate-500">{s.langs.map(l => l.label).join(' · ')}</span>
+                  )}
+                </div>
+                <span class="text-slate-500 text-xs group-open:hidden">▼</span>
               </summary>
-              <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <Code code={s.code} lang="python" theme="github-dark" />
+              <div>
+                {/* Language switcher pills — only shown when multiple languages exist */}
+                {s.langs.length > 1 && (
+                  <div class="px-4 py-2 bg-slate-800 border-b border-slate-700 flex gap-2 lang-bar" data-sol={si}>
+                    {s.langs.map((l, li) => (
+                      <button
+                        class={`lang-pill text-xs px-3 py-1 rounded border font-medium transition-colors ${li === 0 ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-400 border-slate-600 hover:text-slate-200'}`}
+                        data-sol={si}
+                        data-li={li}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {s.langs.map((l, li) => (
+                  <div class={`lang-pane overflow-x-auto max-h-[600px] overflow-y-auto ${li !== 0 ? 'hidden' : ''}`} data-sol={si} data-li={li}>
+                    <Code code={l.code} lang={l.lang} theme="github-dark" />
+                  </div>
+                ))}
               </div>
             </details>
           ))}
@@ -201,7 +249,30 @@ const tabs = ['overview', 'notes', 'problems', 'solutions', ...(hasVisualizer ? 
     activate(hash || 'overview');
   }
 
-  document.addEventListener('DOMContentLoaded', initTabs);
+  function initLangSwitcher() {
+    document.querySelectorAll<HTMLButtonElement>('.lang-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sol = btn.dataset.sol!;
+        const li = btn.dataset.li!;
+        // Update pill active state
+        document.querySelectorAll<HTMLButtonElement>(`.lang-pill[data-sol="${sol}"]`).forEach(b => {
+          const isActive = b.dataset.li === li;
+          b.classList.toggle('bg-blue-700', isActive);
+          b.classList.toggle('text-white', isActive);
+          b.classList.toggle('border-blue-500', isActive);
+          b.classList.toggle('bg-slate-700', !isActive);
+          b.classList.toggle('text-slate-400', !isActive);
+          b.classList.toggle('border-slate-600', !isActive);
+        });
+        // Show matching pane
+        document.querySelectorAll<HTMLElement>(`.lang-pane[data-sol="${sol}"]`).forEach(pane => {
+          pane.classList.toggle('hidden', pane.dataset.li !== li);
+        });
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => { initTabs(); initLangSwitcher(); });
 </script>
 
 <style>

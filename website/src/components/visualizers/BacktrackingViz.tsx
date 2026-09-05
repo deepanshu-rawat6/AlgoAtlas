@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const TAB_BTN = (active: boolean) =>
   `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
@@ -27,12 +27,37 @@ function SubsetsViz() {
   const [steps, setSteps] = useState<SubsetNode[]>([]);
   const [curr, setCurr] = useState(-1);
   const [started, setStarted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
 
   const nums = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n)).slice(0, 4);
 
-  function start() { const s = generateSubsetSteps(nums); setSteps(s); setCurr(0); setStarted(true); }
-  function next() { if (curr < steps.length - 1) setCurr(c => c + 1); }
-  function prev() { if (curr > 0) setCurr(c => c - 1); }
+  function start() {
+    setPlaying(false);
+    const s = generateSubsetSteps(nums);
+    setSteps(s); setCurr(0); setStarted(true);
+  }
+  function nextStep() { if (curr < steps.length - 1) setCurr(c => c + 1); }
+  function stepBack() { setPlaying(false); if (curr > 0) setCurr(c => c - 1); }
+
+  const isDone = started && curr >= steps.length - 1;
+
+  useEffect(() => {
+    if (!playing) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      setCurr(c => {
+        if (c >= steps.length - 1) { setPlaying(false); return c; }
+        return c + 1;
+      });
+    }, 1100 - speed * 200);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, [playing, speed, steps.length]);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const visible = steps.slice(0, curr + 1);
   const current = steps[curr];
@@ -72,10 +97,26 @@ function SubsetsViz() {
           </div>
         </div>
       )}
-      <div className="flex gap-3">
-        <button onClick={prev} disabled={!started || curr <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Prev</button>
-        <button onClick={next} disabled={!started || curr >= steps.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next →</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone || !started}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={!started || curr <= 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={() => setPlaying(p => !p)} disabled={isDone || !started}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
         {started && <span className="text-xs text-slate-500 self-center">{curr + 1} / {steps.length} nodes</span>}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
@@ -119,12 +160,37 @@ function PermutationsViz() {
   const [steps, setSteps] = useState<PermStep[]>([]);
   const [curr, setCurr] = useState(-1);
   const [started, setStarted] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
 
   const nums = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n)).slice(0, 3);
 
-  function start() { const s = generatePermSteps(nums); setSteps(s); setCurr(0); setStarted(true); }
-  function next() { if (curr < steps.length - 1) setCurr(c => c + 1); }
-  function prev() { if (curr > 0) setCurr(c => c - 1); }
+  function start() {
+    setPlaying(false);
+    const s = generatePermSteps(nums);
+    setSteps(s); setCurr(0); setStarted(true);
+  }
+  function nextStep() { if (curr < steps.length - 1) setCurr(c => c + 1); }
+  function stepBack() { setPlaying(false); if (curr > 0) setCurr(c => c - 1); }
+
+  const isDone = started && curr >= steps.length - 1;
+
+  useEffect(() => {
+    if (!playing) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      setCurr(c => {
+        if (c >= steps.length - 1) { setPlaying(false); return c; }
+        return c + 1;
+      });
+    }, 1100 - speed * 200);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, [playing, speed, steps.length]);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
   const step = steps[curr] ?? null;
   const found = steps.slice(0, curr + 1).filter(s => s.action === 'result');
@@ -183,10 +249,26 @@ function PermutationsViz() {
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button onClick={prev} disabled={!started || curr <= 0} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Prev</button>
-        <button onClick={next} disabled={!started || curr >= steps.length - 1} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next →</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone || !started}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={!started || curr <= 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={() => setPlaying(p => !p)} disabled={isDone || !started}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
         {started && <span className="text-xs text-slate-500 self-center">{curr + 1} / {steps.length} steps</span>}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );

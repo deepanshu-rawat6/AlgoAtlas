@@ -121,6 +121,7 @@ export default function SortingViz() {
   const [frames, setFrames] = useState<Frame[]>([]);
   const [step, setStep] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function stopPlay() {
@@ -147,10 +148,20 @@ export default function SortingViz() {
         if (s >= frames.length - 1) { stopPlay(); return s; }
         return s + 1;
       });
-    }, 300);
+    }, 1100 - speed * 200);
   }
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    timerRef.current = setInterval(() => {
+      setStep(s => { if (s >= frames.length - 1) { stopPlay(); return s; } return s + 1; });
+    }, 1100 - speed * 200);
+  }, [speed]);
 
   const frame = frames[step];
   const done = step >= frames.length - 1;
@@ -217,14 +228,19 @@ export default function SortingViz() {
       {frame && <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300 min-h-10">{frame.msg}</div>}
 
       {frames.length > 0 && (
-        <div className="flex gap-3 items-center">
-          <button onClick={() => setStep(s => Math.max(0, s-1))} disabled={step===0}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm rounded-lg">← Prev</button>
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => setStep(s => Math.min(frames.length-1, s+1))} disabled={done}
-            className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm rounded-lg">Next →</button>
+            className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next Step</button>
+          <button onClick={() => { if (playing) stopPlay(); setStep(s => Math.max(0, s-1)); }} disabled={step===0}
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Back</button>
           <button onClick={togglePlay} disabled={done}
-            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 text-white text-sm rounded-lg">{playing ? 'Pause' : 'Play'}</button>
+            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">{playing ? 'Pause' : '▶ Play'}</button>
           <span className="text-xs text-slate-500">{step+1}/{frames.length}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Speed</span>
+            <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
+            <span className="text-xs text-slate-400">{speed}x</span>
+          </div>
         </div>
       )}
     </div>

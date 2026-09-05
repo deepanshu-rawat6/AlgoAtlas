@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ── Reversal tab ──────────────────────────────────────────────────────────────
 
@@ -23,34 +23,78 @@ function initRev(vals: number[]): RevState {
   return { nodes, prev: null, curr: 0, done: false, msg: 'prev=null, curr=head(0). Press "Next Step" to reverse.' };
 }
 
+function revStep(s: RevState): RevState {
+  if (s.done || s.curr === null) return s;
+  const nodes = s.nodes.map(n => ({ ...n }));
+  const curr = s.curr;
+  const nextNode = nodes[curr].next;
+  nodes[curr].next = s.prev;
+  return {
+    nodes, prev: curr, curr: nextNode,
+    done: nextNode === null,
+    msg: nextNode === null
+      ? `✓ Done! Reversed. New head = node(${curr}).`
+      : `next=nodes[${nextNode}], nodes[${curr}].next → ${s.prev === null ? 'null' : `nodes[${s.prev}]`}, prev=nodes[${curr}], curr=nodes[${nextNode}]`,
+  };
+}
+
 function ReversalTab() {
   const [input, setInput] = useState(DEFAULT.join(' → '));
   const [state, setState] = useState<RevState>(() => initRev(DEFAULT));
-
-  function reset() {
-    const vals = input.split(/[→,\s]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-    setState(initRev(vals.length ? vals : DEFAULT));
-  }
-
-  function next() {
-    setState(prev => {
-      if (prev.done || prev.curr === null) return prev;
-      const nodes = prev.nodes.map(n => ({ ...n }));
-      const curr = prev.curr;
-      const nextNode = nodes[curr].next;
-      nodes[curr].next = prev.prev;
-      return {
-        nodes, prev: curr, curr: nextNode,
-        done: nextNode === null,
-        msg: nextNode === null
-          ? `✓ Done! Reversed. New head = node(${curr}).`
-          : `next=nodes[${nextNode}], nodes[${curr}].next → ${prev.prev === null ? 'null' : `nodes[${prev.prev}]`}, prev=nodes[${curr}], curr=nodes[${nextNode}]`,
-      };
-    });
-  }
+  const [history, setHistory] = useState<RevState[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
 
   const { nodes, prev: prevIdx, curr: currIdx, done, msg } = state;
   const n = nodes.length;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function reset() {
+    stopPlay();
+    const vals = input.split(/[→,\s]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    setState(initRev(vals.length ? vals : DEFAULT));
+    setHistory([]);
+  }
+
+  function nextStep() {
+    if (done) { stopPlay(); return; }
+    setHistory(h => [...h, state]);
+    setState(revStep(state));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setState(s);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -60,7 +104,6 @@ function ReversalTab() {
           <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
             value={input} onChange={e => setInput(e.target.value)} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -93,9 +136,30 @@ function ReversalTab() {
 
       <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{msg}</div>
 
-      <button onClick={next} disabled={done} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-        Next Step
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+          Reset
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -118,27 +182,73 @@ function initCycle(): CycleState {
   return { slow: 0, fast: 0, step: 0, done: false, msg: '🐢 slow=0, 🐇 fast=0. Both start at head. Press "Next Step".' };
 }
 
+function cycleStep(prev: CycleState): CycleState {
+  if (prev.done) return prev;
+  const newSlow = CYCLE_NEXT[prev.slow];
+  const newFast = CYCLE_NEXT[CYCLE_NEXT[prev.fast]];
+  const step = prev.step + 1;
+  if (newSlow === newFast) {
+    return { slow: newSlow, fast: newFast, step, done: true,
+      msg: `🎯 Cycle detected! 🐢 slow and 🐇 fast both at node ${newSlow}. Meeting point = node ${newSlow}.` };
+  }
+  return { slow: newSlow, fast: newFast, step, done: false,
+    msg: `Step ${step}: 🐢 slow moved 1 step → node ${newSlow}. 🐇 fast moved 2 steps → node ${newFast}.` };
+}
+
 function CycleDetectionTab() {
   const [state, setState] = useState<CycleState>(initCycle);
+  const [history, setHistory] = useState<CycleState[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
 
-  function reset() { setState(initCycle()); }
+  const { slow, fast, done } = state;
 
-  function next() {
-    setState(prev => {
-      if (prev.done) return prev;
-      const newSlow = CYCLE_NEXT[prev.slow];
-      const newFast = CYCLE_NEXT[CYCLE_NEXT[prev.fast]];
-      const step = prev.step + 1;
-      if (newSlow === newFast) {
-        return { slow: newSlow, fast: newFast, step, done: true,
-          msg: `🎯 Cycle detected! 🐢 slow and 🐇 fast both at node ${newSlow}. Meeting point = node ${newSlow}.` };
-      }
-      return { slow: newSlow, fast: newFast, step, done: false,
-        msg: `Step ${step}: 🐢 slow moved 1 step → node ${newSlow}. 🐇 fast moved 2 steps → node ${newFast}.` };
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function reset() {
+    stopPlay();
+    setState(initCycle());
+    setHistory([]);
+  }
+
+  function nextStep() {
+    if (done) { stopPlay(); return; }
+    setHistory(h => [...h, state]);
+    setState(cycleStep(state));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setState(s);
+      return prev;
     });
   }
 
-  const { slow, fast, done } = state;
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-6">
@@ -211,11 +321,29 @@ function CycleDetectionTab() {
         {state.msg}
       </div>
 
-      <div className="flex gap-3">
-        <button onClick={next} disabled={done} className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={done}
+          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
           Next Step
         </button>
-        <button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button>
+        <button onClick={stepBack} disabled={history.length === 0}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={done}
+          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset}
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+          Reset
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="w-24" />
+          <span className="text-xs text-slate-400">{speed}x</span>
+        </div>
       </div>
     </div>
   );
