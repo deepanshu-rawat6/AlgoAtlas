@@ -4,10 +4,6 @@ const DEFAULT_COINS = [1, 3, 5];
 const DEFAULT_AMOUNT = 7;
 const DEFAULT_HOUSES = [2, 7, 9, 3, 1];
 
-const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
-const ACTIVE = 'bg-blue-700 text-white border-blue-500';
-const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
-
 // ── Coin Change ────────────────────────────────────────────────────────────────
 function CoinChange() {
   const [coinsInput, setCoinsInput] = useState(DEFAULT_COINS.join(', '));
@@ -90,20 +86,20 @@ function CoinChange() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">dp[i] = min coins to make amount i (unbounded knapsack)</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>dp[i] = min coins to make amount i (unbounded knapsack)</p>
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Coins</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Coins</label>
+          <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
             value={coinsInput} onChange={e => setCoinsInput(e.target.value)} />
         </div>
         <div className="w-24">
-          <label className="block text-xs text-slate-400 mb-1">Amount</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Amount</label>
+          <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
             value={amtInput} onChange={e => setAmtInput(e.target.value)} />
         </div>
         <div className="flex items-end">
-          <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
       {dp.length > 0 && (
@@ -111,16 +107,16 @@ function CoinChange() {
           <div className="flex gap-1 min-w-max">
             {dp.map((val, i) => {
               const isCurr = i === step - 1;
-              let bg = 'bg-slate-800 border-slate-700 text-slate-600';
-              if (isCurr) bg = 'bg-yellow-800 border-yellow-400 text-white';
-              else if (val !== null && val !== Infinity) bg = 'bg-blue-900 border-blue-600 text-blue-200';
-              else if (val === Infinity) bg = 'bg-red-900/50 border-red-800 text-red-400';
+              let cellStyle: React.CSSProperties = {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
+              if (isCurr) cellStyle = {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
+              else if (val !== null && val !== Infinity) cellStyle = {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
+              else if (val === Infinity) cellStyle = {background:'color-mix(in srgb, #ef4444 15%, transparent)',borderColor:'#ef4444',color:'var(--text)'};
               return (
                 <div key={i} className="flex flex-col items-center gap-1">
-                  <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>
+                  <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm" style={cellStyle}>
                     {val === null ? '?' : val === Infinity ? '∞' : val}
                   </div>
-                  <div className="text-xs text-slate-600">{i}</div>
+                  <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>{i}</div>
                 </div>
               );
             })}
@@ -128,29 +124,22 @@ function CoinChange() {
         </div>
       )}
       {done && dp[amount] !== null && dp[amount] !== Infinity && (
-        <div className="bg-green-900/40 border border-green-700 rounded-lg px-4 py-3 text-green-300 text-sm font-mono">
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
           ✓ Minimum coins for amount {amount} = {dp[amount]}
         </div>
       )}
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={next} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={togglePlay} disabled={!started || done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={next} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className="viz-btn viz-btn--primary">
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -238,35 +227,34 @@ function HouseRobber() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">dp[i] = max money robbing houses 0..i</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>dp[i] = max money robbing houses 0..i</p>
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">House Values</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>House Values</label>
+          <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
             value={numsInput} onChange={e => setNumsInput(e.target.value)} />
         </div>
         <div className="flex items-end">
-          <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
 
       {/* Houses */}
       {nums.length > 0 && (
         <div>
-          <div className="text-xs text-slate-500 mb-2">Houses</div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem'}}>Houses</div>
           <div className="flex gap-2 flex-wrap">
             {nums.map((v, i) => {
               const isCurr = started && i === step - 1;
               const isPrev1 = started && i === step - 2;
               const isPrev2 = started && i === step - 3;
-              let bg = 'bg-slate-700 border-slate-600 text-slate-300';
-              if (isCurr) bg = 'bg-yellow-700 border-yellow-400 text-white';
-              else if (isPrev1) bg = 'bg-blue-800 border-blue-500 text-blue-200';
-              else if (isPrev2) bg = 'bg-purple-800 border-purple-500 text-purple-200';
+              let cellStyle: React.CSSProperties = {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
+              if (isCurr) cellStyle = {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
+              else if (isPrev1 || isPrev2) cellStyle = {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
               return (
                 <div key={i} className="flex flex-col items-center gap-1">
-                  <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>{v}</div>
-                  <div className="text-xs text-slate-600">h[{i}]</div>
+                  <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm" style={cellStyle}>{v}</div>
+                  <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>h[{i}]</div>
                 </div>
               );
             })}
@@ -277,20 +265,20 @@ function HouseRobber() {
       {/* DP table */}
       {dp.length > 0 && (
         <div>
-          <div className="text-xs text-slate-500 mb-2">dp table</div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem'}}>dp table</div>
           <div className="flex gap-2 flex-wrap">
             {dp.map((val, i) => {
               const isFilled = val !== null;
               const isCurr = started && i === step - 1;
-              let bg = 'bg-slate-800 border-slate-700 text-slate-600';
-              if (isCurr) bg = 'bg-yellow-800 border-yellow-400 text-white';
-              else if (isFilled) bg = 'bg-blue-900 border-blue-600 text-blue-200';
+              let cellStyle: React.CSSProperties = {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
+              if (isCurr) cellStyle = {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
+              else if (isFilled) cellStyle = {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
               return (
                 <div key={i} className="flex flex-col items-center gap-1">
-                  <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>
+                  <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm" style={cellStyle}>
                     {val === null ? '?' : val}
                   </div>
-                  <div className="text-xs text-slate-600">dp[{i}]</div>
+                  <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>dp[{i}]</div>
                 </div>
               );
             })}
@@ -299,29 +287,22 @@ function HouseRobber() {
       )}
 
       {done && (
-        <div className="bg-green-900/40 border border-green-700 rounded-lg px-4 py-3 text-green-300 text-sm font-mono">
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
           ✓ Max money = {dp[nums.length - 1]}
         </div>
       )}
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={next} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={togglePlay} disabled={!started || done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={next} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className="viz-btn viz-btn--primary">
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -334,12 +315,12 @@ export default function DPViz() {
   const tabs = ['Coin Change', 'House Robber'] as const;
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-3">1D Dynamic Programming</h3>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.75rem'}}>1D Dynamic Programming</h3>
         <div className="flex gap-2">
           {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`${TAB_BTN} ${tab === t ? ACTIVE : INACTIVE}`}>{t}</button>
+            <button key={t} onClick={() => setTab(t)} className={`viz-btn${tab === t ? ' viz-btn--primary' : ''}`}>{t}</button>
           ))}
         </div>
       </div>

@@ -28,7 +28,7 @@ function readFile(file: string) {
 }
 
 const readmeRaw = readFile('README.md');
-const notesRaw = readFile('NOTES.md');
+const notesRaw  = readFile('NOTES.md');
 
 async function renderMd(src: string | null): Promise<string> {
   if (!src) return '';
@@ -42,14 +42,12 @@ async function renderMd(src: string | null): Promise<string> {
   return String(file);
 }
 
-// For Problems tab: extract only the problem table section from README
+// Extract problem table from README for the Problems tab
 function extractProblems(md: string | null): string | null {
   if (!md) return null;
-  // Find lines with the markdown table (| header | ...)
   const lines = md.split('\n');
   const tableStart = lines.findIndex(l => l.trim().startsWith('|'));
   if (tableStart === -1) return null;
-  // Find end of table
   let tableEnd = tableStart;
   while (tableEnd < lines.length && (lines[tableEnd].trim().startsWith('|') || lines[tableEnd].trim() === '')) {
     tableEnd++;
@@ -57,25 +55,25 @@ function extractProblems(md: string | null): string | null {
   return lines.slice(tableStart, tableEnd).join('\n');
 }
 
-const problemsMd = extractProblems(readmeRaw);
-const readmeHtml = await renderMd(readmeRaw);
-const notesHtml = await renderMd(notesRaw);
+const problemsMd  = extractProblems(readmeRaw);
+const readmeHtml  = await renderMd(readmeRaw);
+const notesHtml   = await renderMd(notesRaw);
 const problemsHtml = await renderMd(problemsMd);
 
-// Read solutions — grouped by problem, supporting multiple languages
-const LANG_EXT: Record<string, string> = { '.py': 'python', '.cpp': 'cpp', '.java': 'java' };
+// Multi-language solutions — grouped by problem name
+const LANG_EXT:   Record<string, string> = { '.py': 'python', '.cpp': 'cpp', '.java': 'java' };
 const LANG_LABEL: Record<string, string> = { '.py': 'Python', '.cpp': 'C++', '.java': 'Java' };
+const LANG_ORDER = ['.py', '.cpp', '.java'];
 
 type SolutionLang = { ext: string; label: string; lang: string; code: string };
-type Solution = { name: string; langs: SolutionLang[] };
+type Solution     = { name: string; langs: SolutionLang[] };
 
 const solutionsDir = path.join(dataDir, 'solutions');
 const solutions: Solution[] = [];
 
 if (fs.existsSync(solutionsDir)) {
-  const allFiles = fs.readdirSync(solutionsDir).sort();
   const byName = new Map<string, SolutionLang[]>();
-  for (const file of allFiles) {
+  for (const file of fs.readdirSync(solutionsDir).sort()) {
     const ext = path.extname(file);
     if (!LANG_EXT[ext]) continue;
     const problem = path.basename(file, ext);
@@ -83,11 +81,9 @@ if (fs.existsSync(solutionsDir)) {
     const code = fs.readFileSync(path.join(solutionsDir, file), 'utf8');
     byName.get(problem)!.push({ ext, label: LANG_LABEL[ext], lang: LANG_EXT[ext], code });
   }
-  // Sort problems alphabetically; within each, preserve Python → C++ → Java order
-  const LANG_ORDER = ['.py', '.cpp', '.java'];
   for (const [problem, langs] of [...byName.entries()].sort()) {
-    const name = problem.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     langs.sort((a, b) => LANG_ORDER.indexOf(a.ext) - LANG_ORDER.indexOf(b.ext));
+    const name = problem.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     solutions.push({ name, langs });
   }
 }
@@ -100,173 +96,148 @@ const VISUALIZER_PATTERNS = new Set([
 ]);
 const hasVisualizer = VISUALIZER_PATTERNS.has(slug);
 
-const phaseBadge: Record<number, string> = {
-  1: 'bg-blue-900 text-blue-300',
-  2: 'bg-purple-900 text-purple-300',
-  3: 'bg-emerald-900 text-emerald-300',
-};
-
 const tabs = ['overview', 'notes', 'problems', 'solutions', ...(hasVisualizer ? ['visualizer'] : [])];
 ---
 
 <BaseLayout title={title}>
+
   <!-- Breadcrumb -->
-  <nav class="text-xs text-slate-500 mb-4 flex items-center gap-1">
-    <a href="/" class="hover:text-blue-400 transition-colors">Home</a>
-    <span>›</span>
-    <span class="text-slate-400">{title}</span>
+  <nav class="crumb-trail mb-4">
+    <a href="/">Home</a>
+    <span class="sep">›</span>
+    <span class="current">{title}</span>
   </nav>
 
+  <!-- Page header -->
   <div class="mb-6 flex flex-wrap items-center gap-3">
-    <h1 class="text-2xl font-bold text-slate-100">{title}</h1>
-    <span class={`text-xs px-2 py-1 rounded font-medium ${phaseBadge[phase]}`}>Phase {phase}</span>
+    <h1 class="text-2xl font-bold" style="color:var(--text)">{title}</h1>
+    <span class={`tier-chip phase-${phase}`}>Phase {phase}</span>
     {solutions.length > 0 && (
-      <span class="text-xs px-2 py-1 rounded bg-slate-800 text-slate-400">{solutions.length} problems</span>
+      <span class="step-badge">{solutions.length} solutions</span>
     )}
   </div>
 
-  <!-- Tabs -->
-  <div class="border-b border-slate-700 mb-6">
-    <div class="flex gap-1 overflow-x-auto" id="tab-bar">
+  <!-- Tab group -->
+  <div class="tab-group mb-6">
+    <div class="tab-buttons" id="tab-bar">
       {tabs.map(tab => (
-        <button
-          class="tab-btn px-4 py-2 text-sm font-medium capitalize transition-colors text-slate-400 hover:text-slate-200 whitespace-nowrap"
-          data-tab={tab}
-        >
-          {tab}
-        </button>
+        <button class="tab-btn" data-tab={tab}>{tab}</button>
       ))}
     </div>
-  </div>
 
-  <!-- Overview: full README (diagrams + everything) -->
-  <div id="tab-overview" class="tab-content prose max-w-none">
-    {readmeRaw
-      ? <Fragment set:html={readmeHtml} />
-      : <p class="text-slate-500">No overview available.</p>
-    }
-  </div>
+    <!-- Overview -->
+    <div id="tab-overview" class="tab-content tab-panel prose max-w-none">
+      {readmeRaw
+        ? <Fragment set:html={readmeHtml} />
+        : <p style="color:var(--text-faint)">No overview available.</p>
+      }
+    </div>
 
-  <!-- Notes: NOTES.md content -->
-  <div id="tab-notes" class="tab-content prose max-w-none">
-    {notesRaw
-      ? <Fragment set:html={notesHtml} />
-      : <p class="text-slate-500">No notes available for this pattern.</p>
-    }
-  </div>
+    <!-- Notes -->
+    <div id="tab-notes" class="tab-content tab-panel prose max-w-none">
+      {notesRaw
+        ? <Fragment set:html={notesHtml} />
+        : <p style="color:var(--text-faint)">No notes available for this pattern.</p>
+      }
+    </div>
 
-  <!-- Problems: just the problem table from README -->
-  <div id="tab-problems" class="tab-content">
-    {problemsMd
-      ? <Fragment set:html={problemsHtml} class="prose max-w-none" />
-      : <div class="prose max-w-none"><Fragment set:html={readmeHtml} /></div>
-    }
-  </div>
+    <!-- Problems -->
+    <div id="tab-problems" class="tab-content tab-panel">
+      {problemsMd
+        ? <Fragment set:html={problemsHtml} class="prose max-w-none" />
+        : <div class="prose max-w-none"><Fragment set:html={readmeHtml} /></div>
+      }
+    </div>
 
-  <!-- Solutions: syntax-highlighted code accordions with language switcher -->
-  <div id="tab-solutions" class="tab-content">
-    {solutions.length === 0
-      ? <p class="text-slate-500 py-4">No solutions available for this pattern.</p>
-      : (
-        <div class="space-y-2">
-          {solutions.map((s, si) => (
-            <details class="border border-slate-700 rounded-lg overflow-hidden group">
-              <summary class="px-4 py-3 bg-slate-800 text-slate-200 font-medium text-sm cursor-pointer hover:bg-slate-750 select-none flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span>{s.name}</span>
-                  {s.langs.length > 1 && (
-                    <span class="text-xs text-slate-500">{s.langs.map(l => l.label).join(' · ')}</span>
-                  )}
-                </div>
-                <span class="text-slate-500 text-xs group-open:hidden">▼</span>
-              </summary>
-              <div>
-                {/* Language switcher pills — only shown when multiple languages exist */}
-                {s.langs.length > 1 && (
-                  <div class="px-4 py-2 bg-slate-800 border-b border-slate-700 flex gap-2 lang-bar" data-sol={si}>
-                    {s.langs.map((l, li) => (
-                      <button
-                        class={`lang-pill text-xs px-3 py-1 rounded border font-medium transition-colors ${li === 0 ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-400 border-slate-600 hover:text-slate-200'}`}
-                        data-sol={si}
-                        data-li={li}
-                      >
-                        {l.label}
-                      </button>
+    <!-- Solutions -->
+    <div id="tab-solutions" class="tab-content tab-panel">
+      {solutions.length === 0
+        ? <p style="color:var(--text-faint)" class="py-4">No solutions available for this pattern.</p>
+        : (
+          <div class="space-y-2">
+            {solutions.map((s, si) => (
+              <details class="overflow-hidden rounded-lg" style="border:1px solid var(--border)">
+                <summary class="px-4 py-3 cursor-pointer select-none flex items-center justify-between"
+                  style="background:var(--surface-raised);color:var(--text-secondary);font-size:0.875rem;font-weight:500">
+                  <div class="flex items-center gap-2">
+                    <span>{s.name}</span>
+                    {s.langs.map(l => (
+                      <span class="step-badge" style="font-size:0.65rem">{l.label}</span>
                     ))}
                   </div>
-                )}
-                {s.langs.map((l, li) => (
-                  <div class={`lang-pane overflow-x-auto max-h-[600px] overflow-y-auto ${li !== 0 ? 'hidden' : ''}`} data-sol={si} data-li={li}>
-                    <Code code={l.code} lang={l.lang} theme="github-dark" />
-                  </div>
-                ))}
-              </div>
-            </details>
-          ))}
-        </div>
-      )
-    }
+                  <span style="color:var(--text-faint);font-size:0.75rem" class="group-open:hidden">▼</span>
+                </summary>
+                <div>
+                  {s.langs.length > 1 && (
+                    <div class="px-4 py-2 flex gap-2 lang-bar" data-sol={si}
+                      style="background:var(--surface-raised);border-bottom:1px solid var(--border)">
+                      {s.langs.map((l, li) => (
+                        <button
+                          class={`lang-pill viz-btn ${li === 0 ? 'viz-btn--primary' : ''}`}
+                          style="font-size:0.72rem;padding:0.2rem 0.65rem"
+                          data-sol={si} data-li={li}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {s.langs.map((l, li) => (
+                    <div class={`lang-pane overflow-x-auto max-h-[600px] overflow-y-auto ${li !== 0 ? 'hidden' : ''}`}
+                      data-sol={si} data-li={li}>
+                      <Code code={l.code} lang={l.lang} theme="github-dark" />
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Visualizer -->
+    {hasVisualizer && (
+      <div id="tab-visualizer" class="tab-content tab-panel min-h-96">
+        <Visualizer slug={slug} client:visible />
+      </div>
+    )}
   </div>
 
-  <!-- Visualizer: React island mounted client-side -->
-  {hasVisualizer && (
-    <div id="tab-visualizer" class="tab-content min-h-96">
-      <Visualizer slug={slug} client:visible />
-    </div>
-  )}
 </BaseLayout>
 
 <script>
   function initTabs() {
-    const tabs = document.querySelectorAll<HTMLButtonElement>('.tab-btn');
+    const btns     = document.querySelectorAll<HTMLButtonElement>('#tab-bar .tab-btn');
     const contents = document.querySelectorAll<HTMLElement>('.tab-content');
 
     function activate(id: string) {
-      const validIds = Array.from(tabs).map(t => t.dataset.tab!);
-      const target = validIds.includes(id) ? id : validIds[0];
-      tabs.forEach(t => {
-        const active = t.dataset.tab === target;
-        t.classList.toggle('text-blue-400', active);
-        t.classList.toggle('border-b-2', active);
-        t.classList.toggle('border-blue-400', active);
-        t.classList.toggle('text-slate-400', !active);
-        t.classList.toggle('text-slate-200', active);
-      });
-      contents.forEach(c => {
-        c.classList.toggle('active', c.id === `tab-${target}`);
-      });
+      const ids = Array.from(btns).map(b => b.dataset.tab!);
+      const target = ids.includes(id) ? id : ids[0];
+      btns.forEach(b => b.classList.toggle('active', b.dataset.tab === target));
+      contents.forEach(c => c.classList.toggle('active', c.id === `tab-${target}`));
     }
 
-    tabs.forEach(btn => {
+    btns.forEach(btn => {
       btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab!;
-        history.replaceState(null, '', `#${tab}`);
-        activate(tab);
+        history.replaceState(null, '', `#${btn.dataset.tab}`);
+        activate(btn.dataset.tab!);
       });
     });
-
-    const hash = location.hash.replace('#', '');
-    activate(hash || 'overview');
+    activate(location.hash.replace('#', '') || 'overview');
   }
 
   function initLangSwitcher() {
     document.querySelectorAll<HTMLButtonElement>('.lang-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         const sol = btn.dataset.sol!;
-        const li = btn.dataset.li!;
-        // Update pill active state
+        const li  = btn.dataset.li!;
         document.querySelectorAll<HTMLButtonElement>(`.lang-pill[data-sol="${sol}"]`).forEach(b => {
-          const isActive = b.dataset.li === li;
-          b.classList.toggle('bg-blue-700', isActive);
-          b.classList.toggle('text-white', isActive);
-          b.classList.toggle('border-blue-500', isActive);
-          b.classList.toggle('bg-slate-700', !isActive);
-          b.classList.toggle('text-slate-400', !isActive);
-          b.classList.toggle('border-slate-600', !isActive);
+          const active = b.dataset.li === li;
+          b.classList.toggle('viz-btn--primary', active);
         });
-        // Show matching pane
-        document.querySelectorAll<HTMLElement>(`.lang-pane[data-sol="${sol}"]`).forEach(pane => {
-          pane.classList.toggle('hidden', pane.dataset.li !== li);
+        document.querySelectorAll<HTMLElement>(`.lang-pane[data-sol="${sol}"]`).forEach(p => {
+          p.classList.toggle('hidden', p.dataset.li !== li);
         });
       });
     });
@@ -274,8 +245,3 @@ const tabs = ['overview', 'notes', 'problems', 'solutions', ...(hasVisualizer ? 
 
   document.addEventListener('DOMContentLoaded', () => { initTabs(); initLangSwitcher(); });
 </script>
-
-<style>
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-</style>

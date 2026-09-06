@@ -100,8 +100,8 @@ function ReversalTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Values (space or → separated)</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Values (space or → separated)</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={input} onChange={e => setInput(e.target.value)} />
         </div>
       </div>
@@ -112,52 +112,45 @@ function ReversalTab() {
             const isCurr = i === currIdx;
             const isPrev = i === prevIdx;
             const pointsTo = node.next;
-            let bg = 'bg-slate-700 border-slate-600';
-            if (isCurr) bg = 'bg-yellow-800 border-yellow-400';
-            else if (isPrev) bg = 'bg-blue-800 border-blue-500';
+            let nodeStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)' };
+            if (isCurr) nodeStyle = { background: 'color-mix(in srgb, #eab308 20%, transparent)', borderColor: '#eab308' };
+            else if (isPrev) nodeStyle = { background: 'var(--accent-soft)', borderColor: 'var(--accent)' };
             return (
               <div key={i} className="flex items-center">
                 <div className="flex flex-col items-center gap-1">
-                  <div className={`w-14 h-12 flex flex-col items-center justify-center border-2 rounded-lg text-sm ${bg}`}>
-                    <span className="font-mono font-bold text-slate-100">{node.val}</span>
-                    <span className="text-xs text-slate-400">→{pointsTo !== null ? `[${pointsTo}]` : 'null'}</span>
+                  <div style={nodeStyle} className="w-14 h-12 flex flex-col items-center justify-center border-2 rounded-lg text-sm">
+                    <span style={{ color: 'var(--text)', fontFamily: 'var(--mono)', fontWeight: 700 }}>{node.val}</span>
+                    <span style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>→{pointsTo !== null ? `[${pointsTo}]` : 'null'}</span>
                   </div>
                   <div className="text-xs h-4 text-center" style={{ minWidth: '3.5rem' }}>
-                    {isCurr ? <span className="text-yellow-400">curr</span> : isPrev ? <span className="text-blue-400">prev</span> : null}
+                    {isCurr ? <span className="text-yellow-400">curr</span> : isPrev ? <span style={{ color: 'var(--accent)' }}>prev</span> : null}
                   </div>
                 </div>
-                {i < n - 1 && <div className="text-slate-500 text-lg mx-0.5 mb-5">→</div>}
+                {i < n - 1 && <div style={{ color: 'var(--text-faint)', fontSize: '1.125rem' }} className="mx-0.5 mb-5">→</div>}
               </div>
             );
           })}
-          <div className="text-slate-500 font-mono text-sm mb-5 ml-1">→ null</div>
+          <div style={{ color: 'var(--text-faint)', fontFamily: 'var(--mono)', fontSize: '0.875rem' }} className="mb-5 ml-1">→ null</div>
         </div>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{msg}</div>
+      {done
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>{msg}</div>
+        : <div className="viz-info">{msg}</div>
+      }
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={togglePlay} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
-          Reset
-        </button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -252,7 +245,7 @@ function CycleDetectionTab() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>
         Floyd's algorithm: slow moves 1 step, fast moves 2. If they meet, there's a cycle.
       </p>
 
@@ -263,35 +256,35 @@ function CycleDetectionTab() {
             const isSlow = i === slow;
             const isFast = i === fast;
             const isBoth = isSlow && isFast;
-            let bg = 'bg-slate-700 border-slate-600';
-            if (done && isBoth) bg = 'bg-green-700 border-green-400';
-            else if (isBoth) bg = 'bg-purple-700 border-purple-400';
-            else if (isSlow) bg = 'bg-blue-800 border-blue-400';
-            else if (isFast) bg = 'bg-orange-800 border-orange-400';
+            let nodeStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)' };
+            if (done && isBoth) nodeStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)' };
+            else if (isBoth) nodeStyle = { background: 'color-mix(in srgb, #a855f7 20%, transparent)', borderColor: '#a855f7' };
+            else if (isSlow) nodeStyle = { background: 'var(--accent-soft)', borderColor: 'var(--accent)' };
+            else if (isFast) nodeStyle = { background: 'color-mix(in srgb, #f97316 20%, transparent)', borderColor: '#f97316' };
             return (
               <div key={i} className="flex items-center">
                 <div className="flex flex-col items-center gap-1">
                   <div className="text-xs h-5 text-center font-mono" style={{ minWidth: '3.5rem' }}>
-                    {isBoth ? <span className={done ? 'text-green-400' : 'text-purple-400'}>🐢🐇</span>
-                      : isSlow ? <span className="text-blue-400">🐢</span>
-                      : isFast ? <span className="text-orange-400">🐇</span>
+                    {isBoth ? <span style={{ color: done ? 'var(--tier-3)' : '#a855f7' }}>🐢🐇</span>
+                      : isSlow ? <span style={{ color: 'var(--accent)' }}>🐢</span>
+                      : isFast ? <span style={{ color: '#f97316' }}>🐇</span>
                       : null}
                   </div>
-                  <div className={`w-14 h-12 flex flex-col items-center justify-center border-2 rounded-lg text-sm ${bg}`}>
-                    <span className="font-mono font-bold text-slate-100">{val}</span>
-                    <span className="text-xs text-slate-400">→{CYCLE_NEXT[i]}</span>
+                  <div style={nodeStyle} className="w-14 h-12 flex flex-col items-center justify-center border-2 rounded-lg text-sm">
+                    <span style={{ color: 'var(--text)', fontFamily: 'var(--mono)', fontWeight: 700 }}>{val}</span>
+                    <span style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>→{CYCLE_NEXT[i]}</span>
                   </div>
-                  <div className="text-xs text-slate-500 text-center" style={{ minWidth: '3.5rem' }}>[{i}]</div>
+                  <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', textAlign: 'center', minWidth: '3.5rem' }}>[{i}]</div>
                 </div>
                 {i < CYCLE_NODES.length - 1 && (
-                  <div className="text-slate-500 text-lg mx-0.5 mt-5">→</div>
+                  <div style={{ color: 'var(--text-faint)', fontSize: '1.125rem' }} className="mx-0.5 mt-5">→</div>
                 )}
               </div>
             );
           })}
           {/* Cycle back arrow label */}
           <div className="flex flex-col justify-center ml-2 mt-5">
-            <div className="text-orange-400 text-sm font-mono">↩ cycle to node 2</div>
+            <div style={{ color: '#f97316', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>↩ cycle to node 2</div>
           </div>
         </div>
 
@@ -312,37 +305,28 @@ function CycleDetectionTab() {
 
       {/* Legend */}
       <div className="flex gap-4 text-xs">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-700 inline-block" /> 🐢 slow</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-700 inline-block" /> 🐇 fast</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-700 inline-block" /> meeting point</span>
+        <span className="flex items-center gap-1"><span style={{ width: '0.75rem', height: '0.75rem', borderRadius: '0.25rem', background: 'var(--accent)', display: 'inline-block' }} /> 🐢 slow</span>
+        <span className="flex items-center gap-1"><span style={{ width: '0.75rem', height: '0.75rem', borderRadius: '0.25rem', background: '#f97316', display: 'inline-block' }} /> 🐇 fast</span>
+        <span className="flex items-center gap-1"><span style={{ width: '0.75rem', height: '0.75rem', borderRadius: '0.25rem', background: 'var(--tier-3)', display: 'inline-block' }} /> meeting point</span>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>
-        {state.msg}
-      </div>
+      {done
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>{state.msg}</div>
+        : <div className="viz-info">{state.msg}</div>
+      }
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={togglePlay} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
-          Reset
-        </button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -358,17 +342,17 @@ export default function LinkedListViz() {
   const [tab, setTab] = useState<Tab>('Reversal');
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Linked List</h3>
-        <p className="text-sm text-slate-400">Three-pointer reversal · Floyd's cycle detection</p>
+        <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Linked List</h3>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Three-pointer reversal · Floyd's cycle detection</p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-2">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${tab === t ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`}>
+            className={tab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
             {t}
           </button>
         ))}

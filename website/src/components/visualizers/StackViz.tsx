@@ -80,8 +80,9 @@ function MonotonicStackTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Temperatures</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Temperatures</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={arrInput} onChange={e => setArrInput(e.target.value)} />
         </div>
       </div>
@@ -91,59 +92,63 @@ function MonotonicStackTab() {
           const isCurrent = idx === i;
           const inStack = stack.includes(idx);
           const isDoneIdx = result[idx] !== undefined;
-          let bg = 'bg-slate-700 border-slate-600 text-slate-400';
-          if (isCurrent) bg = 'bg-yellow-800 border-yellow-400 text-white';
-          else if (inStack) bg = 'bg-blue-800 border-blue-500 text-white';
-          else if (isDoneIdx) bg = 'bg-slate-600 border-slate-500 text-slate-300';
+          const cellStyle = isCurrent
+            ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+            : inStack
+              ? {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+              : isDoneIdx
+                ? {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+                : {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
           return (
             <div key={idx} className="flex flex-col items-center gap-1">
-              <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>{v}</div>
+              <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm" style={cellStyle}>{v}</div>
               <div className="text-xs text-center" style={{ minWidth: '3rem' }}>
-                {result[idx] !== undefined ? <span className="text-green-400">{result[idx]}d</span> : <span className="text-slate-600">?</span>}
+                {result[idx] !== undefined
+                  ? <span style={{color:'var(--tier-3)'}}>{result[idx]}d</span>
+                  : <span style={{color:'var(--text-faint)'}}>?</span>}
               </div>
-              <div className="text-xs text-slate-600">[{idx}]</div>
+              <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>[{idx}]</div>
             </div>
           );
         })}
       </div>
 
       <div className="flex items-end gap-2">
-        <span className="text-xs text-slate-500 font-mono">Stack (indices):</span>
+        <span style={{color:'var(--text-faint)',fontSize:'0.75rem',fontFamily:'var(--mono)'}}>Stack (indices):</span>
         <div className="flex gap-1">
           {stack.length === 0
-            ? <span className="text-slate-600 text-sm">[ empty ]</span>
+            ? <span style={{color:'var(--text-faint)',fontSize:'0.875rem'}}>[ empty ]</span>
             : stack.map((idx, si) => (
-                <span key={si} className="bg-blue-900/50 border border-blue-700 px-2 py-1 rounded text-sm font-mono text-blue-300">
+                <span key={si} style={{background:'var(--surface-raised)',border:'1px solid var(--border)',padding:'0.25rem 0.5rem',borderRadius:'0.25rem',fontSize:'0.875rem',fontFamily:'var(--mono)',color:'var(--accent)'}}>
                   {idx}({arr[idx]})
                 </span>
               ))}
         </div>
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           Next Step
         </button>
         <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">
           ← Back
         </button>
         <button onClick={togglePlay} disabled={isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+        <button onClick={reset} className="viz-btn">
           Reset
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -248,7 +253,7 @@ function MinStackTab() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">Auxiliary min-stack tracks current minimum at each level — O(1) getMin.</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Auxiliary min-stack tracks current minimum at each level — O(1) getMin.</p>
 
       {/* Operations list */}
       <div className="flex flex-wrap gap-2">
@@ -256,11 +261,13 @@ function MinStackTab() {
           const si = i + 1;
           const isActive = stepIdx === si;
           const isDoneOp = stepIdx > si;
-          let cls = 'bg-slate-700 border-slate-600 text-slate-400';
-          if (isActive) cls = 'bg-yellow-800 border-yellow-400 text-white';
-          else if (isDoneOp) cls = 'bg-slate-600 border-slate-500 text-slate-300';
+          const opStyle = isActive
+            ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+            : isDoneOp
+              ? {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+              : {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
           return (
-            <span key={i} className={`px-2 py-1 text-xs font-mono border rounded ${cls}`}>{opLabel(op)}</span>
+            <span key={i} className="px-2 py-1 text-xs font-mono border rounded" style={opStyle}>{opLabel(op)}</span>
           );
         })}
       </div>
@@ -269,16 +276,19 @@ function MinStackTab() {
       <div className="flex gap-8">
         {/* Main stack */}
         <div className="flex-1">
-          <div className="text-xs text-slate-400 mb-2 font-mono">Main Stack</div>
+          <div style={{color:'var(--text-dim)',fontSize:'0.75rem',marginBottom:'0.5rem',fontFamily:'var(--mono)'}}>Main Stack</div>
           <div className="flex flex-col-reverse gap-1 min-h-16">
             {step.main.length === 0
-              ? <span className="text-slate-600 text-xs font-mono">[ empty ]</span>
+              ? <span style={{color:'var(--text-faint)',fontSize:'0.75rem',fontFamily:'var(--mono)'}}>[ empty ]</span>
               : step.main.map((v, i) => {
                   const isTop = i === step.main.length - 1;
                   return (
-                    <div key={i} className={`flex items-center justify-between px-3 py-1.5 rounded border font-mono text-sm ${isTop ? 'bg-blue-800 border-blue-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>
+                    <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded border font-mono text-sm"
+                      style={isTop
+                        ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+                        : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}}>
                       <span>{v}</span>
-                      {isTop && <span className="text-xs text-blue-300 ml-2">← top</span>}
+                      {isTop && <span style={{color:'var(--accent)',fontSize:'0.75rem',marginLeft:'0.5rem'}}>← top</span>}
                     </div>
                   );
                 })}
@@ -287,16 +297,19 @@ function MinStackTab() {
 
         {/* Min stack */}
         <div className="flex-1">
-          <div className="text-xs text-slate-400 mb-2 font-mono">Min-Stack</div>
+          <div style={{color:'var(--text-dim)',fontSize:'0.75rem',marginBottom:'0.5rem',fontFamily:'var(--mono)'}}>Min-Stack</div>
           <div className="flex flex-col-reverse gap-1 min-h-16">
             {step.minStack.length === 0
-              ? <span className="text-slate-600 text-xs font-mono">[ empty ]</span>
+              ? <span style={{color:'var(--text-faint)',fontSize:'0.75rem',fontFamily:'var(--mono)'}}>[ empty ]</span>
               : step.minStack.map((v, i) => {
                   const isTop = i === step.minStack.length - 1;
                   return (
-                    <div key={i} className={`flex items-center justify-between px-3 py-1.5 rounded border font-mono text-sm ${isTop ? 'bg-orange-800 border-orange-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>
+                    <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded border font-mono text-sm"
+                      style={isTop
+                        ? {background:'color-mix(in srgb, var(--accent) 20%, transparent)',borderColor:'var(--accent)',color:'var(--text)'}
+                        : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}}>
                       <span>{v}</span>
-                      {isTop && <span className="text-xs text-orange-300 ml-2">= min</span>}
+                      {isTop && <span style={{color:'var(--accent)',fontSize:'0.75rem',marginLeft:'0.5rem'}}>= min</span>}
                     </div>
                   );
                 })}
@@ -306,31 +319,31 @@ function MinStackTab() {
 
       {/* GetMin result */}
       {step.getMinResult !== null && (
-        <div className="bg-green-900/40 border border-green-700 rounded-lg px-4 py-2 text-sm font-mono text-green-300">
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
           GetMin → {step.getMinResult}
         </div>
       )}
 
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{step.msg}</div>
+      <div className="viz-info">{step.msg}</div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           Next Step
         </button>
         <button onClick={stepBack} disabled={stepIdx === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">
           ← Back
         </button>
         <button onClick={togglePlay} disabled={isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -346,16 +359,16 @@ export default function StackViz() {
   const [tab, setTab] = useState<Tab>('Monotonic Stack');
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Stack</h3>
-        <p className="text-sm text-slate-400">Monotonic stack · Min stack O(1) getMin</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Stack</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Monotonic stack · Min stack O(1) getMin</p>
       </div>
 
       <div className="flex gap-2">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${tab === t ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`}>
+            className={tab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
             {t}
           </button>
         ))}

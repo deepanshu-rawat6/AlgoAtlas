@@ -5,10 +5,6 @@ const TS_TARGET = 9;
 const PS_DEFAULT = [1, 1, 1, 2, 3];
 const PS_K = 3;
 
-const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
-const ACTIVE = 'bg-blue-700 text-white border-blue-500';
-const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
-
 // ── Two Sum tab ──────────────────────────────────────────────────────────────
 interface TSSnap { step: number; map: Record<number, number>; found: [number, number] | null; msg: string; }
 
@@ -38,7 +34,6 @@ function TwoSumTab() {
     if (found || step >= arr.length - 1) return;
     const ni = step + 1;
     const complement = target - arr[ni];
-    // snapshot before advancing
     setHistory(h => [...h, { step, map, found, msg }]);
     if (map[complement] !== undefined) {
       setFound([map[complement], ni]);
@@ -77,13 +72,15 @@ function TwoSumTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Array</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={arrInput} onChange={e => { setArrInput(e.target.value); reset(); }} />
         </div>
         <div className="w-24">
-          <label className="block text-xs text-slate-400 mb-1">Target</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Target</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={tgtInput} onChange={e => { setTgtInput(e.target.value); reset(); }} />
         </div>
       </div>
@@ -92,47 +89,49 @@ function TwoSumTab() {
         {arr.map((v, i) => {
           const isFound = found && (i === found[0] || i === found[1]);
           const isActive = i === step && !isFound;
-          let bg = 'bg-slate-700 border-slate-600 text-slate-300';
-          if (isFound) bg = 'bg-green-800 border-green-400 text-white';
-          else if (isActive) bg = 'bg-yellow-800 border-yellow-400 text-white';
+          const cellStyle = isFound
+            ? {background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',borderColor:'var(--tier-3)',color:'var(--text)'}
+            : isActive
+              ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+              : {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
           return (
             <div key={i} className="flex flex-col items-center gap-1">
-              <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg ${bg}`}>{v}</div>
-              <div className="text-xs text-slate-500">[{i}]</div>
+              <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg" style={cellStyle}>{v}</div>
+              <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>[{i}]</div>
             </div>
           );
         })}
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg p-4">
-        <div className="text-xs text-slate-500 mb-2 font-mono">HashMap: seen = {'{'}</div>
+      <div className="rounded-lg p-4" style={{background:'var(--surface-sunken)'}}>
+        <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem',fontFamily:'var(--mono)'}}>HashMap: seen = {'{'}</div>
         <div className="flex flex-wrap gap-2 ml-4">
           {Object.entries(map).length === 0
-            ? <span className="text-slate-600 text-sm font-mono">empty</span>
+            ? <span style={{color:'var(--text-faint)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>empty</span>
             : Object.entries(map).map(([k, v]) => (
-                <span key={k} className="text-sm font-mono bg-blue-900/40 border border-blue-700 px-2 py-1 rounded text-blue-300">{k}: {v}</span>
+                <span key={k} style={{fontSize:'0.875rem',fontFamily:'var(--mono)',background:'var(--surface-raised)',border:'1px solid var(--border)',padding:'0.25rem 0.5rem',borderRadius:'0.25rem',color:'var(--accent)'}}>{k}: {v}</span>
               ))}
         </div>
-        <div className="text-xs text-slate-500 mt-2 font-mono">{'}'}</div>
+        <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginTop:'0.5rem',fontFamily:'var(--mono)'}}>{'}'}</div>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${found ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{msg}</div>
+      <div className={found ? '' : 'viz-info'}
+        style={found ? {background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'} : undefined}>{msg}</div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={next} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">Next Step</button>
         <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">← Back</button>
         <button onClick={() => setPlaying(p => !p)} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -141,11 +140,11 @@ function TwoSumTab() {
 
 // ── Prefix Sum tab ───────────────────────────────────────────────────────────
 interface PSStep {
-  index: number;          // current i being processed
+  index: number;
   currSum: number;
   prefixMap: Record<number, number>;
   count: number;
-  foundRanges: [number, number][];  // list of [start, end] inclusive
+  foundRanges: [number, number][];
   done: boolean;
   msg: string;
 }
@@ -157,7 +156,6 @@ function buildPSSteps(arr: number[], k: number): PSStep[] {
   const prefixMap: Record<number, number> = { 0: 1 };
   const foundRanges: [number, number][] = [];
 
-  // initial state (before processing any element)
   steps.push({ index: -1, currSum: 0, prefixMap: { 0: 1 }, count: 0, foundRanges: [], done: false,
     msg: 'Initial: prefix_map={0:1}, curr_sum=0. Press "Next Step".' });
 
@@ -170,8 +168,6 @@ function buildPSSteps(arr: number[], k: number): PSStep[] {
 
     if (snapMap[need] !== undefined) {
       newCount += snapMap[need];
-      // find start index (where prefix sum == need) — rough: last occurrence
-      // For display, mark all possible subarrays ending at i
       newRanges.push([i - (snapMap[need] > 0 ? 1 : 0), i]);
       steps.push({
         index: i, currSum, prefixMap: { ...snapMap, [currSum]: (snapMap[currSum] ?? 0) + 1 },
@@ -192,7 +188,6 @@ function buildPSSteps(arr: number[], k: number): PSStep[] {
     newRanges.forEach(r => foundRanges.push(r));
   }
 
-  // mark last step done
   steps[steps.length - 1] = { ...steps[steps.length - 1], done: true,
     msg: steps[steps.length - 1].msg + ` — Done! Total = ${count}.` };
   return steps;
@@ -228,27 +223,27 @@ function PrefixSumTab() {
 
   useEffect(() => { if (isDone) setPlaying(false); }, [isDone]);
 
-  // determine per-element highlight: current=yellow, in a found range=green
-  function getBoxClass(i: number) {
-    if (i === s.index) return 'bg-yellow-800 border-yellow-400 text-white';
-    // check if i is in any found range
+  function getCellStyle(i: number): React.CSSProperties {
+    if (i === s.index) return {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
     for (const [lo, hi] of s.foundRanges) {
-      if (i >= lo && i <= hi) return 'bg-green-800 border-green-400 text-white';
+      if (i >= lo && i <= hi) return {background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',borderColor:'var(--tier-3)',color:'var(--text)'};
     }
-    return 'bg-slate-700 border-slate-600 text-slate-300';
+    return {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Array</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={arrInput} onChange={e => { setArrInput(e.target.value); setStepIdx(0); }} />
         </div>
         <div className="w-20">
-          <label className="block text-xs text-slate-400 mb-1">K</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>K</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={kInput} onChange={e => { setKInput(e.target.value); setStepIdx(0); }} />
         </div>
       </div>
@@ -256,42 +251,42 @@ function PrefixSumTab() {
       <div className="flex gap-2 flex-wrap">
         {arr.map((v, i) => (
           <div key={i} className="flex flex-col items-center gap-1">
-            <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg ${getBoxClass(i)}`}>{v}</div>
-            <div className="text-xs text-slate-500">[{i}]</div>
+            <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg" style={getCellStyle(i)}>{v}</div>
+            <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>[{i}]</div>
           </div>
         ))}
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg p-4">
-        <div className="text-xs text-slate-500 mb-2 font-mono">prefix_map = {'{'}</div>
+      <div className="rounded-lg p-4" style={{background:'var(--surface-sunken)'}}>
+        <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem',fontFamily:'var(--mono)'}}>prefix_map = {'{'}</div>
         <div className="flex flex-wrap gap-2 ml-4">
           {Object.entries(s.prefixMap).length === 0
-            ? <span className="text-slate-600 text-sm font-mono">empty</span>
+            ? <span style={{color:'var(--text-faint)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>empty</span>
             : Object.entries(s.prefixMap).map(([pk, pv]) => (
-                <span key={pk} className="text-sm font-mono bg-blue-900/40 border border-blue-700 px-2 py-1 rounded text-blue-300">{pk}: {pv}</span>
+                <span key={pk} style={{fontSize:'0.875rem',fontFamily:'var(--mono)',background:'var(--surface-raised)',border:'1px solid var(--border)',padding:'0.25rem 0.5rem',borderRadius:'0.25rem',color:'var(--accent)'}}>{pk}: {pv}</span>
               ))}
         </div>
-        <div className="text-xs text-slate-500 mt-2 font-mono">{'}'}</div>
-        <div className="text-xs text-slate-400 mt-2">Subarrays found: <span className="text-green-400 font-mono font-bold">{s.count}</span></div>
+        <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginTop:'0.5rem',fontFamily:'var(--mono)'}}>{'}'}</div>
+        <div style={{color:'var(--text-dim)',fontSize:'0.75rem',marginTop:'0.5rem'}}>Subarrays found: <span style={{color:'var(--tier-3)',fontFamily:'var(--mono)',fontWeight:'bold'}}>{s.count}</span></div>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${s.count > 0 ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{s.msg}</div>
+      <div className={s.count > 0 ? '' : 'viz-info'}
+        style={s.count > 0 ? {background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'} : undefined}>{s.msg}</div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setStepIdx(i => Math.min(i + 1, steps.length - 1))} disabled={isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">Next Step</button>
         <button onClick={() => { setPlaying(false); setStepIdx(i => Math.max(0, i - 1)); }} disabled={stepIdx === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">← Back</button>
         <button onClick={() => setPlaying(p => !p)} disabled={isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -303,15 +298,15 @@ export default function HashMapViz() {
   const [tab, setTab] = useState<'twosum' | 'prefixsum'>('twosum');
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Hash Map</h3>
-        <p className="text-sm text-slate-400">Trade space for time with complement / prefix lookups</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Hash Map</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Trade space for time with complement / prefix lookups</p>
       </div>
 
       <div className="flex gap-2">
-        <button onClick={() => setTab('twosum')} className={`${TAB_BTN} ${tab === 'twosum' ? ACTIVE : INACTIVE}`}>Two Sum</button>
-        <button onClick={() => setTab('prefixsum')} className={`${TAB_BTN} ${tab === 'prefixsum' ? ACTIVE : INACTIVE}`}>Prefix Sum</button>
+        <button onClick={() => setTab('twosum')} className={tab === 'twosum' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Two Sum</button>
+        <button onClick={() => setTab('prefixsum')} className={tab === 'prefixsum' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Prefix Sum</button>
       </div>
 
       {tab === 'twosum' ? <TwoSumTab /> : <PrefixSumTab />}

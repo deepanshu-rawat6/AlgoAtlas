@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const TAB_BTN = (active: boolean) =>
-  `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
+const TAB_BTN = (active: boolean) => active ? 'viz-btn viz-btn--primary' : 'viz-btn';
 
 // ── Jump Game ────────────────────────────────────────────────────────────────
 
@@ -40,7 +39,6 @@ function JumpGame() {
 
   function next() {
     if (!started || done) return;
-    // snapshot before advancing
     setHistory(h => [...h, { i, maxReach, started, done, canJump, msg }]);
     const ni = i + 1;
     if (ni >= arr.length) {
@@ -70,7 +68,6 @@ function JumpGame() {
     return () => clearInterval(id);
   }, [playing, speed]);
 
-  // stop playing when done
   useEffect(() => { if (done) setPlaying(false); }, [done]);
 
   function stepBack() {
@@ -87,15 +84,16 @@ function JumpGame() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">Track farthest reachable index greedily</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Track farthest reachable index greedily</p>
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array (max jump from each index)</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Array (max jump from each index)</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={arrInput} onChange={e => { setArrInput(e.target.value); reset(); }} />
         </div>
         <div className="flex items-end gap-2">
-          <button onClick={start} className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
       <div className="flex gap-2 flex-wrap">
@@ -103,41 +101,50 @@ function JumpGame() {
           const isCurr = idx === i;
           const isReachable = idx <= maxReach && started;
           const isBlocked = done && !canJump && idx > maxReach;
-          let bg = 'bg-slate-700 border-slate-600 text-slate-400';
-          if (isCurr) bg = 'bg-yellow-800 border-yellow-400 text-white';
-          else if (idx === arr.length - 1 && canJump) bg = 'bg-green-800 border-green-400 text-white';
-          else if (isBlocked) bg = 'bg-red-900/60 border-red-800 text-red-400';
-          else if (isReachable) bg = 'bg-blue-900/50 border-blue-700 text-blue-200';
+          const isResult = idx === arr.length - 1 && canJump;
+          const cellStyle = isCurr
+            ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+            : isResult
+              ? {background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',borderColor:'var(--tier-3)',color:'var(--text)'}
+              : isBlocked
+                ? {background:'color-mix(in srgb, #ef4444 15%, transparent)',borderColor:'#ef4444',color:'var(--text)'}
+                : isReachable
+                  ? {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+                  : {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
           return (
             <div key={idx} className="flex flex-col items-center gap-1">
-              <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg ${bg}`}>{v}</div>
-              <div className="text-xs text-slate-600">[{idx}]</div>
+              <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg" style={cellStyle}>{v}</div>
+              <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>[{idx}]</div>
             </div>
           );
         })}
       </div>
       {started && (
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-slate-400 font-mono">maxReach:</span>
-          <span className="bg-blue-900/50 border border-blue-700 px-3 py-1 rounded text-blue-300 font-mono font-bold">{maxReach}</span>
+          <span style={{color:'var(--text-dim)',fontFamily:'var(--mono)'}}>maxReach:</span>
+          <span style={{background:'var(--surface-raised)',border:'1px solid var(--border)',padding:'0.25rem 0.75rem',borderRadius:'0.25rem',color:'var(--accent)',fontFamily:'var(--mono)',fontWeight:'bold'}}>{maxReach}</span>
         </div>
       )}
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${canJump === true ? 'bg-green-900/40 text-green-300' : canJump === false ? 'bg-red-900/40 text-red-300' : 'bg-slate-900/60 text-slate-300'}`}>{msg}</div>
+      <div className={canJump === true || canJump === false ? '' : 'viz-info'}
+        style={canJump === true
+          ? {background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}
+          : canJump === false
+            ? {background:'color-mix(in srgb, #ef4444 15%, transparent)',border:'1px solid #ef4444',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'#ef4444',fontSize:'0.875rem',fontFamily:'var(--mono)'}
+            : undefined}>{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={next} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">Next Step</button>
         <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">← Back</button>
         <button onClick={() => setPlaying(p => !p)} disabled={!started || done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -231,75 +238,72 @@ function MergeIntervalsViz() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">Sort intervals by start, then merge overlapping pairs</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Sort intervals by start, then merge overlapping pairs</p>
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Intervals (format: "1,3 2,6 8,10")</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Intervals (format: "1,3 2,6 8,10")</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
             value={input} onChange={e => { setInput(e.target.value); reset(); }} />
         </div>
         <div className="flex items-end gap-2">
-          <button onClick={start} className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
 
       {/* Timeline SVG */}
-      <div className="bg-slate-900/60 rounded-lg p-4 space-y-3">
-        <div className="text-xs text-slate-500 mb-1">Timeline (0 → {maxVal})</div>
-        {/* Axis */}
+      <div className="rounded-lg p-4 space-y-3" style={{background:'var(--surface-sunken)'}}>
+        <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Timeline (0 → {maxVal})</div>
         <svg width={SVG_W} height={16}>
-          <line x1={PAD} y1={8} x2={SVG_W - PAD} y2={8} stroke="#475569" strokeWidth={1} />
+          <line x1={PAD} y1={8} x2={SVG_W - PAD} y2={8} stroke="var(--border)" strokeWidth={1} />
           {[0, 0.25, 0.5, 0.75, 1].map(t => {
             const x = PAD + t * (SVG_W - 2 * PAD);
-            return <g key={t}><line x1={x} y1={4} x2={x} y2={12} stroke="#475569" strokeWidth={1} /><text x={x} y={16} textAnchor="middle" fontSize={8} fill="#94a3b8">{Math.round(t * maxVal)}</text></g>;
+            return <g key={t}><line x1={x} y1={4} x2={x} y2={12} stroke="var(--border)" strokeWidth={1} /><text x={x} y={16} textAnchor="middle" fontSize={8} fill="var(--text-faint)">{Math.round(t * maxVal)}</text></g>;
           })}
         </svg>
 
-        {/* Input intervals */}
         <div>
-          <div className="text-xs text-slate-500 mb-1">Input (sorted):</div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Input (sorted):</div>
           <svg width={SVG_W} height={allIntervals.length * 20 + 4}>
             {allIntervals.map((iv, i) => {
               const isCurr = step && iv[0] === step.current[0] && iv[1] === step.current[1];
               const isInRemaining = step?.remaining.some(r => r[0] === iv[0] && r[1] === iv[1]);
-              const color = isCurr ? '#ca8a04' : isInRemaining ? '#475569' : '#1e40af';
-              return <g key={i}>{bar(iv, color, i * 20, `in-${i}`)}<text x={PAD + (iv[0] / maxVal) * (SVG_W - 2 * PAD)} y={i * 20 + 11} fontSize={9} fill="#e2e8f0">{`[${iv}]`}</text></g>;
+              const color = isCurr ? 'var(--accent)' : isInRemaining ? 'var(--border)' : 'var(--surface-raised)';
+              return <g key={i}>{bar(iv, color, i * 20, `in-${i}`)}<text x={PAD + (iv[0] / maxVal) * (SVG_W - 2 * PAD)} y={i * 20 + 11} fontSize={9} fill="var(--text)">{`[${iv}]`}</text></g>;
             })}
           </svg>
         </div>
 
-        {/* Merged result */}
         {step && step.merged.length > 0 && (
           <div>
-            <div className="text-xs text-slate-500 mb-1">Merged so far:</div>
+            <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Merged so far:</div>
             <svg width={SVG_W} height={step.merged.length * 20 + 4}>
               {step.merged.map((iv, i) => (
-                <g key={i}>{bar(iv, '#15803d', i * 20, `mg-${i}`)}<text x={PAD + (iv[0] / maxVal) * (SVG_W - 2 * PAD)} y={i * 20 + 11} fontSize={9} fill="#e2e8f0">{`[${iv}]`}</text></g>
+                <g key={i}>{bar(iv, 'var(--tier-3)', i * 20, `mg-${i}`)}<text x={PAD + (iv[0] / maxVal) * (SVG_W - 2 * PAD)} y={i * 20 + 11} fontSize={9} fill="var(--text)">{`[${iv}]`}</text></g>
               ))}
             </svg>
           </div>
         )}
       </div>
 
-      {step && <div className="rounded-lg px-4 py-3 text-sm font-mono bg-slate-900/60 text-slate-300">{step.msg}</div>}
+      {step && <div className="viz-info">{step.msg}</div>}
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setStepIdx(s => Math.min(steps.length - 1, s + 1))} disabled={stepIdx < 0 || isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">Next Step</button>
         <button onClick={() => { setPlaying(false); setStepIdx(s => Math.max(0, s - 1)); }} disabled={stepIdx <= 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">← Back</button>
         <button onClick={() => setPlaying(p => !p)} disabled={stepIdx < 0 || isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
-        {steps.length > 0 && <span className="text-xs text-slate-500">{stepIdx + 1} / {steps.length}</span>}
+        {steps.length > 0 && <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>{stepIdx + 1} / {steps.length}</span>}
       </div>
     </div>
   );
@@ -310,9 +314,9 @@ function MergeIntervalsViz() {
 export default function GreedyViz() {
   const [tab, setTab] = useState<'jump' | 'merge'>('jump');
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-3">Greedy</h3>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.75rem'}}>Greedy</h3>
         <div className="flex gap-2">
           <button className={TAB_BTN(tab === 'jump')} onClick={() => setTab('jump')}>Jump Game</button>
           <button className={TAB_BTN(tab === 'merge')} onClick={() => setTab('merge')}>Merge Intervals</button>

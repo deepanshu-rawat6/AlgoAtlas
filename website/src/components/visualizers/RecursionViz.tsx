@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 
-const TAB_BTN = (active: boolean) =>
-  `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
-
 // ── Fibonacci ────────────────────────────────────────────────────────────────
 
 interface FibCall { id: string; n: number; result: number | null; parentId: string | null; depth: number; }
@@ -98,28 +95,33 @@ function FibonacciViz() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">Visualize overlapping subproblems (why memoization helps)</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Visualize overlapping subproblems (why memoization helps)</p>
       <div className="flex gap-3 items-end flex-wrap">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">n (max 7)</label>
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>n (max 7)</label>
           <input type="number" min="1" max="7"
-            className="w-20 bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'5rem'}}
             value={n} onChange={e => setN(Math.min(7, Math.max(1, parseInt(e.target.value) || 1)))} />
         </div>
-        <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Build Tree</button>
+        <button onClick={start} className="viz-btn viz-btn--primary">Build Tree</button>
       </div>
       {started && (
-        <div className="bg-slate-900/60 rounded-lg p-4 space-y-3 max-h-72 overflow-y-auto">
+        <div style={{background:'var(--surface-sunken)',borderRadius:'0.5rem',padding:'1rem'}} className="space-y-3 max-h-72 overflow-y-auto">
           {Object.entries(byDepth).map(([depth, depthCalls]) => (
             <div key={depth} className="flex gap-2 flex-wrap items-center">
-              <span className="text-xs text-slate-600 font-mono w-12">d={depth}:</span>
+              <span style={{color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'0.75rem',width:'3rem'}}>d={depth}:</span>
               {depthCalls.map(c => {
                 const isCurr = c.id === current?.id;
                 const memoHit = depthCalls.filter(x => x.n === c.n && x.id < c.id).length > 0;
+                let cellStyle: React.CSSProperties;
+                if (isCurr) cellStyle = {background:'var(--accent-soft)',border:'1px solid var(--accent)',color:'var(--text)'};
+                else if (memoHit) cellStyle = {background:'color-mix(in srgb, #ef4444 15%, transparent)',border:'1px solid #ef4444',color:'var(--text)'};
+                else if (c.result !== null) cellStyle = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text-secondary)'};
+                else cellStyle = {background:'var(--surface-sunken)',border:'1px solid var(--border-soft)',color:'var(--text-faint)'};
                 return (
-                  <div key={c.id} className={`flex flex-col items-center px-2 py-1 rounded border text-xs font-mono ${isCurr ? 'bg-yellow-800 border-yellow-500 text-yellow-100' : memoHit ? 'bg-red-900/40 border-red-800 text-red-400' : c.result !== null ? 'bg-blue-900/40 border-blue-700 text-blue-200' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
+                  <div key={c.id} className="flex flex-col items-center px-2 py-1 rounded text-xs font-mono" style={cellStyle}>
                     <span>fib({c.n})</span>
-                    {c.result !== null && <span className="text-green-400">={c.result}</span>}
+                    {c.result !== null && <span style={{color:'var(--tier-3)'}}>={c.result}</span>}
                   </div>
                 );
               })}
@@ -128,26 +130,22 @@ function FibonacciViz() {
         </div>
       )}
       {started && (
-        <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300">
+        <div className="viz-info">
           {current ? `Call ${step + 1}/${calls.length}: fib(${current.n})${current.result !== null ? ` = ${current.result}` : ' (computing...)'}` : ''}
           {step === calls.length - 1 && ` | Total calls: ${calls.length} (naive)`}
         </div>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={!started || isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={!started || step <= 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={!started || isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={!started || isDone} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={!started || step <= 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || isDone} className="viz-btn viz-btn--primary">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -229,23 +227,23 @@ function HanoiViz() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">Classic recursion: move n disks from A to C using B as auxiliary</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Classic recursion: move n disks from A to C using B as auxiliary</p>
       <div className="flex gap-3 items-end flex-wrap">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Disks (1–5)</label>
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Disks (1–5)</label>
           <input type="number" min="1" max="5"
-            className="w-20 bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'5rem'}}
             value={n} onChange={e => setN(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))} />
         </div>
-        <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button>
+        <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
       </div>
 
       {allStates.length > 0 && (
         <>
-          <div className="bg-slate-900/60 rounded-lg p-4">
+          <div style={{background:'var(--surface-sunken)',borderRadius:'0.5rem',padding:'1rem'}}>
             <svg width={SVG_W} height={SVG_H}>
               {/* Base line */}
-              <line x1={10} y1={SVG_H - 10} x2={SVG_W - 10} y2={SVG_H - 10} stroke="#475569" strokeWidth={2} />
+              <line x1={10} y1={SVG_H - 10} x2={SVG_W - 10} y2={SVG_H - 10} stroke="var(--border)" strokeWidth={2} />
               {PEG_POSITIONS.map((px, pi) => {
                 const label = PEG_LABELS[pi];
                 const stack = pegState[label] ?? [];
@@ -253,9 +251,9 @@ function HanoiViz() {
                 return (
                   <g key={label}>
                     {/* Peg pole */}
-                    <rect x={px - 3} y={SVG_H - 10 - pegH} width={6} height={pegH} rx={2} fill="#64748b" />
+                    <rect x={px - 3} y={SVG_H - 10 - pegH} width={6} height={pegH} rx={2} fill="var(--border)" />
                     {/* Label */}
-                    <text x={px} y={SVG_H - 1} textAnchor="middle" fontSize={10} fill="#94a3b8">{label}</text>
+                    <text x={px} y={SVG_H - 1} textAnchor="middle" fontSize={10} fill="var(--text-faint)">{label}</text>
                     {/* Disks */}
                     {stack.map((disk, di) => {
                       const w = (disk / maxDisk) * maxDiskW;
@@ -264,7 +262,7 @@ function HanoiViz() {
                       return (
                         <rect key={disk} x={px - w / 2} y={y} width={w} height={diskH} rx={3}
                           fill={DISK_COLORS[(disk - 1) % DISK_COLORS.length]}
-                          stroke={isMoving ? '#fbbf24' : 'transparent'} strokeWidth={2} opacity={0.9} />
+                          stroke={isMoving ? 'var(--accent)' : 'transparent'} strokeWidth={2} opacity={0.9} />
                       );
                     })}
                   </g>
@@ -273,7 +271,7 @@ function HanoiViz() {
             </svg>
           </div>
 
-          <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300">
+          <div className="viz-info">
             {stepIdx === 0
               ? `Initial state: ${n} disks on peg A. Total moves: ${moves.length}`
               : move
@@ -282,22 +280,18 @@ function HanoiViz() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => goTo(stepIdx + 1)} disabled={isDone}
-              className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-            <button onClick={() => { setPlaying(false); goTo(stepIdx - 1); }} disabled={stepIdx <= 0}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-            <button onClick={() => setPlaying(p => !p)} disabled={isDone}
-              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+            <button onClick={() => goTo(stepIdx + 1)} disabled={isDone} className="viz-btn viz-btn--primary">Next Step</button>
+            <button onClick={() => { setPlaying(false); goTo(stepIdx - 1); }} disabled={stepIdx <= 0} className="viz-btn">← Back</button>
+            <button onClick={() => setPlaying(p => !p)} disabled={isDone} className="viz-btn viz-btn--primary">
               {playing ? 'Pause' : '▶ Play'}
             </button>
-            <button onClick={start}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+            <button onClick={start} className="viz-btn">Reset</button>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Speed</span>
-              <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-              <span className="text-xs text-slate-400">{speed}x</span>
+              <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+              <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+              <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
             </div>
-            <span className="text-xs text-slate-500">{stepIdx} / {moves.length} moves</span>
+            <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>{stepIdx} / {moves.length} moves</span>
           </div>
         </>
       )}
@@ -310,12 +304,12 @@ function HanoiViz() {
 export default function RecursionViz() {
   const [tab, setTab] = useState<'fib' | 'hanoi'>('fib');
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-3">Recursion</h3>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.75rem'}}>Recursion</h3>
         <div className="flex gap-2">
-          <button className={TAB_BTN(tab === 'fib')} onClick={() => setTab('fib')}>Fibonacci</button>
-          <button className={TAB_BTN(tab === 'hanoi')} onClick={() => setTab('hanoi')}>Tower of Hanoi</button>
+          <button className={`viz-btn${tab === 'fib' ? ' viz-btn--primary' : ''}`} onClick={() => setTab('fib')}>Fibonacci</button>
+          <button className={`viz-btn${tab === 'hanoi' ? ' viz-btn--primary' : ''}`} onClick={() => setTab('hanoi')}>Tower of Hanoi</button>
         </div>
       </div>
       {tab === 'fib' ? <FibonacciViz /> : <HanoiViz />}

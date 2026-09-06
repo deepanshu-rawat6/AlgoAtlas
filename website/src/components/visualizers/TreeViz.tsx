@@ -80,14 +80,14 @@ export default function TreeViz() {
   }, [speed]);
 
   function nodeColor(i: number) {
-    if (currentIdx === i) return '#ca8a04';  // yellow — current
-    if (visitedIndices.includes(i)) return '#1d4ed8'; // blue — visited
-    return '#1e293b'; // slate — unvisited
+    if (currentIdx === i) return 'var(--accent-soft)';
+    if (visitedIndices.includes(i)) return 'var(--accent)';
+    return 'var(--surface-raised)';
   }
   function nodeStroke(i: number) {
-    if (currentIdx === i) return '#fbbf24';
-    if (visitedIndices.includes(i)) return '#60a5fa';
-    return '#475569';
+    if (currentIdx === i) return 'var(--accent)';
+    if (visitedIndices.includes(i)) return 'var(--accent)';
+    return 'var(--border)';
   }
 
   const msg = !started
@@ -99,37 +99,37 @@ export default function TreeViz() {
         : `Visiting node ${TREE[currentIdx === -1 ? seq[step-1] : currentIdx]} — step ${step}/${seq.length}`;
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Tree Traversal</h3>
-        <p className="text-sm text-slate-400">Step through traversal orders on a binary tree</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Tree Traversal</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Step through traversal orders on a binary tree</p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-2 flex-wrap">
         {TABS.map(t => (
           <button key={t.id} onClick={() => switchTab(t.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${tab === t.id ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'}`}>
+            className={tab === t.id ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
             {t.label}
           </button>
         ))}
       </div>
 
       {/* SVG Tree */}
-      <div className="bg-slate-900/60 rounded-lg p-3">
+      <div className="panel p-3">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 220 }}>
           {EDGES.map(([a, b]) => (
             <line key={`${a}-${b}`}
               x1={POS[a][0]} y1={POS[a][1] + R}
               x2={POS[b][0]} y2={POS[b][1] - R}
-              stroke="#334155" strokeWidth="2" />
+              stroke="var(--border)" strokeWidth="2" />
           ))}
           {TREE.map((val, i) => {
             if (val == null || !POS[i]) return null;
             return (
               <g key={i}>
                 <circle cx={POS[i][0]} cy={POS[i][1]} r={R} fill={nodeColor(i)} stroke={nodeStroke(i)} strokeWidth="2" />
-                <text x={POS[i][0]} y={POS[i][1]+5} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold">{val}</text>
+                <text x={POS[i][0]} y={POS[i][1]+5} textAnchor="middle" fill="var(--text)" fontSize="13" fontWeight="bold">{val}</text>
               </g>
             );
           })}
@@ -139,45 +139,42 @@ export default function TreeViz() {
       {/* Visit sequence badges */}
       {visitedIndices.length > 0 && (
         <div className="flex gap-2 flex-wrap items-center">
-          <span className="text-xs text-slate-500">Visited:</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Visited:</span>
           {visitedIndices.map((idx, pos) => (
-            <span key={pos} className="bg-blue-900/50 border border-blue-700 px-2 py-0.5 rounded text-sm font-mono text-blue-300">{TREE[idx]}</span>
+            <span key={pos} style={{background:'color-mix(in srgb, var(--accent) 20%, transparent)',border:'1px solid var(--accent)',padding:'0.125rem 0.5rem',borderRadius:'0.25rem',fontSize:'0.875rem',fontFamily:'var(--mono)',color:'var(--accent)'}}>{TREE[idx]}</span>
           ))}
           {currentIdx !== -1 && (
-            <span className="bg-yellow-900/50 border border-yellow-600 px-2 py-0.5 rounded text-sm font-mono text-yellow-300 animate-pulse">{TREE[currentIdx]}</span>
+            <span className="animate-pulse" style={{background:'var(--accent-soft)',border:'1px solid var(--accent)',padding:'0.125rem 0.5rem',borderRadius:'0.25rem',fontSize:'0.875rem',fontFamily:'var(--mono)',color:'var(--text)'}}>{TREE[currentIdx]}</span>
           )}
         </div>
       )}
 
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
 
       <div className="flex flex-wrap items-center gap-3">
         {!started
-          ? <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg">Start</button>
+          ? <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
           : <>
-              <button onClick={nextStep} disabled={done}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-              <button onClick={prevStep} disabled={step === 0}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-              <button onClick={togglePlay} disabled={done}
-                className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+              <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+              <button onClick={prevStep} disabled={step === 0} className="viz-btn">← Back</button>
+              <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
                 {playing ? 'Pause' : '▶ Play'}
               </button>
-              <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+              <button onClick={reset} className="viz-btn">Reset</button>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Speed</span>
-                <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-                <span className="text-xs text-slate-400">{speed}x</span>
+                <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+                <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+                <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
               </div>
             </>
         }
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 text-xs text-slate-400">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-600 inline-block"></span>Current</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-700 inline-block"></span>Visited</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-700 inline-block"></span>Unvisited</span>
+      <div className="flex gap-4 text-xs" style={{color:'var(--text-dim)'}}>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--accent-soft)',border:'2px solid var(--accent)'}}></span>Current</span>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--accent)'}}></span>Visited</span>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--surface-raised)',border:'2px solid var(--border)'}}></span>Unvisited</span>
       </div>
     </div>
   );

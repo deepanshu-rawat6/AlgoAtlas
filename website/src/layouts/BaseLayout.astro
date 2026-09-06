@@ -10,7 +10,7 @@ interface Props {
 const { title, description = 'Learn DSA patterns with visual diagrams and interactive animations' } = Astro.props;
 const patterns = await getCollection('patterns');
 const sorted = patterns.sort((a, b) => a.data.phase - b.data.phase || a.data.title.localeCompare(b.data.title));
-const currentSlug = Astro.url.pathname.split('/').pop();
+const currentSlug = Astro.url.pathname.split('/').filter(Boolean).pop();
 ---
 
 <!DOCTYPE html>
@@ -21,49 +21,72 @@ const currentSlug = Astro.url.pathname.split('/').pop();
   <meta name="description" content={description} />
   <title>{title} | AlgoAtlas</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- Apply saved theme before first paint to prevent flash -->
+  <script is:inline>
+    (function(){
+      var t = localStorage.getItem('algoatlas-theme');
+      if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+      else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    })();
+  </script>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-900 text-slate-200">
-  <header class="border-b border-slate-800 px-6 py-4 flex items-center gap-4">
-    <a href="/" class="text-xl font-bold text-blue-400 hover:text-blue-300">AlgoAtlas</a>
-    <span class="text-slate-500 text-sm hidden sm:block">Frequency-Based Learning Roadmap</span>
+<body class="min-h-screen flex flex-col" style="background:var(--bg);color:var(--text)">
+
+  <!-- Header -->
+  <header class="site-header px-6 py-3.5 flex items-center gap-5">
+    <a href="/" class="wordmark">
+      <span class="prompt">❯</span>
+      AlgoAtlas
+      <span class="cursor"></span>
+    </a>
+    <span style="color:var(--text-faint);font-size:0.8rem" class="hidden sm:block">
+      Frequency-Based DSA Roadmap
+    </span>
+    <div class="ml-auto flex items-center gap-3">
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <span class="dot"></span>
+        <span id="theme-label">Theme</span>
+      </button>
+    </div>
   </header>
 
   <div class="flex flex-1 overflow-hidden">
     <!-- Sidebar -->
-    <nav class="hidden lg:flex flex-col w-56 border-r border-slate-800 overflow-y-auto py-4 shrink-0">
-      <!-- Sidebar search -->
+    <nav class="sidebar hidden lg:flex flex-col w-64 overflow-y-auto py-4 shrink-0">
+      <!-- Search -->
       <div class="px-3 pb-3">
-        <input
-          type="text"
-          id="sidebar-search"
-          placeholder="Filter patterns…"
-          class="w-full bg-slate-800 border border-slate-700 rounded-md px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
-        />
+        <input type="text" id="sidebar-search" placeholder="Filter patterns…"
+          class="sidebar-search" autocomplete="off" />
       </div>
+
       {[1, 2, 3].map(phase => (
-        <div class="mb-4 sidebar-phase" data-phase={phase}>
-          <div class="px-4 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Phase {phase}</div>
+        <details open class="sidebar-phase" data-phase={phase}>
+          <summary class="sidebar-summary">
+            Phase {phase}
+          </summary>
           {sorted.filter(p => p.data.phase === phase).map(p => (
             <a
               href={`/pattern/${p.data.slug}`}
               data-title={p.data.title.toLowerCase()}
-              class={`sidebar-link block px-4 py-1.5 text-sm hover:bg-slate-800 hover:text-blue-400 transition-colors ${currentSlug === p.data.slug ? 'bg-slate-800 text-blue-400 border-l-2 border-blue-400' : 'text-slate-400'}`}
+              class={`sidebar-link ${currentSlug === p.data.slug ? 'active' : ''}`}
             >
               {p.data.title}
             </a>
           ))}
-        </div>
+        </details>
       ))}
     </nav>
 
     <!-- Main content -->
-    <main class="flex-1 overflow-y-auto p-6">
+    <main class="flex-1 overflow-y-auto p-6" style="background:var(--bg)">
       <slot />
     </main>
   </div>
 
   <script>
-    // Mermaid rendering
+    // ── Mermaid ──────────────────────────────────────────────────────
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
     mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
 
@@ -80,7 +103,7 @@ const currentSlug = Astro.url.pathname.split('/').pop();
       mermaid.run();
     }
 
-    // Difficulty badge replacement: 🟢→Easy, 🟡→Medium, 🔴→Hard
+    // ── Difficulty badges ────────────────────────────────────────────
     function renderBadges() {
       document.querySelectorAll('.prose td').forEach(td => {
         const text = td.textContent || '';
@@ -94,15 +117,41 @@ const currentSlug = Astro.url.pathname.split('/').pop();
       });
     }
 
+    // ── Sidebar search ───────────────────────────────────────────────
     function initSidebarSearch() {
       const input = document.getElementById('sidebar-search') as HTMLInputElement | null;
       if (!input) return;
       input.addEventListener('input', () => {
         const q = input.value.toLowerCase().trim();
         document.querySelectorAll<HTMLElement>('.sidebar-link').forEach(link => {
-          const match = !q || (link.dataset.title || '').includes(q);
-          link.style.display = match ? '' : 'none';
+          link.style.display = !q || (link.dataset.title || '').includes(q) ? '' : 'none';
         });
+      });
+    }
+
+    // ── Theme toggle ─────────────────────────────────────────────────
+    function initTheme() {
+      const btn = document.getElementById('theme-toggle');
+      const label = document.getElementById('theme-label');
+      if (!btn || !label) return;
+
+      function getTheme() {
+        return document.documentElement.dataset.theme ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      }
+
+      function updateLabel() {
+        label.textContent = getTheme() === 'dark' ? 'Dark' : 'Light';
+      }
+
+      updateLabel();
+
+      btn.addEventListener('click', () => {
+        const current = getTheme();
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('algoatlas-theme', next);
+        updateLabel();
       });
     }
 
@@ -110,6 +159,7 @@ const currentSlug = Astro.url.pathname.split('/').pop();
       renderMermaid();
       renderBadges();
       initSidebarSearch();
+      initTheme();
     }
 
     if (document.readyState === 'loading') {

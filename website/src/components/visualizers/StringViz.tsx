@@ -63,9 +63,6 @@ function buildZFrames(text: string, pattern: string): ZFrame[] {
   return frames;
 }
 
-const TAB_BTN = (active: boolean) =>
-  `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
-
 export default function StringViz() {
   const [tab, setTab] = useState<'kmp' | 'z'>('kmp');
 
@@ -162,37 +159,41 @@ export default function StringViz() {
   const combined = zPattern + '#' + zText;
   const zDone = zStarted && zStep >= zFrames.length - 1;
 
+  const inputStyle = { background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' };
+  const labelStyle = { display: 'block' as const, color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' };
+  const foundMsgStyle = { background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)', minHeight: '2.5rem' };
+
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       {/* Tab bar */}
       <div className="flex gap-2">
-        <button className={TAB_BTN(tab === 'kmp')} onClick={() => setTab('kmp')}>KMP</button>
-        <button className={TAB_BTN(tab === 'z')} onClick={() => setTab('z')}>Z-Function</button>
+        <button className={tab === 'kmp' ? 'viz-btn viz-btn--primary' : 'viz-btn'} onClick={() => setTab('kmp')}>KMP</button>
+        <button className={tab === 'z' ? 'viz-btn viz-btn--primary' : 'viz-btn'} onClick={() => setTab('z')}>Z-Function</button>
       </div>
 
       {tab === 'kmp' && (
         <>
           <div>
-            <h3 className="text-lg font-semibold text-slate-100 mb-1">KMP Pattern Matching</h3>
-            <p className="text-sm text-slate-400">O(n+m) using LPS (failure function) to avoid backtracking</p>
+            <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>KMP Pattern Matching</h3>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>O(n+m) using LPS (failure function) to avoid backtracking</p>
           </div>
           <div className="flex flex-wrap gap-3">
             {([['Text', kText, setKText], ['Pattern', kPattern, setKPattern]] as const).map(([label, val, set]) => (
               <div key={label} className="flex-1 min-w-28">
-                <label className="block text-xs text-slate-400 mb-1">{label}</label>
-                <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                <label style={labelStyle}>{label}</label>
+                <input style={{ ...inputStyle, fontFamily: 'var(--mono)' }}
                   value={val} onChange={e => set(e.target.value.toUpperCase())} />
               </div>
             ))}
-            <div className="flex items-end"><button onClick={startKmp} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button></div>
+            <div className="flex items-end"><button onClick={startKmp} className="viz-btn viz-btn--primary">Start</button></div>
           </div>
 
           <div className="flex gap-2 items-center flex-wrap">
-            <span className="text-xs text-slate-500 font-mono">LPS:</span>
+            <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem', fontFamily: 'var(--mono)' }}>LPS:</span>
             {kPattern.split('').map((c, i) => (
               <div key={i} className="flex flex-col items-center">
-                <span className="text-xs font-mono text-slate-400 w-7 text-center">{c}</span>
-                <span className="text-xs font-mono bg-slate-700 border border-slate-600 w-7 h-7 flex items-center justify-center rounded text-blue-300">{lps[i]}</span>
+                <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontFamily: 'var(--mono)', width: '1.75rem', textAlign: 'center' }}>{c}</span>
+                <span style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', width: '1.75rem', height: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.25rem', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: '0.75rem' }}>{lps[i]}</span>
               </div>
             ))}
           </div>
@@ -203,49 +204,53 @@ export default function StringViz() {
                 {kText.split('').map((c, i) => {
                   const isTi = i === kFrame.ti;
                   const isFound = kFrame.found !== null && i >= kFrame.found && i < kFrame.found + kPattern.length;
-                  let bg = 'bg-slate-700 border-slate-600 text-slate-300';
-                  if (isFound) bg = 'bg-green-800 border-green-400 text-white';
-                  else if (isTi) bg = `${kFrame.match ? 'bg-blue-800 border-blue-400' : 'bg-red-800 border-red-400'} text-white`;
+                  let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' };
+                  if (isFound) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)', color: 'var(--text)' };
+                  else if (isTi) cellStyle = kFrame.match
+                    ? { background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--text)' }
+                    : { background: 'color-mix(in srgb, #ef4444 15%, transparent)', borderColor: '#ef4444', color: 'var(--text)' };
                   return (
                     <div key={i} className="flex flex-col items-center">
-                      <div className={`w-8 h-8 flex items-center justify-center font-mono font-bold border-2 rounded text-sm ${bg}`}>{c}</div>
-                      <span className="text-xs text-slate-600">{i}</span>
+                      <div style={cellStyle} className="w-8 h-8 flex items-center justify-center font-mono font-bold border-2 rounded text-sm">{c}</div>
+                      <span style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{i}</span>
                     </div>
                   );
                 })}
               </div>
               <div className="flex gap-1 flex-wrap items-center">
-                <span className="text-xs text-slate-500">Pattern:</span>
-                {kPattern.split('').map((c, i) => (
-                  <div key={i} className={`w-8 h-8 flex items-center justify-center font-mono font-bold border-2 rounded text-sm ${i === kFrame.pi ? 'bg-purple-800 border-purple-400 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>{c}</div>
-                ))}
+                <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Pattern:</span>
+                {kPattern.split('').map((c, i) => {
+                  const pStyle = i === kFrame.pi
+                    ? { background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--text)' }
+                    : { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-faint)' };
+                  return (
+                    <div key={i} style={pStyle} className="w-8 h-8 flex items-center justify-center font-mono font-bold border-2 rounded text-sm">{c}</div>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {kFrame && <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${kFrame.found !== null ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{kFrame.msg}</div>}
+          {kFrame && (
+            kFrame.found !== null
+              ? <div style={foundMsgStyle}>{kFrame.msg}</div>
+              : <div className="viz-info">{kFrame.msg}</div>
+          )}
 
           {kStarted && (
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={kNextStep} disabled={kDone}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-                Next Step
-              </button>
-              <button onClick={kStepBack} disabled={kStep === 0}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-                ← Back
-              </button>
-              <button onClick={kTogglePlay} disabled={kDone}
-                className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+              <button onClick={kNextStep} disabled={kDone} className="viz-btn viz-btn--primary">Next Step</button>
+              <button onClick={kStepBack} disabled={kStep === 0} className="viz-btn">← Back</button>
+              <button onClick={kTogglePlay} disabled={kDone} className={kPlaying ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
                 {kPlaying ? 'Pause' : '▶ Play'}
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Speed</span>
+                <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
                 <input type="range" min={1} max={5} value={kSpeed} onChange={e => setKSpeed(Number(e.target.value))}
-                  className="w-24" />
-                <span className="text-xs text-slate-400">{kSpeed}x</span>
+                  className="speed-slider w-24" />
+                <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{kSpeed}x</span>
               </div>
-              <span className="text-xs text-slate-500 self-center">{kStep + 1}/{kFrames.length}</span>
+              <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>{kStep + 1}/{kFrames.length}</span>
             </div>
           )}
         </>
@@ -254,82 +259,84 @@ export default function StringViz() {
       {tab === 'z' && (
         <>
           <div>
-            <h3 className="text-lg font-semibold text-slate-100 mb-1">Z-Function Pattern Matching</h3>
-            <p className="text-sm text-slate-400">Build Z-array on pattern+'#'+text; match where Z[i] == pattern.length</p>
+            <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Z-Function Pattern Matching</h3>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Build Z-array on pattern+'#'+text; match where Z[i] == pattern.length</p>
           </div>
           <div className="flex flex-wrap gap-3">
             {([['Text', zText, setZText], ['Pattern', zPattern, setZPattern]] as const).map(([label, val, set]) => (
               <div key={label} className="flex-1 min-w-28">
-                <label className="block text-xs text-slate-400 mb-1">{label}</label>
-                <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                <label style={labelStyle}>{label}</label>
+                <input style={{ ...inputStyle, fontFamily: 'var(--mono)' }}
                   value={val} onChange={e => set(e.target.value.toUpperCase())} />
               </div>
             ))}
-            <div className="flex items-end"><button onClick={startZ} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button></div>
+            <div className="flex items-end"><button onClick={startZ} className="viz-btn viz-btn--primary">Start</button></div>
           </div>
 
           {/* Combined string + Z-array */}
           {zStarted && zFrame && (
             <div className="space-y-3">
-              <p className="text-xs text-slate-500 font-mono">Combined: <span className="text-slate-300">{combined}</span></p>
+              <p style={{ color: 'var(--text-faint)', fontSize: '0.75rem', fontFamily: 'var(--mono)' }}>Combined: <span style={{ color: 'var(--text)' }}>{combined}</span></p>
               <div className="flex gap-1 flex-wrap">
                 {combined.split('').map((c, i) => {
                   const isCurr = i === zFrame.i;
                   const inMatchExtent = i >= zFrame.i && i < zFrame.matchEnd;
                   const inZBox = zFrame.l > 0 && i >= zFrame.l && i < zFrame.r;
-                  let bg = 'bg-slate-700 border-slate-600 text-slate-300';
-                  if (isCurr) bg = 'bg-yellow-800 border-yellow-400 text-white';
-                  else if (inMatchExtent) bg = 'bg-blue-800 border-blue-500 text-white';
-                  else if (inZBox) bg = 'bg-green-900 border-green-600 text-green-200';
+                  let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' };
+                  if (isCurr) cellStyle = { background: 'color-mix(in srgb, #eab308 20%, transparent)', borderColor: '#eab308', color: 'var(--text)' };
+                  else if (inMatchExtent) cellStyle = { background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--text)' };
+                  else if (inZBox) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)', color: 'var(--text)' };
                   return (
                     <div key={i} className="flex flex-col items-center">
-                      <div className={`w-8 h-8 flex items-center justify-center font-mono font-bold border-2 rounded text-sm ${bg}`}>{c}</div>
-                      <span className="text-xs text-slate-600">{i}</span>
+                      <div style={cellStyle} className="w-8 h-8 flex items-center justify-center font-mono font-bold border-2 rounded text-sm">{c}</div>
+                      <span style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{i}</span>
                     </div>
                   );
                 })}
               </div>
               {/* Z-array values */}
               <div className="flex gap-2 items-center flex-wrap">
-                <span className="text-xs text-slate-500 font-mono">Z:</span>
+                <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem', fontFamily: 'var(--mono)' }}>Z:</span>
                 {zFrame.z.slice(1).map((v, i) => {
                   const realI = i + 1;
                   const isMatch = v === zPattern.length;
+                  const zValStyle = realI === zFrame.i
+                    ? { background: 'color-mix(in srgb, #eab308 20%, transparent)', borderColor: '#eab308', color: 'var(--text)' }
+                    : isMatch
+                    ? { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)', color: 'var(--text)' }
+                    : { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--accent)' };
                   return (
                     <div key={realI} className="flex flex-col items-center">
-                      <span className="text-xs font-mono text-slate-500 w-7 text-center">{realI}</span>
-                      <span className={`text-xs font-mono w-7 h-7 flex items-center justify-center rounded border ${realI === zFrame.i ? 'bg-yellow-800 border-yellow-400 text-white' : isMatch ? 'bg-green-800 border-green-400 text-green-200' : 'bg-slate-700 border-slate-600 text-blue-300'}`}>{v}</span>
+                      <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem', fontFamily: 'var(--mono)', width: '1.75rem', textAlign: 'center' }}>{realI}</span>
+                      <span style={{ ...zValStyle, width: '1.75rem', height: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0.25rem', border: '1px solid', fontFamily: 'var(--mono)', fontSize: '0.75rem' }}>{v}</span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-slate-500">Z-box: <span className="text-green-400 font-mono">[{zFrame.l}, {zFrame.r})</span></p>
+              <p style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Z-box: <span style={{ color: 'var(--tier-3)', fontFamily: 'var(--mono)' }}>[{zFrame.l}, {zFrame.r})</span></p>
             </div>
           )}
 
-          {zFrame && <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${zFrame.msg.startsWith('✓') ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{zFrame.msg}</div>}
+          {zFrame && (
+            zFrame.msg.startsWith('✓')
+              ? <div style={foundMsgStyle}>{zFrame.msg}</div>
+              : <div className="viz-info">{zFrame.msg}</div>
+          )}
 
           {zStarted && (
             <div className="flex flex-wrap items-center gap-3">
-              <button onClick={zNextStep} disabled={zDone}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-                Next Step
-              </button>
-              <button onClick={zStepBack} disabled={zStep === 0}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-                ← Back
-              </button>
-              <button onClick={zTogglePlay} disabled={zDone}
-                className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+              <button onClick={zNextStep} disabled={zDone} className="viz-btn viz-btn--primary">Next Step</button>
+              <button onClick={zStepBack} disabled={zStep === 0} className="viz-btn">← Back</button>
+              <button onClick={zTogglePlay} disabled={zDone} className={zPlaying ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
                 {zPlaying ? 'Pause' : '▶ Play'}
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Speed</span>
+                <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
                 <input type="range" min={1} max={5} value={zSpeed} onChange={e => setZSpeed(Number(e.target.value))}
-                  className="w-24" />
-                <span className="text-xs text-slate-400">{zSpeed}x</span>
+                  className="speed-slider w-24" />
+                <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{zSpeed}x</span>
               </div>
-              <span className="text-xs text-slate-500 self-center">{zStep + 1}/{zFrames.length}</span>
+              <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>{zStep + 1}/{zFrames.length}</span>
             </div>
           )}
         </>

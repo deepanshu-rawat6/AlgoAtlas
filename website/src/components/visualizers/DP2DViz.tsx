@@ -1,9 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 
-const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
-const ACTIVE = 'bg-blue-700 text-white border-blue-500';
-const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
-
 type DP2DSnap = { dp: number[][], i: number, j: number, done: boolean, msg: string };
 
 // ── LCS ────────────────────────────────────────────────────────────────────────
@@ -94,19 +90,22 @@ function LCS() {
 
   const maxVal = dp.length ? Math.max(...dp.flat()) : 0;
 
+  const thStyle: React.CSSProperties = {width:'2rem',height:'2rem',color:'var(--text-faint)',border:'1px solid var(--border)',background:'var(--surface-sunken)',textAlign:'center',fontSize:'0.75rem',fontFamily:'var(--mono)'};
+  const thLabelStyle: React.CSSProperties = {...thStyle,color:'var(--text-dim)'};
+
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">dp[i][j] = LCS length of s1[0..i] and s2[0..j]</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>dp[i][j] = LCS length of s1[0..i] and s2[0..j]</p>
       <div className="flex flex-wrap gap-3">
         {([['String 1', s1, setS1], ['String 2', s2, setS2]] as const).map(([label, val, set]) => (
           <div key={label} className="flex-1 min-w-28">
-            <label className="block text-xs text-slate-400 mb-1">{label}</label>
-            <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>{label}</label>
+            <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
               value={val} onChange={e => set(e.target.value)} />
           </div>
         ))}
         <div className="flex items-end">
-          <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
       {dp.length > 0 && (
@@ -114,26 +113,26 @@ function LCS() {
           <table className="border-collapse text-xs font-mono">
             <thead>
               <tr>
-                <th className="w-8 h-8 text-slate-600 border border-slate-700 bg-slate-900/60"></th>
-                <th className="w-8 h-8 text-slate-500 border border-slate-700 bg-slate-900/60">ε</th>
+                <th style={thStyle}></th>
+                <th style={thStyle}>ε</th>
                 {s2.split('').map((c, idx) => (
-                  <th key={idx} className="w-8 h-8 text-slate-400 border border-slate-700 bg-slate-900/60">{c}</th>
+                  <th key={idx} style={thLabelStyle}>{c}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {dp.map((row, ri) => (
                 <tr key={ri}>
-                  <td className="w-8 h-8 text-center text-slate-400 border border-slate-700 bg-slate-900/60">{ri === 0 ? 'ε' : s1[ri - 1]}</td>
+                  <td style={{...thLabelStyle,textAlign:'center'}}>{ri === 0 ? 'ε' : s1[ri - 1]}</td>
                   {row.map((val, ci) => {
                     const isCurr = ri === i && ci === j;
                     const isMax = val === maxVal && maxVal > 0;
-                    let bg = 'bg-slate-800';
-                    if (isCurr) bg = 'bg-yellow-800 border-yellow-500';
-                    else if (isMax && ri <= (started ? i : 999)) bg = 'bg-green-800';
-                    else if (ri < i || (ri === i && ci < j)) bg = 'bg-blue-900/30';
+                    let cellStyle: React.CSSProperties = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text)',textAlign:'center',width:'2rem',height:'2rem'};
+                    if (isCurr) cellStyle = {...cellStyle,background:'var(--accent-soft)',borderColor:'var(--accent)'};
+                    else if (isMax && ri <= (started ? i : 999)) cellStyle = {...cellStyle,background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',borderColor:'var(--tier-3)'};
+                    else if (ri < i || (ri === i && ci < j)) cellStyle = {...cellStyle,background:'var(--surface-sunken)',color:'var(--text-secondary)'};
                     return (
-                      <td key={ci} className={`w-8 h-8 text-center border border-slate-700 text-slate-200 ${bg}`}>{val}</td>
+                      <td key={ci} style={cellStyle}>{val}</td>
                     );
                   })}
                 </tr>
@@ -142,25 +141,18 @@ function LCS() {
           </table>
         </div>
       )}
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={next} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={togglePlay} disabled={!started || done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={next} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className="viz-btn viz-btn--primary">
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -258,19 +250,22 @@ function EditDistance() {
     timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
   }, [speed]);
 
+  const thStyle: React.CSSProperties = {width:'2rem',height:'2rem',color:'var(--text-faint)',border:'1px solid var(--border)',background:'var(--surface-sunken)',textAlign:'center',fontSize:'0.75rem',fontFamily:'var(--mono)'};
+  const thLabelStyle: React.CSSProperties = {...thStyle,color:'var(--text-dim)'};
+
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">dp[i][j] = min ops to convert word1[0..i-1] to word2[0..j-1]</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>dp[i][j] = min ops to convert word1[0..i-1] to word2[0..j-1]</p>
       <div className="flex flex-wrap gap-3">
         {([['Word 1', word1, setWord1], ['Word 2', word2, setWord2]] as const).map(([label, val, set]) => (
           <div key={label} className="flex-1 min-w-28">
-            <label className="block text-xs text-slate-400 mb-1">{label}</label>
-            <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+            <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>{label}</label>
+            <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
               value={val} onChange={e => set(e.target.value)} />
           </div>
         ))}
         <div className="flex items-end">
-          <button onClick={start} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
       {dp.length > 0 && (
@@ -278,25 +273,25 @@ function EditDistance() {
           <table className="border-collapse text-xs font-mono">
             <thead>
               <tr>
-                <th className="w-8 h-8 text-slate-600 border border-slate-700 bg-slate-900/60"></th>
-                <th className="w-8 h-8 text-slate-500 border border-slate-700 bg-slate-900/60">ε</th>
+                <th style={thStyle}></th>
+                <th style={thStyle}>ε</th>
                 {word2.split('').map((c, idx) => (
-                  <th key={idx} className="w-8 h-8 text-slate-400 border border-slate-700 bg-slate-900/60">{c}</th>
+                  <th key={idx} style={thLabelStyle}>{c}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {dp.map((row, ri) => (
                 <tr key={ri}>
-                  <td className="w-8 h-8 text-center text-slate-400 border border-slate-700 bg-slate-900/60">{ri === 0 ? 'ε' : word1[ri - 1]}</td>
+                  <td style={{...thLabelStyle,textAlign:'center'}}>{ri === 0 ? 'ε' : word1[ri - 1]}</td>
                   {row.map((val, ci) => {
                     const isCurr = ri === i && ci === j && started && !done;
                     const isFilled = started && (ri < i || (ri === i && ci <= j));
-                    let bg = 'bg-slate-800';
-                    if (isCurr) bg = 'bg-yellow-800 border-yellow-500';
-                    else if (isFilled) bg = 'bg-blue-900/40';
+                    let cellStyle: React.CSSProperties = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text)',textAlign:'center',width:'2rem',height:'2rem'};
+                    if (isCurr) cellStyle = {...cellStyle,background:'var(--accent-soft)',borderColor:'var(--accent)'};
+                    else if (isFilled) cellStyle = {...cellStyle,background:'var(--surface-sunken)',color:'var(--text-secondary)'};
                     return (
-                      <td key={ci} className={`w-8 h-8 text-center border border-slate-700 text-slate-200 ${bg}`}>{val}</td>
+                      <td key={ci} style={cellStyle}>{val}</td>
                     );
                   })}
                 </tr>
@@ -306,29 +301,22 @@ function EditDistance() {
         </div>
       )}
       {done && (
-        <div className="bg-green-900/40 border border-green-700 rounded-lg px-4 py-3 text-green-300 text-sm font-mono">
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
           ✓ Edit distance = {dp[word1.length]?.[word2.length]}
         </div>
       )}
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={next} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={togglePlay} disabled={!started || done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={next} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className="viz-btn viz-btn--primary">
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -341,12 +329,12 @@ export default function DP2DViz() {
   const tabs = ['LCS', 'Edit Distance'] as const;
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-3">2D Dynamic Programming</h3>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.75rem'}}>2D Dynamic Programming</h3>
         <div className="flex gap-2">
           {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`${TAB_BTN} ${tab === t ? ACTIVE : INACTIVE}`}>{t}</button>
+            <button key={t} onClick={() => setTab(t)} className={`viz-btn${tab === t ? ' viz-btn--primary' : ''}`}>{t}</button>
           ))}
         </div>
       </div>

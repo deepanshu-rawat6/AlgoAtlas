@@ -168,17 +168,17 @@ export default function SortingViz() {
   const maxVal = frame ? Math.max(...frame.array) : 1;
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Sorting Algorithms</h3>
-        <p className="text-sm text-slate-400">Step through Merge Sort, Quick Sort, and Heap Sort</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Sorting Algorithms</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Step through Merge Sort, Quick Sort, and Heap Sort</p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-2">
         {TABS.map(t => (
           <button key={t.id} onClick={() => switchAlgo(t.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${algo === t.id ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'}`}>
+            className={algo === t.id ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
             {t.label}
           </button>
         ))}
@@ -187,12 +187,12 @@ export default function SortingViz() {
       {/* Input + Start */}
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Array</label>
+          <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
             value={input} onChange={e => setInput(e.target.value)} />
         </div>
         <div className="flex items-end">
-          <button onClick={start} className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded">Start</button>
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
         </div>
       </div>
 
@@ -204,11 +204,11 @@ export default function SortingViz() {
             const isSwap    = frame.swapping.includes(i);
             const isPivot   = frame.pivot.includes(i);
             const height = Math.max(8, Math.round((v / maxVal) * 100));
-            const color = isPivot ? 'bg-orange-500' : isSwap ? 'bg-green-500' : isCompare ? 'bg-yellow-500' : 'bg-blue-600';
+            const barBg = isPivot ? '#f97316' : isSwap ? 'var(--tier-3)' : isCompare ? '#eab308' : 'var(--accent)';
             return (
               <div key={i} className="flex flex-col items-center gap-1 flex-1">
-                <span className="text-xs font-mono text-slate-500">{v}</span>
-                <div className={`w-full rounded-t transition-all duration-150 ${color}`} style={{ height: `${height}%` }} />
+                <span style={{fontSize:'0.75rem',fontFamily:'var(--mono)',color:'var(--text-faint)'}}>{v}</span>
+                <div className="w-full rounded-t transition-all duration-150" style={{ height: `${height}%`, background: barBg }} />
               </div>
             );
           })}
@@ -217,11 +217,11 @@ export default function SortingViz() {
 
       {/* Legend (quick/heap only) */}
       {(algo === 'quick' || algo === 'heap') && (
-        <div className="flex gap-4 text-xs text-slate-400">
-          {algo === 'quick' && <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-500 inline-block"></span>Pivot</span>}
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-500 inline-block"></span>Comparing</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block"></span>Swapped</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-600 inline-block"></span>Default</span>
+        <div className="flex gap-4 text-xs" style={{color:'var(--text-dim)'}}>
+          {algo === 'quick' && <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:'#f97316'}}></span>Pivot</span>}
+          <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:'#eab308'}}></span>Comparing</span>
+          <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:'var(--tier-3)'}}></span>Swapped</span>
+          <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:'var(--accent)'}}></span>Default</span>
         </div>
       )}
 

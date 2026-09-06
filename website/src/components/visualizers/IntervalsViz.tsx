@@ -4,8 +4,7 @@ const DEFAULT_MERGE: [number, number][] = [[1,3],[2,6],[8,10],[15,18]];
 const DEFAULT_INSERT_INTERVALS: [number,number][] = [[1,3],[6,9]];
 const DEFAULT_NEW_INTERVAL: [number,number] = [2,5];
 
-const TAB_BTN = (active: boolean) =>
-  `px-3 py-1.5 text-xs font-medium rounded border transition-colors ${active ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`;
+const TAB_BTN = (active: boolean) => active ? 'viz-btn viz-btn--primary' : 'viz-btn';
 
 // ── Merge Intervals ──────────────────────────────────────────────────────────
 
@@ -89,60 +88,59 @@ function MergeTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Merge Intervals</h3>
-        <p className="text-sm text-slate-400">Sort by start, merge overlapping intervals greedily</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Merge Intervals</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Sort by start, merge overlapping intervals greedily</p>
       </div>
-      <div className="bg-slate-900/60 rounded-lg p-4 overflow-x-auto">
+      <div className="rounded-lg p-4 overflow-x-auto" style={{background:'var(--surface-sunken)'}}>
         <svg width="100%" viewBox={`0 0 500 ${(intervals.length + merged.length + 2) * 28 + 10}`} style={{ minWidth: 320 }}>
-          <line x1="10" y1="5" x2={max * scale + 10} y2="5" stroke="#334155" strokeWidth="1" />
+          <line x1="10" y1="5" x2={max * scale + 10} y2="5" stroke="var(--border)" strokeWidth="1" />
           {Array.from({ length: max + 1 }, (_, i) => (
             <g key={i}>
-              <line x1={i * scale + 10} y1="3" x2={i * scale + 10} y2="7" stroke="#475569" strokeWidth="1" />
-              <text x={i * scale + 10} y="18" textAnchor="middle" fill="#64748b" fontSize="9">{i}</text>
+              <line x1={i * scale + 10} y1="3" x2={i * scale + 10} y2="7" stroke="var(--border)" strokeWidth="1" />
+              <text x={i * scale + 10} y="18" textAnchor="middle" fill="var(--text-faint)" fontSize="9">{i}</text>
             </g>
           ))}
           {sorted.map(([s, e], i) => (
             <g key={i}>
               <rect x={s * scale + 10} y={28 + i * 28} width={(e - s) * scale} height="18"
-                fill={i < step ? '#1e3a5f' : i === step ? '#1d4ed8' : '#1e293b'}
-                stroke={i < step ? '#334155' : i === step ? '#60a5fa' : '#475569'} strokeWidth="1.5" rx="3" />
-              <text x={s * scale + 15} y={28 + i * 28 + 13} fill="#94a3b8" fontSize="10">[{s},{e}]</text>
+                fill={i < step ? 'var(--surface-raised)' : i === step ? 'var(--accent-soft)' : 'var(--surface-sunken)'}
+                stroke={i < step ? 'var(--border)' : i === step ? 'var(--accent)' : 'var(--border-soft)'} strokeWidth="1.5" rx="3" />
+              <text x={s * scale + 15} y={28 + i * 28 + 13} fill="var(--text-dim)" fontSize="10">[{s},{e}]</text>
             </g>
           ))}
-          <line x1="10" y1={28 + sorted.length * 28 + 8} x2={max * scale + 10} y2={28 + sorted.length * 28 + 8} stroke="#334155" strokeWidth="1" strokeDasharray="4" />
-          <text x="12" y={28 + sorted.length * 28 + 20} fill="#64748b" fontSize="9">merged:</text>
+          <line x1="10" y1={28 + sorted.length * 28 + 8} x2={max * scale + 10} y2={28 + sorted.length * 28 + 8} stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
+          <text x="12" y={28 + sorted.length * 28 + 20} fill="var(--text-faint)" fontSize="9">merged:</text>
           {merged.map(([s, e], i) => (
             <g key={i}>
               <rect x={s * scale + 10} y={28 + sorted.length * 28 + 24 + i * 28} width={(e - s) * scale} height="18"
-                fill="#14532d" stroke="#22c55e" strokeWidth="1.5" rx="3" />
-              <text x={s * scale + 15} y={28 + sorted.length * 28 + 24 + i * 28 + 13} fill="#86efac" fontSize="10">[{s},{e}]</text>
+                fill="color-mix(in srgb, var(--tier-3) 20%, transparent)" stroke="var(--tier-3)" strokeWidth="1.5" rx="3" />
+              <text x={s * scale + 15} y={28 + sorted.length * 28 + 24 + i * 28 + 13} fill="var(--tier-3)" fontSize="10">[{s},{e}]</text>
             </g>
           ))}
         </svg>
       </div>
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           Next Step
         </button>
         <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">
           ← Back
         </button>
         <button onClick={togglePlay} disabled={isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+        <button onClick={reset} className="viz-btn">
           Reset
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -167,13 +165,11 @@ function buildInsertFrames(intervals: [number,number][], newInterval: [number,nu
   let i = 0;
   const n = intervals.length;
 
-  // Phase 1: before
   while (i < n && intervals[i][1] < ni[0]) {
     result.push([...intervals[i]]);
     frames.push({ idx: i, phase: 'before', result: result.map(x => [...x] as [number,number]), newInterval: [...ni], msg: `[${intervals[i]}] ends before new interval starts → add to result` });
     i++;
   }
-  // Phase 2: overlap
   while (i < n && intervals[i][0] <= ni[1]) {
     const merged: [number,number] = [Math.min(ni[0], intervals[i][0]), Math.max(ni[1], intervals[i][1])];
     frames.push({ idx: i, phase: 'overlap', result: result.map(x => [...x] as [number,number]), newInterval: [...ni], msg: `[${intervals[i]}] overlaps → merge: [${ni}] ∪ [${intervals[i]}] = [${merged}]` });
@@ -183,7 +179,6 @@ function buildInsertFrames(intervals: [number,number][], newInterval: [number,nu
   result.push([...ni]);
   frames.push({ idx: i - 1, phase: 'overlap', result: result.map(x => [...x] as [number,number]), newInterval: [...ni], msg: `Merged interval [${ni}] added to result` });
 
-  // Phase 3: after
   while (i < n) {
     result.push([...intervals[i]]);
     frames.push({ idx: i, phase: 'after', result: result.map(x => [...x] as [number,number]), newInterval: [...ni], msg: `[${intervals[i]}] starts after merged end ${ni[1]} → add to result` });
@@ -240,97 +235,97 @@ function InsertTab() {
     timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
   }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function cellColor(idx: number, phase: InsertPhase) {
-    if (phase === 'done') return { fill: '#14532d', stroke: '#22c55e' };
-    if (phase === 'before') return { fill: '#1e3a5f', stroke: '#3b82f6' };
-    if (phase === 'overlap') return { fill: '#713f12', stroke: '#eab308' };
-    return { fill: '#1e293b', stroke: '#475569' };
+  function cellColor(phase: InsertPhase) {
+    if (phase === 'done') return { fill: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', stroke: 'var(--tier-3)' };
+    if (phase === 'before') return { fill: 'var(--surface-raised)', stroke: 'var(--border)' };
+    if (phase === 'overlap') return { fill: 'var(--accent-soft)', stroke: 'var(--accent)' };
+    return { fill: 'var(--surface-sunken)', stroke: 'var(--border-soft)' };
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Insert Interval</h3>
-        <p className="text-sm text-slate-400">Insert into sorted non-overlapping intervals and merge</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Insert Interval</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Insert into sorted non-overlapping intervals and merge</p>
       </div>
 
-      <div className="flex flex-wrap gap-4 text-xs text-slate-400">
-        <span>Intervals: <span className="text-slate-200 font-mono">{intervals.map(i => `[${i}]`).join(', ')}</span></span>
-        <span>New: <span className="text-yellow-300 font-mono">[{newInterval.join(',')}]</span></span>
+      <div className="flex flex-wrap gap-4 text-xs" style={{color:'var(--text-dim)'}}>
+        <span>Intervals: <span style={{color:'var(--text)',fontFamily:'var(--mono)'}}>{intervals.map(i => `[${i}]`).join(', ')}</span></span>
+        <span>New: <span style={{color:'var(--accent)',fontFamily:'var(--mono)'}}>[{newInterval.join(',')}]</span></span>
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg p-4 overflow-x-auto">
+      <div className="rounded-lg p-4 overflow-x-auto" style={{background:'var(--surface-sunken)'}}>
         <svg width="100%" viewBox={`0 0 460 ${(intervals.length + 4) * 28 + 10}`} style={{ minWidth: 300 }}>
           {/* Axis */}
           {Array.from({ length: max + 1 }, (_, i) => (
             <g key={i}>
-              <line x1={i * scale + 10} y1="3" x2={i * scale + 10} y2="7" stroke="#475569" strokeWidth="1" />
-              <text x={i * scale + 10} y="18" textAnchor="middle" fill="#64748b" fontSize="9">{i}</text>
+              <line x1={i * scale + 10} y1="3" x2={i * scale + 10} y2="7" stroke="var(--border)" strokeWidth="1" />
+              <text x={i * scale + 10} y="18" textAnchor="middle" fill="var(--text-faint)" fontSize="9">{i}</text>
             </g>
           ))}
           {/* New interval */}
           <rect x={newInterval[0] * scale + 10} y={28} width={(newInterval[1] - newInterval[0]) * scale} height="18"
-            fill="#422006" stroke="#f59e0b" strokeWidth="1.5" rx="3" strokeDasharray="4" />
-          <text x={newInterval[0] * scale + 15} y={28 + 13} fill="#fcd34d" fontSize="10">new [{newInterval.join(',')}]</text>
+            fill="var(--accent-soft)" stroke="var(--accent)" strokeWidth="1.5" rx="3" strokeDasharray="4" />
+          <text x={newInterval[0] * scale + 15} y={28 + 13} fill="var(--accent)" fontSize="10">new [{newInterval.join(',')}]</text>
 
           {/* Original intervals */}
           {intervals.map(([s, e], i) => {
             const isCurr = frame && i === frame.idx;
-            const color = isCurr ? cellColor(i, frame.phase) : { fill: '#1e293b', stroke: '#475569' };
+            const color = isCurr ? cellColor(frame.phase) : { fill: 'var(--surface-sunken)', stroke: 'var(--border-soft)' };
             return (
               <g key={i}>
                 <rect x={s * scale + 10} y={56 + i * 28} width={(e - s) * scale} height="18"
                   fill={color.fill} stroke={color.stroke} strokeWidth="1.5" rx="3" />
-                <text x={s * scale + 15} y={56 + i * 28 + 13} fill="#94a3b8" fontSize="10">[{s},{e}]</text>
+                <text x={s * scale + 15} y={56 + i * 28 + 13} fill="var(--text-dim)" fontSize="10">[{s},{e}]</text>
               </g>
             );
           })}
 
           {/* Separator */}
-          <line x1="10" y1={56 + intervals.length * 28 + 8} x2={max * scale + 10} y2={56 + intervals.length * 28 + 8} stroke="#334155" strokeWidth="1" strokeDasharray="4" />
-          <text x="12" y={56 + intervals.length * 28 + 20} fill="#64748b" fontSize="9">result:</text>
+          <line x1="10" y1={56 + intervals.length * 28 + 8} x2={max * scale + 10} y2={56 + intervals.length * 28 + 8} stroke="var(--border)" strokeWidth="1" strokeDasharray="4" />
+          <text x="12" y={56 + intervals.length * 28 + 20} fill="var(--text-faint)" fontSize="9">result:</text>
 
           {/* Result */}
           {frame && frame.result.map(([s, e], i) => (
             <g key={i}>
               <rect x={s * scale + 10} y={56 + intervals.length * 28 + 24 + i * 28} width={(e - s) * scale} height="18"
-                fill="#14532d" stroke="#22c55e" strokeWidth="1.5" rx="3" />
-              <text x={s * scale + 15} y={56 + intervals.length * 28 + 24 + i * 28 + 13} fill="#86efac" fontSize="10">[{s},{e}]</text>
+                fill="color-mix(in srgb, var(--tier-3) 20%, transparent)" stroke="var(--tier-3)" strokeWidth="1.5" rx="3" />
+              <text x={s * scale + 15} y={56 + intervals.length * 28 + 24 + i * 28 + 13} fill="var(--tier-3)" fontSize="10">[{s},{e}]</text>
             </g>
           ))}
         </svg>
       </div>
 
       {frame && (
-        <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${frame.phase === 'done' ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>
+        <div className={frame.phase === 'done' ? '' : 'viz-info'}
+          style={frame.phase === 'done' ? {background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'} : undefined}>
           {frame.msg}
         </div>
       )}
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={nextStep} disabled={isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           Next Step
         </button>
         <button onClick={stepBack} disabled={step === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">
           ← Back
         </button>
         <button onClick={togglePlay} disabled={isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={() => { stopPlay(); setStep(0); }}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">
+        <button onClick={() => { stopPlay(); setStep(0); }} className="viz-btn">
           Reset
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
-        <span className="text-xs text-slate-500 self-center">{step + 1}/{frames.length}</span>
+        <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}} className="self-center">{step + 1}/{frames.length}</span>
       </div>
     </div>
   );
@@ -340,7 +335,7 @@ function InsertTab() {
 export default function IntervalsViz() {
   const [tab, setTab] = useState<'merge' | 'insert'>('merge');
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div className="flex gap-2">
         <button className={TAB_BTN(tab === 'merge')} onClick={() => setTab('merge')}>Merge Intervals</button>
         <button className={TAB_BTN(tab === 'insert')} onClick={() => setTab('insert')}>Insert Interval</button>

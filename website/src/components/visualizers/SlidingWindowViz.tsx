@@ -1,9 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 
-const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
-const ACTIVE = 'bg-blue-700 text-white border-blue-500';
-const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
-
 // ── Min Subarray Sum tab ─────────────────────────────────────────────────────
 const MSS_DEFAULT = [2, 1, 5, 1, 3, 2];
 const MSS_TARGET = 7;
@@ -108,16 +104,16 @@ function MinSubarrayTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array (comma-separated)</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Array (comma-separated)</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={arrayInput} onChange={e => setArrayInput(e.target.value)} />
         </div>
         <div className="w-24">
-          <label className="block text-xs text-slate-400 mb-1">Target</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Target</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={targetInput} onChange={e => setTargetInput(e.target.value)} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -125,35 +121,37 @@ function MinSubarrayTab() {
           {array.map((val, i) => {
             const inWindow = i >= left && i <= right;
             const isMin = phase === 'done' && i >= minLeft && i <= minRight;
-            let bg = 'bg-slate-700 border-slate-600';
-            if (isMin) bg = 'bg-green-800 border-green-500';
-            else if (inWindow) bg = 'bg-blue-800 border-blue-500';
+            let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)' };
+            if (isMin) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)' };
+            else if (inWindow) cellStyle = { background: 'var(--accent-soft)', borderColor: 'var(--accent)' };
             return (
               <div key={i} className="flex flex-col items-center gap-1">
-                <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg ${bg} text-slate-100`}>{val}</div>
-                <div className="text-xs text-slate-500 h-4">{i === left && i === right ? 'L R' : i === left ? 'L' : i === right ? 'R' : ''}</div>
-                <div className="text-xs text-slate-600">{i}</div>
+                <div style={cellStyle} className="w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg" >
+                  <span style={{ color: 'var(--text)' }}>{val}</span>
+                </div>
+                <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', height: '1rem' }}>{i === left && i === right ? 'L R' : i === left ? 'L' : i === right ? 'R' : ''}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{i}</div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm text-slate-300 min-h-12 font-mono">{message}</div>
+      {phase === 'done'
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)', minHeight: '3rem' }}>{message}</div>
+        : <div className="viz-info">{message}</div>
+      }
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={phase === 'done'}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={phase === 'done'}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={phase === 'done'} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={phase === 'done'} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -268,11 +266,11 @@ function LongestNoRepeatTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">String</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>String</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={strInput} onChange={e => setStrInput(e.target.value)} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -280,39 +278,39 @@ function LongestNoRepeatTab() {
           {s.split('').map((ch, i) => {
             const isRight = i === right + 1; // next to expand (yellow)
             const inWindow = i >= left && i <= right;
-            let bg = 'bg-slate-700 border-slate-600 text-slate-300';
-            if (isRight && !done) bg = 'bg-yellow-800 border-yellow-400 text-white';
-            else if (inWindow) bg = 'bg-blue-800 border-blue-500 text-white';
+            let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' };
+            if (isRight && !done) cellStyle = { background: 'color-mix(in srgb, #eab308 20%, transparent)', borderColor: '#eab308', color: 'var(--text)' };
+            else if (inWindow) cellStyle = { background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--text)' };
             return (
               <div key={i} className="flex flex-col items-center gap-1">
-                <div className={`w-10 h-10 flex items-center justify-center font-mono font-bold border-2 rounded-lg ${bg}`}>{ch}</div>
-                <div className="text-xs text-slate-600">{i}</div>
+                <div style={cellStyle} className="w-10 h-10 flex items-center justify-center font-mono font-bold border-2 rounded-lg">{ch}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{i}</div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg p-4 space-y-2">
-        <div className="text-xs text-slate-400">Window set: <span className="font-mono text-blue-300">{'{'}  {[...windowSet].join(', ')}  {'}'}</span></div>
-        <div className="text-xs text-slate-400">Max length so far: <span className="font-mono text-green-400 font-bold">{maxLen}</span></div>
+      <div className="viz-info space-y-2">
+        <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Window set: <span style={{ fontFamily: 'var(--mono)', color: 'var(--accent)' }}>{'{'}  {[...windowSet].join(', ')}  {'}'}</span></div>
+        <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Max length so far: <span style={{ fontFamily: 'var(--mono)', color: 'var(--tier-3)', fontWeight: 700 }}>{maxLen}</span></div>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{message}</div>
+      {done
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>{message}</div>
+        : <div className="viz-info">{message}</div>
+      }
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -324,15 +322,15 @@ export default function SlidingWindowViz() {
   const [tab, setTab] = useState<'min' | 'norepeat'>('min');
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Sliding Window</h3>
-        <p className="text-sm text-slate-400">Avoid nested loops by maintaining a dynamic window</p>
+        <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Sliding Window</h3>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Avoid nested loops by maintaining a dynamic window</p>
       </div>
 
       <div className="flex gap-2">
-        <button onClick={() => setTab('min')} className={`${TAB_BTN} ${tab === 'min' ? ACTIVE : INACTIVE}`}>Min Subarray Sum</button>
-        <button onClick={() => setTab('norepeat')} className={`${TAB_BTN} ${tab === 'norepeat' ? ACTIVE : INACTIVE}`}>Longest No Repeat</button>
+        <button onClick={() => setTab('min')} className={tab === 'min' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Min Subarray Sum</button>
+        <button onClick={() => setTab('norepeat')} className={tab === 'norepeat' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Longest No Repeat</button>
       </div>
 
       {tab === 'min' ? <MinSubarrayTab /> : <LongestNoRepeatTab />}

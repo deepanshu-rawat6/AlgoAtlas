@@ -3,10 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 // ── Grid BFS/DFS ────────────────────────────────────────────────────────────
 const ROWS = 6, COLS = 6;
 const DIRS = [[0,1],[0,-1],[1,0],[-1,0]];
-const LEVEL_COLORS = [
-  'bg-yellow-500','bg-orange-500','bg-red-500','bg-pink-500',
-  'bg-purple-500','bg-indigo-500','bg-blue-500','bg-cyan-500',
-  'bg-teal-500','bg-green-500',
+const LEVEL_COLORS_CSS = [
+  '#eab308','#f97316','#ef4444','#ec4899',
+  '#a855f7','#6366f1','#3b82f6','#06b6d4',
+  '#14b8a6','#22c55e',
 ];
 
 type GridMode = 'bfs' | 'dfs';
@@ -158,11 +158,11 @@ function GridTab() {
       <div className="flex gap-2">
         {(['bfs', 'dfs'] as GridMode[]).map(m => (
           <button key={m} onClick={() => switchMode(m)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${mode === m ? 'bg-blue-700 border-blue-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}`}>
+            className={mode === m ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
             {m.toUpperCase()}
           </button>
         ))}
-        <span className="text-xs text-slate-500 self-center ml-2">
+        <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}} className="self-center ml-2">
           {mode === 'bfs' ? 'Queue — expands level by level' : 'Stack — goes deep before wide'}
         </span>
       </div>
@@ -171,15 +171,16 @@ function GridTab() {
           <div key={r} className="flex gap-1 mb-1">
             {row.map((cell, c) => {
               const inFrontier = frontier.some(([fr, fc]) => fr === r && fc === c);
-              let colorClass = 'bg-slate-700';
+              let cellBg = 'var(--surface-sunken)';
               if (cell.visited) {
-                colorClass = mode === 'bfs'
-                  ? LEVEL_COLORS[cell.level % LEVEL_COLORS.length]
-                  : cell.order >= 0 ? 'bg-blue-600' : 'bg-yellow-600';
+                cellBg = mode === 'bfs'
+                  ? LEVEL_COLORS_CSS[cell.level % LEVEL_COLORS_CSS.length]
+                  : cell.order >= 0 ? 'var(--accent)' : '#ca8a04';
               }
               return (
                 <button key={c} onClick={() => handleCellClick(r, c)}
-                  className={`w-12 h-12 rounded-lg border-2 text-xs font-bold transition-all ${colorClass} ${inFrontier ? 'border-white scale-105' : 'border-transparent'} ${!started ? 'cursor-pointer hover:bg-slate-600' : 'cursor-default'} ${cell.visited ? 'text-white' : 'text-slate-500'}`}>
+                  className={`w-12 h-12 rounded-lg border-2 text-xs font-bold transition-all ${inFrontier ? 'scale-105' : ''} ${!started ? 'cursor-pointer' : 'cursor-default'}`}
+                  style={{background:cellBg, borderColor:inFrontier?'var(--text)':'transparent', color:cell.visited?'var(--text)':'var(--text-faint)'}}>
                   {cell.visited && cell.order >= 0 ? cell.order : ''}
                 </button>
               );
@@ -187,39 +188,36 @@ function GridTab() {
           </div>
         ))}
       </div>
-      <div className="flex gap-4 flex-wrap text-xs text-slate-400">
+      <div className="flex gap-4 flex-wrap text-xs" style={{color:'var(--text-dim)'}}>
         {mode === 'bfs' ? (
           <>
-            {LEVEL_COLORS.slice(0, 4).map((c, i) => (
+            {LEVEL_COLORS_CSS.slice(0, 4).map((c, i) => (
               <span key={i} className="flex items-center gap-1">
-                <span className={`inline-block w-3 h-3 rounded ${c}`}></span> Level {i}
+                <span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:c}}></span> Level {i}
               </span>
             ))}
-            <span className="text-slate-500">number = visit order within level</span>
+            <span style={{color:'var(--text-faint)'}}>number = visit order within level</span>
           </>
         ) : (
           <>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-yellow-600"></span> In stack</span>
-            <span className="flex items-center gap-1"><span className="inline-block w-3 h-3 rounded bg-blue-600"></span> Processed</span>
-            <span className="text-slate-500">number = visit order</span>
+            <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:'#ca8a04'}}></span> In stack</span>
+            <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'0.25rem',background:'var(--accent)'}}></span> Processed</span>
+            <span style={{color:'var(--text-faint)'}}>number = visit order</span>
           </>
         )}
       </div>
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm text-slate-300 font-mono min-h-12">{message}</div>
+      <div className="viz-info">{message}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={!started || done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={gridHistory.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={!started || done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={gridHistory.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -322,21 +320,21 @@ function DijkstraTab() {
   const INF = Infinity;
 
   function nodeColor(i: number) {
-    if (s.current === i) return '#ca8a04';   // yellow
-    if (s.visited[i])   return '#1d4ed8';   // blue
-    if (s.updated.includes(i)) return '#16a34a'; // green
-    return '#1e293b'; // slate
+    if (s.current === i) return 'var(--accent-soft)';
+    if (s.visited[i])   return 'var(--accent)';
+    if (s.updated.includes(i)) return 'var(--tier-3)';
+    return 'var(--surface-raised)';
   }
   function nodeStroke(i: number) {
-    if (s.current === i) return '#fbbf24';
-    if (s.visited[i])   return '#60a5fa';
-    if (s.updated.includes(i)) return '#4ade80';
-    return '#475569';
+    if (s.current === i) return 'var(--accent)';
+    if (s.visited[i])   return 'var(--accent)';
+    if (s.updated.includes(i)) return 'var(--tier-3)';
+    return 'var(--border)';
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-slate-900/60 rounded-lg p-3">
+      <div className="panel p-3">
         <svg viewBox="0 0 320 210" className="w-full" style={{ maxHeight: 220 }}>
           {/* Edges */}
           {WEIGHTED_EDGES.map(([u,v,w], idx) => {
@@ -344,8 +342,8 @@ function DijkstraTab() {
             const mx = (x1+x2)/2, my = (y1+y2)/2;
             return (
               <g key={idx}>
-                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#334155" strokeWidth="2" />
-                <text x={mx} y={my-4} textAnchor="middle" fill="#94a3b8" fontSize="11">{w}</text>
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--border)" strokeWidth="2" />
+                <text x={mx} y={my-4} textAnchor="middle" fill="var(--text-faint)" fontSize="11">{w}</text>
               </g>
             );
           })}
@@ -353,7 +351,7 @@ function DijkstraTab() {
           {LABELS.map((lbl, i) => (
             <g key={i}>
               <circle cx={NODE_POS[i][0]} cy={NODE_POS[i][1]} r={18} fill={nodeColor(i)} stroke={nodeStroke(i)} strokeWidth="2.5" />
-              <text x={NODE_POS[i][0]} y={NODE_POS[i][1]+5} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold">{lbl}</text>
+              <text x={NODE_POS[i][0]} y={NODE_POS[i][1]+5} textAnchor="middle" fill="var(--text)" fontSize="13" fontWeight="bold">{lbl}</text>
             </g>
           ))}
         </svg>
@@ -362,38 +360,39 @@ function DijkstraTab() {
       {/* Distance table */}
       <div className="flex gap-2 flex-wrap">
         {LABELS.map((lbl, i) => (
-          <div key={i} className={`flex flex-col items-center rounded-lg border px-3 py-2 min-w-12 ${s.current===i ? 'border-yellow-500 bg-yellow-900/30' : s.visited[i] ? 'border-blue-600 bg-blue-900/30' : s.updated.includes(i) ? 'border-green-600 bg-green-900/30' : 'border-slate-600 bg-slate-800'}`}>
-            <span className="text-xs text-slate-400">{lbl}</span>
-            <span className="text-sm font-bold text-slate-100">{s.dist[i] === INF ? '∞' : s.dist[i]}</span>
+          <div key={i} className="flex flex-col items-center rounded-lg border px-3 py-2 min-w-12"
+            style={s.current===i ? {borderColor:'var(--accent)',background:'var(--accent-soft)'} : s.visited[i] ? {borderColor:'var(--accent)',background:'color-mix(in srgb, var(--accent) 15%, transparent)'} : s.updated.includes(i) ? {borderColor:'var(--tier-3)',background:'color-mix(in srgb, var(--tier-3) 15%, transparent)'} : {borderColor:'var(--border)',background:'var(--surface-raised)'}}>
+            <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>{lbl}</span>
+            <span style={{color:'var(--text)',fontSize:'0.875rem',fontWeight:700}}>{s.dist[i] === INF ? '∞' : s.dist[i]}</span>
           </div>
         ))}
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 text-xs text-slate-400 flex-wrap">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-600 inline-block"></span>Current</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-700 inline-block"></span>Visited</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-700 inline-block"></span>Updated</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-slate-700 inline-block"></span>Unvisited</span>
+      <div className="flex gap-4 flex-wrap text-xs" style={{color:'var(--text-dim)'}}>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--accent-soft)',border:'2px solid var(--accent)'}}></span>Current</span>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--accent)'}}></span>Visited</span>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--tier-3)'}}></span>Updated</span>
+        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--surface-raised)',border:'2px solid var(--border)'}}></span>Unvisited</span>
       </div>
 
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono text-slate-300 min-h-12">{s.msg}</div>
+      <div className="viz-info">{s.msg}</div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={() => setStep(s => Math.min(DIJKSTRA_STEPS.length-1, s+1))} disabled={step===DIJKSTRA_STEPS.length-1}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Next Step</button>
+          className="viz-btn viz-btn--primary">Next Step</button>
         <button onClick={() => { if (playing) stopPlay(); setStep(s => Math.max(0, s-1)); }} disabled={step===0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 text-sm font-medium rounded-lg">← Back</button>
+          className="viz-btn">← Back</button>
         <button onClick={togglePlay} disabled={step===DIJKSTRA_STEPS.length-1}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">
+          className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={() => { stopPlay(); setStep(0); }} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
-        <span className="text-xs text-slate-500">{step+1}/{DIJKSTRA_STEPS.length}</span>
+        <button onClick={() => { stopPlay(); setStep(0); }} className="viz-btn">Reset</button>
+        <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>{step+1}/{DIJKSTRA_STEPS.length}</span>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -411,17 +410,17 @@ export default function BFSViz() {
   const [tab, setTab] = useState<Tab>('grid');
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Graph Traversal</h3>
-        <p className="text-sm text-slate-400">BFS, DFS, and Dijkstra's shortest path</p>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Graph Traversal</h3>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>BFS, DFS, and Dijkstra's shortest path</p>
       </div>
 
       {/* Tab bar */}
       <div className="flex gap-2">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${tab === t.id ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'}`}>
+            className={tab === t.id ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
             {t.label}
           </button>
         ))}

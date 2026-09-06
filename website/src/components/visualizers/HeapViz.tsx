@@ -1,9 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 
-const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
-const ACTIVE = 'bg-blue-700 text-white border-blue-500';
-const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
-
 function parentIdx(i: number) { return Math.floor((i - 1) / 2); }
 function leftIdx(i: number) { return 2 * i + 1; }
 function rightIdx(i: number) { return 2 * i + 2; }
@@ -63,42 +59,48 @@ function MinHeap() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">Insert (sift-up) and Extract-Min (sift-down)</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Insert (sift-up) and Extract-Min (sift-down)</p>
       <div className="flex gap-3 items-end flex-wrap">
         <div>
-          <label className="block text-xs text-slate-400 mb-1">Insert value</label>
-          <input className="w-24 bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Insert value</label>
+          <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'6rem'}}
             value={inputVal} onChange={e => setInputVal(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && insert()} placeholder="e.g. 4" />
         </div>
-        <button onClick={insert} className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg">Insert</button>
-        <button onClick={extractMin} disabled={heap.length === 0} className="px-4 py-2 bg-orange-700 hover:bg-orange-600 disabled:opacity-40 text-white text-sm font-medium rounded-lg">Extract Min</button>
+        <button onClick={insert} className="viz-btn viz-btn--primary">Insert</button>
+        <button onClick={extractMin} disabled={heap.length === 0} className="viz-btn">Extract Min</button>
       </div>
-      <div className="bg-slate-900/60 rounded-lg p-2">
+      <div style={{background:'var(--surface-sunken)',borderRadius:'0.5rem',padding:'0.5rem'}}>
         <svg viewBox="0 0 400 160" className="w-full max-w-md mx-auto" style={{ height: 160 }}>
           {EDGES.filter(([a, b]) => a < heap.length && b < heap.length).map(([a, b]) => (
-            <line key={`${a}-${b}`} x1={`${POS[a][0]}%`} y1={POS[a][1] * 1.5 + 10} x2={`${POS[b][0]}%`} y2={POS[b][1] * 1.5 + 10} stroke="#334155" strokeWidth="2" />
+            <line key={`${a}-${b}`} x1={`${POS[a][0]}%`} y1={POS[a][1] * 1.5 + 10} x2={`${POS[b][0]}%`} y2={POS[b][1] * 1.5 + 10} stroke="var(--border)" strokeWidth="2" />
           ))}
           {heap.slice(0, 7).map((val, i) => {
             const isHl = highlight.includes(i);
             return (
               <g key={i}>
                 <circle cx={`${POS[i][0]}%`} cy={POS[i][1] * 1.5 + 10} r="16"
-                  fill={i === 0 ? '#1d4ed8' : isHl ? '#92400e' : '#1e293b'}
-                  stroke={i === 0 ? '#60a5fa' : isHl ? '#fbbf24' : '#475569'} strokeWidth="2" />
-                <text x={`${POS[i][0]}%`} y={POS[i][1] * 1.5 + 15} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">{val}</text>
+                  fill={i === 0 ? 'var(--accent)' : isHl ? 'var(--accent-soft)' : 'var(--surface-raised)'}
+                  stroke={i === 0 ? 'var(--accent)' : isHl ? 'var(--accent)' : 'var(--border)'} strokeWidth="2" />
+                <text x={`${POS[i][0]}%`} y={POS[i][1] * 1.5 + 15} textAnchor="middle" fill="var(--text)" fontSize="12" fontWeight="bold">{val}</text>
               </g>
             );
           })}
         </svg>
       </div>
       <div className="flex gap-1 flex-wrap items-center">
-        <span className="text-xs text-slate-500 font-mono">Array:</span>
+        <span style={{color:'var(--text-faint)',fontSize:'0.75rem',fontFamily:'var(--mono)'}}>Array:</span>
         {heap.map((v, i) => (
-          <span key={i} className={`px-2 py-1 rounded text-sm font-mono border ${i === 0 ? 'bg-blue-900/50 border-blue-700 text-blue-300' : highlight.includes(i) ? 'bg-yellow-900/50 border-yellow-700 text-yellow-300' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>{v}</span>
+          <span key={i} className="px-2 py-1 rounded text-sm font-mono border"
+            style={i === 0
+              ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+              : highlight.includes(i)
+                ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+                : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+            }>{v}</span>
         ))}
       </div>
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
     </div>
   );
 }
@@ -206,11 +208,11 @@ function TwoHeapsMedian() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-400">small = max-heap (lower half), large = min-heap (upper half)</p>
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>small = max-heap (lower half), large = min-heap (upper half)</p>
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="text-sm text-slate-400 font-mono">
+        <div className="font-mono" style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>
           Stream: [{stream.map((v, i) => (
-            <span key={i} className={i < streamIdx ? 'text-slate-600' : i === streamIdx ? 'text-yellow-400 font-bold' : 'text-slate-300'}>{i > 0 ? ', ' : ''}{v}</span>
+            <span key={i} style={{color: i < streamIdx ? 'var(--text-faint)' : i === streamIdx ? 'var(--accent)' : 'var(--text)', fontWeight: i === streamIdx ? 700 : undefined}}>{i > 0 ? ', ' : ''}{v}</span>
           ))}]
         </div>
       </div>
@@ -218,23 +220,31 @@ function TwoHeapsMedian() {
       <div className="flex gap-6 flex-wrap">
         {/* Small (max-heap) */}
         <div className="flex-1 min-w-40">
-          <div className="text-xs text-slate-500 mb-2">small (max-heap) — lower half</div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem'}}>small (max-heap) — lower half</div>
           <div className="flex gap-1 flex-wrap">
             {small.length === 0
-              ? <span className="text-xs text-slate-600 font-mono">[]</span>
+              ? <span style={{color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'0.75rem'}}>[]</span>
               : small.map((v, i) => (
-                <span key={i} className={`px-2 py-1 rounded text-sm font-mono border ${i === 0 ? 'bg-purple-900/60 border-purple-500 text-purple-200' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>{v}</span>
+                <span key={i} className="px-2 py-1 rounded text-sm font-mono border"
+                  style={i === 0
+                    ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+                    : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+                  }>{v}</span>
               ))}
           </div>
         </div>
         {/* Large (min-heap) */}
         <div className="flex-1 min-w-40">
-          <div className="text-xs text-slate-500 mb-2">large (min-heap) — upper half</div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem'}}>large (min-heap) — upper half</div>
           <div className="flex gap-1 flex-wrap">
             {large.length === 0
-              ? <span className="text-xs text-slate-600 font-mono">[]</span>
+              ? <span style={{color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'0.75rem'}}>[]</span>
               : large.map((v, i) => (
-                <span key={i} className={`px-2 py-1 rounded text-sm font-mono border ${i === 0 ? 'bg-blue-900/60 border-blue-500 text-blue-200' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>{v}</span>
+                <span key={i} className="px-2 py-1 rounded text-sm font-mono border"
+                  style={i === 0
+                    ? {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text)'}
+                    : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'}
+                  }>{v}</span>
               ))}
           </div>
         </div>
@@ -243,34 +253,27 @@ function TwoHeapsMedian() {
       {/* Median badge */}
       {median !== null && (
         <div className="flex justify-center">
-          <div className="bg-green-900/40 border border-green-600 rounded-xl px-8 py-4 text-center">
-            <div className="text-xs text-green-400 mb-1">Current Median</div>
-            <div className="text-3xl font-bold text-green-300 font-mono">{median}</div>
-            <div className="text-xs text-slate-500 mt-1">{small.length === large.length ? 'even — avg of two tops' : 'odd — top of small'}</div>
+          <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.75rem',padding:'1rem 2rem',textAlign:'center'}}>
+            <div style={{color:'var(--tier-3)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Current Median</div>
+            <div style={{color:'var(--tier-3)',fontSize:'1.875rem',fontWeight:700,fontFamily:'var(--mono)'}}>{median}</div>
+            <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginTop:'0.25rem'}}>{small.length === large.length ? 'even — avg of two tops' : 'odd — top of small'}</div>
           </div>
         </div>
       )}
 
-      <div className="bg-slate-900/60 rounded-lg px-4 py-3 text-sm font-mono min-h-10 text-slate-300">{msg}</div>
+      <div className="viz-info">{msg}</div>
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={isDone}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          Next Step
-        </button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">
-          ← Back
-        </button>
-        <button onClick={() => setPlaying(p => !p)} disabled={isDone}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={isDone} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={() => setPlaying(p => !p)} disabled={isDone} className="viz-btn viz-btn--primary">
           {playing ? 'Pause' : '▶ Play'}
         </button>
-        <button onClick={reset} className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
           <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
-            className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -283,12 +286,12 @@ export default function HeapViz() {
   const tabs = ['Min Heap', 'Two Heaps — Median'] as const;
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-3">Heap Visualizer</h3>
+        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.75rem'}}>Heap Visualizer</h3>
         <div className="flex gap-2">
           {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`${TAB_BTN} ${tab === t ? ACTIVE : INACTIVE}`}>{t}</button>
+            <button key={t} onClick={() => setTab(t)} className={`viz-btn${tab === t ? ' viz-btn--primary' : ''}`}>{t}</button>
           ))}
         </div>
       </div>
