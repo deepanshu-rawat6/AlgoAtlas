@@ -34,6 +34,12 @@ function stepBS(s: BSState): BSState {
   return { ...s, mid, hi: mid - 1, message: `arr[${mid}]=${val} > ${target} → search left half. New hi = ${mid - 1}` };
 }
 
+const inputStyle: React.CSSProperties = {
+  background: 'var(--surface-raised)', border: '1px solid var(--border)',
+  borderRadius: '0.375rem', padding: '0.375rem 0.75rem',
+  color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%',
+};
+
 function ClassicBSTab() {
   const [arrayInput, setArrayInput] = useState(DEFAULT_ARRAY.join(', '));
   const [targetInput, setTargetInput] = useState(String(DEFAULT_TARGET));
@@ -49,8 +55,7 @@ function ClassicBSTab() {
   }
 
   function reset() {
-    stopPlay();
-    setHistory([]);
+    stopPlay(); setHistory([]);
     const arr = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
     setState(initBS(arr.length ? arr : DEFAULT_ARRAY, parseInt(targetInput) || DEFAULT_TARGET));
   }
@@ -64,10 +69,8 @@ function ClassicBSTab() {
   function stepBack() {
     if (playing) stopPlay();
     if (history.length === 0) return;
-    const prev = [...history];
-    const s = prev.pop()!;
-    setState(s);
-    setHistory(prev);
+    const prev = [...history]; const s = prev.pop()!;
+    setState(s); setHistory(prev);
   }
 
   function togglePlay() {
@@ -101,21 +104,27 @@ function ClassicBSTab() {
   const { array, lo, hi, mid, phase, message } = state;
   const done = phase === 'found' || phase === 'done';
 
+  function cellStyle(i: number): React.CSSProperties {
+    const isFound = phase === 'found' && i === mid;
+    const isMid = i === mid;
+    const inRange = i >= lo && i <= hi;
+    if (isFound) return { background: 'color-mix(in srgb, var(--tier-3) 25%, transparent)', borderColor: 'var(--tier-3)', color: 'var(--text)' };
+    if (phase === 'done' && !inRange) return { background: 'var(--surface-sunken)', borderColor: 'var(--border-soft)', color: 'var(--text-faint)' };
+    if (isMid) return { background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--text)' };
+    if (inRange) return { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' };
+    return { background: 'var(--surface-sunken)', borderColor: 'var(--border-soft)', color: 'var(--text-faint)' };
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array (will be sorted)</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
-            value={arrayInput} onChange={e => setArrayInput(e.target.value)} />
+          <label style={{ color: 'var(--text-faint)', fontSize: '0.75rem', display: 'block', marginBottom: '0.25rem' }}>Array (will be sorted)</label>
+          <input style={inputStyle} value={arrayInput} onChange={e => setArrayInput(e.target.value)} />
         </div>
         <div className="w-24">
-          <label className="block text-xs text-slate-400 mb-1">Target</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
-            value={targetInput} onChange={e => setTargetInput(e.target.value)} />
-        </div>
-        <div className="flex items-end">
-          <button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button>
+          <label style={{ color: 'var(--text-faint)', fontSize: '0.75rem', display: 'block', marginBottom: '0.25rem' }}>Target</label>
+          <input style={inputStyle} value={targetInput} onChange={e => setTargetInput(e.target.value)} />
         </div>
       </div>
 
@@ -123,52 +132,33 @@ function ClassicBSTab() {
         <div className="flex gap-1 min-w-max">
           {array.map((val, i) => {
             const isLo = i === lo, isHi = i === hi, isMid = i === mid;
-            const inRange = i >= lo && i <= hi;
             const isFound = phase === 'found' && i === mid;
-            let bg = 'bg-slate-700 border-slate-600 text-slate-500';
-            if (isFound) bg = 'bg-green-700 border-green-400 text-white';
-            else if (phase === 'done' && !inRange) bg = 'bg-slate-800 border-slate-700 text-slate-600';
-            else if (isMid) bg = 'bg-yellow-700 border-yellow-400 text-white';
-            else if (inRange) bg = 'bg-slate-600 border-slate-500 text-slate-200';
             return (
               <div key={i} className="flex flex-col items-center">
-                <div className={`w-11 h-11 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>{val}</div>
-                <div className="text-xs mt-1 h-4 text-center leading-none" style={{ minWidth: '2.75rem' }}>
-                  {isFound ? <span className="text-green-400">✓</span>
-                    : isMid ? <span className="text-yellow-400">mid</span>
-                    : isLo && isHi ? <span className="text-slate-400">lo/hi</span>
-                    : isLo ? <span className="text-blue-400">lo</span>
-                    : isHi ? <span className="text-red-400">hi</span>
-                    : null}
+                <div style={{ ...cellStyle(i), width: '2.75rem', height: '2.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--mono)', fontWeight: 700, border: '2px solid', borderRadius: '0.5rem', fontSize: '0.875rem', transition: 'background 0.2s, border-color 0.2s' }}>{val}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.7rem', marginTop: '0.25rem', height: '1rem', textAlign: 'center', minWidth: '2.75rem' }}>
+                  {isFound ? '✓' : isMid ? 'mid' : isLo && isHi ? 'lo/hi' : isLo ? 'lo' : isHi ? 'hi' : ''}
                 </div>
-                <div className="text-xs text-slate-600">{i}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.65rem' }}>{i}</div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm min-h-12 font-mono ${
-        phase === 'found' ? 'bg-green-900/40 text-green-300' :
-        phase === 'done' ? 'bg-red-900/40 text-red-300' : 'bg-slate-900/60 text-slate-300'}`}>
+      <div className="viz-info" style={phase === 'found' ? { color: 'var(--tier-3)' } : phase === 'done' ? { color: 'var(--bad, #ef4444)' } : {}}>
         {message}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          {playing ? 'Pause' : '▶ Play'}
-        </button>
-        <button onClick={reset}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className="viz-btn viz-btn--primary">{playing ? 'Pause' : '▶ Play'}</button>
+        <button onClick={reset} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -179,45 +169,35 @@ function ClassicBSTab() {
 
 const PILES = [3, 6, 7, 11];
 const H = 8;
-const MAX_K = Math.max(...PILES); // 11
+const MAX_K = Math.max(...PILES);
 
 function hoursNeeded(k: number): number {
   return PILES.reduce((sum, p) => sum + Math.ceil(p / k), 0);
 }
 
 interface KokoStep {
-  lo: number;
-  hi: number;
-  mid: number | null;
-  hours: number | null;
-  feasible: boolean | null;
-  msg: string;
-  done: boolean;
+  lo: number; hi: number; mid: number | null;
+  hours: number | null; feasible: boolean | null;
+  msg: string; done: boolean;
 }
 
 function buildKokoSteps(): KokoStep[] {
   const steps: KokoStep[] = [];
   steps.push({ lo: 1, hi: MAX_K, mid: null, hours: null, feasible: null, done: false,
     msg: `Koko Eating Bananas: piles=[${PILES}], h=${H}. Search k in [1..${MAX_K}]. lo=1, hi=${MAX_K}.` });
-
   let lo = 1, hi = MAX_K;
   while (lo < hi) {
     const mid = Math.floor((lo + hi) / 2);
     const hours = hoursNeeded(mid);
     const feasible = hours <= H;
-    const pilesBreakdown = PILES.map(p => `⌈${p}/${mid}⌉=${Math.ceil(p / mid)}`).join(' + ');
-    const msg = `mid=${mid}, hours(${mid}) = ${pilesBreakdown} = ${hours}. h=${H}. ${hours}≤${H} → ${feasible ? `hi=${mid} (feasible, try smaller k)` : `lo=${mid + 1} (too slow, need faster k)`}`;
+    const breakdown = PILES.map(p => `⌈${p}/${mid}⌉=${Math.ceil(p / mid)}`).join(' + ');
+    const msg = `mid=${mid}, hours(${mid}) = ${breakdown} = ${hours}. h=${H}. ${hours}≤${H} → ${feasible ? `hi=${mid} (feasible, try smaller k)` : `lo=${mid + 1} (too slow)`}`;
     if (feasible) hi = mid; else lo = mid + 1;
     steps.push({ lo, hi, mid, hours, feasible, done: lo === hi, msg });
   }
-  // Final step
   const last = steps[steps.length - 1];
-  if (!last.done) {
-    steps.push({ ...last, done: true, msg: `lo = hi = ${lo}. Answer: k = ${lo}. Koko eats ${lo} bananas/hour.` });
-  } else {
-    steps[steps.length - 1] = { ...last, msg: last.msg + ` → lo=hi=${lo}. Answer: k=${lo}.` };
-  }
-
+  if (!last.done) steps.push({ ...last, done: true, msg: `lo = hi = ${lo}. Answer: k = ${lo}.` });
+  else steps[steps.length - 1] = { ...last, msg: last.msg + ` → lo=hi=${lo}. Answer: k=${lo}.` };
   return steps;
 }
 
@@ -244,9 +224,9 @@ function KokoTab() {
 
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
-  const kokoMountedRef = useRef(false);
+  const mountedRef = useRef(false);
   useEffect(() => {
-    if (!kokoMountedRef.current) { kokoMountedRef.current = true; return; }
+    if (!mountedRef.current) { mountedRef.current = true; return; }
     if (!playing) return;
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     timerRef.current = setInterval(() => {
@@ -256,35 +236,34 @@ function KokoTab() {
 
   const step = KOKO_STEPS[stepIdx];
 
+  function kCellStyle(k: number): React.CSSProperties {
+    const isAnswer = step.done && k === step.lo;
+    const isMid = k === step.mid;
+    const inRange = k >= step.lo && k <= step.hi;
+    if (isAnswer) return { background: 'color-mix(in srgb, var(--tier-3) 25%, transparent)', borderColor: 'var(--tier-3)', color: 'var(--text)' };
+    if (isMid) return { background: 'var(--accent-soft)', borderColor: 'var(--accent)', color: 'var(--text)' };
+    if (inRange) return { background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' };
+    return { background: 'var(--surface-sunken)', borderColor: 'var(--border-soft)', color: 'var(--text-faint)' };
+  }
+
   return (
     <div className="space-y-6">
-      <div className="text-sm text-slate-400 space-y-1">
-        <div>piles = [{PILES.join(', ')}], h = {H}</div>
-        <div>Find minimum k (bananas/hr) such that Koko finishes in ≤ h hours.</div>
-      </div>
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>
+        piles = [{PILES.join(', ')}], h = {H} — Find minimum k so Koko finishes in ≤ h hours.
+      </p>
 
-      {/* Number line 1..11 */}
       <div>
-        <div className="text-xs text-slate-400 mb-2">Search space: k ∈ [1 .. {MAX_K}]</div>
+        <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.5rem' }}>Search space: k ∈ [1 .. {MAX_K}]</div>
         <div className="overflow-x-auto">
           <div className="flex gap-1 min-w-max">
             {Array.from({ length: MAX_K }, (_, i) => i + 1).map(k => {
               const isLo = k === step.lo, isHi = k === step.hi, isMid = k === step.mid;
               const isAnswer = step.done && k === step.lo;
-              let bg = 'bg-slate-700 border-slate-600 text-slate-500';
-              if (isAnswer) bg = 'bg-green-700 border-green-400 text-white';
-              else if (isMid) bg = 'bg-yellow-700 border-yellow-400 text-white';
-              else if (k >= step.lo && k <= step.hi) bg = 'bg-slate-600 border-slate-500 text-slate-200';
               return (
                 <div key={k} className="flex flex-col items-center">
-                  <div className={`w-10 h-10 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm ${bg}`}>{k}</div>
-                  <div className="text-xs mt-1 h-4 text-center leading-none" style={{ minWidth: '2.5rem' }}>
-                    {isAnswer ? <span className="text-green-400">ans</span>
-                      : isMid ? <span className="text-yellow-400">mid</span>
-                      : isLo && isHi ? <span className="text-slate-400">lo/hi</span>
-                      : isLo ? <span className="text-blue-400">lo</span>
-                      : isHi ? <span className="text-red-400">hi</span>
-                      : null}
+                  <div style={{ ...kCellStyle(k), width: '2.5rem', height: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--mono)', fontWeight: 700, border: '2px solid', borderRadius: '0.5rem', fontSize: '0.875rem', transition: 'background 0.2s, border-color 0.2s' }}>{k}</div>
+                  <div style={{ color: 'var(--text-faint)', fontSize: '0.65rem', marginTop: '0.25rem', height: '1rem', textAlign: 'center', minWidth: '2.5rem' }}>
+                    {isAnswer ? 'ans' : isMid ? 'mid' : isLo && isHi ? 'lo/hi' : isLo ? 'lo' : isHi ? 'hi' : ''}
                   </div>
                 </div>
               );
@@ -293,77 +272,62 @@ function KokoTab() {
         </div>
       </div>
 
-      {/* Feasibility breakdown */}
       {step.mid !== null && (
-        <div className="bg-slate-900/60 rounded-lg px-4 py-3 space-y-1">
-          <div className="text-xs text-slate-400 mb-1">Feasibility check for k = {step.mid}:</div>
+        <div style={{ background: 'var(--surface-sunken)', border: '1px solid var(--border-soft)', borderRadius: '0.5rem', padding: '0.75rem 1rem' }}>
+          <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.5rem' }}>Feasibility check for k = {step.mid}:</div>
           <div className="flex flex-wrap gap-3">
             {PILES.map((p, i) => (
-              <span key={i} className="font-mono text-sm text-slate-300">
-                ⌈{p}/{step.mid}⌉ = <span className="text-yellow-300">{Math.ceil(p / step.mid!)}</span>
+              <span key={i} style={{ fontFamily: 'var(--mono)', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                ⌈{p}/{step.mid}⌉ = <span style={{ color: 'var(--accent)' }}>{Math.ceil(p / step.mid!)}</span>
               </span>
             ))}
-            <span className="font-mono text-sm">
-              → total = <span className={step.feasible ? 'text-green-400' : 'text-red-400'}>{step.hours}</span> hrs
-              {step.feasible ? ' ≤' : ' >'} {H}
+            <span style={{ fontFamily: 'var(--mono)', fontSize: '0.875rem', color: step.feasible ? 'var(--tier-3)' : 'var(--text-dim)' }}>
+              → total = {step.hours} hrs {step.feasible ? '≤' : '>'} {H}
             </span>
           </div>
         </div>
       )}
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-mono min-h-10 ${
-        step.done ? 'bg-green-900/40 text-green-300' :
-        step.feasible === true ? 'bg-blue-900/40 text-blue-300' :
-        step.feasible === false ? 'bg-orange-900/40 text-orange-300' :
-        'bg-slate-900/60 text-slate-300'}`}>
+      <div className="viz-info" style={step.done ? { color: 'var(--tier-3)' } : {}}>
         {step.msg}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={() => setStepIdx(s => Math.min(KOKO_STEPS.length - 1, s + 1))} disabled={stepIdx === KOKO_STEPS.length - 1}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={() => { if (playing) stopPlay(); setStepIdx(s => Math.max(0, s - 1)); }} disabled={stepIdx === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={stepIdx === KOKO_STEPS.length - 1}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
-          {playing ? 'Pause' : '▶ Play'}
-        </button>
-        <button onClick={() => { stopPlay(); setStepIdx(0); }}
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-slate-200 text-sm font-medium rounded-lg">Reset</button>
+        <button onClick={() => setStepIdx(s => Math.min(KOKO_STEPS.length - 1, s + 1))} disabled={stepIdx === KOKO_STEPS.length - 1} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={() => { if (playing) stopPlay(); setStepIdx(s => Math.max(0, s - 1)); }} disabled={stepIdx === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={stepIdx === KOKO_STEPS.length - 1} className="viz-btn viz-btn--primary">{playing ? 'Pause' : '▶ Play'}</button>
+        <button onClick={() => { stopPlay(); setStepIdx(0); }} className="viz-btn">Reset</button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Root component ─────────────────────────────────────────────────────────────
+// ── Root ───────────────────────────────────────────────────────────────────────
 
 type Tab = 'Classic BS' | 'BS on Answer';
 const TABS: Tab[] = ['Classic BS', 'BS on Answer'];
 
 export default function BinarySearchViz() {
   const [tab, setTab] = useState<Tab>('Classic BS');
-
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Binary Search</h3>
-        <p className="text-sm text-slate-400">Classic binary search · Binary search on answer space</p>
+        <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Binary Search</h3>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Classic binary search · Binary search on answer space</p>
       </div>
-
       <div className="flex gap-2">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-3 py-1.5 text-xs font-medium rounded border transition-colors ${tab === t ? 'bg-blue-700 text-white border-blue-500' : 'bg-slate-700 text-slate-300 border-slate-600'}`}>
+            className={`viz-btn ${tab === t ? 'viz-btn--primary' : ''}`}>
             {t}
           </button>
         ))}
       </div>
-
       {tab === 'Classic BS' ? <ClassicBSTab /> : <KokoTab />}
     </div>
   );

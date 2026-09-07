@@ -1,9 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 
-const TAB_BTN = 'px-3 py-1.5 text-xs font-medium rounded border transition-colors';
-const ACTIVE = 'bg-blue-700 text-white border-blue-500';
-const INACTIVE = 'bg-slate-700 text-slate-300 border-slate-600';
-
 // ── Two Sum II tab ───────────────────────────────────────────────────────────
 const TS2_DEFAULT = [1, 2, 4, 6, 8, 9, 14, 15];
 const TS2_TARGET = 13;
@@ -96,16 +92,16 @@ function TwoSumIITab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array (will be sorted)</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Array (will be sorted)</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={arrayInput} onChange={e => setArrayInput(e.target.value)} />
         </div>
         <div className="w-24">
-          <label className="block text-xs text-slate-400 mb-1">Target</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Target</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={targetInput} onChange={e => setTargetInput(e.target.value)} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -113,38 +109,42 @@ function TwoSumIITab() {
           {array.map((val, i) => {
             const isLeft = i === left, isRight = i === right;
             const isFound = phase === 'found' && (i === foundLeft || i === foundRight);
-            let bg = 'bg-slate-700 border-slate-600';
-            if (isFound) bg = 'bg-green-800 border-green-400';
-            else if (isLeft) bg = 'bg-emerald-800 border-emerald-400';
-            else if (isRight) bg = 'bg-red-800 border-red-400';
+            let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)' };
+            if (isFound) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)' };
+            else if (isLeft) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', borderColor: 'var(--tier-3)' };
+            else if (isRight) cellStyle = { background: 'color-mix(in srgb, #ef4444 15%, transparent)', borderColor: '#ef4444' };
             return (
               <div key={i} className="flex flex-col items-center gap-1">
-                <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg ${bg} text-slate-100`}>{val}</div>
-                <div className="text-xs h-4" style={{ color: isLeft ? '#4ade80' : isRight ? '#f87171' : 'transparent' }}>
+                <div style={cellStyle} className="w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg">
+                  <span style={{ color: 'var(--text)' }}>{val}</span>
+                </div>
+                <div className="text-xs h-4" style={{ color: isLeft ? 'var(--tier-3)' : isRight ? '#f87171' : 'transparent' }}>
                   {isLeft ? 'L' : isRight ? 'R' : '.'}
                 </div>
-                <div className="text-xs text-slate-600">{i}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{i}</div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className={`rounded-lg px-4 py-3 text-sm min-h-12 font-mono ${phase === 'found' ? 'bg-green-900/40 text-green-300' : phase === 'done' ? 'bg-red-900/40 text-red-300' : 'bg-slate-900/60 text-slate-300'}`}>{message}</div>
+      {phase === 'found'
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)', minHeight: '3rem' }}>{message}</div>
+        : phase === 'done'
+        ? <div style={{ background: 'color-mix(in srgb, #ef4444 15%, transparent)', border: '1px solid #ef4444', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: '#ef4444', fontSize: '0.875rem', fontFamily: 'var(--mono)', minHeight: '3rem' }}>{message}</div>
+        : <div className="viz-info">{message}</div>
+      }
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -280,11 +280,11 @@ function ThreeSumTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-40">
-          <label className="block text-xs text-slate-400 mb-1">Array (will be sorted)</label>
-          <input className="w-full bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Array (will be sorted)</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
             value={arrayInput} onChange={e => setArrayInput(e.target.value)} />
         </div>
-        <div className="flex items-end"><button onClick={reset} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded">Reset</button></div>
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
       </div>
 
       <div className="overflow-x-auto pb-2">
@@ -293,17 +293,19 @@ function ThreeSumTab() {
             const isI = idx === i;
             const isLeft = idx === left;
             const isRight = idx === right;
-            let bg = 'bg-slate-700 border-slate-600';
-            if (isI) bg = 'bg-orange-800 border-orange-400';
-            else if (isLeft) bg = 'bg-green-800 border-green-400';
-            else if (isRight) bg = 'bg-red-800 border-red-400';
+            let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)' };
+            if (isI) cellStyle = { background: 'color-mix(in srgb, #f97316 20%, transparent)', borderColor: '#f97316' };
+            else if (isLeft) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)' };
+            else if (isRight) cellStyle = { background: 'color-mix(in srgb, #ef4444 15%, transparent)', borderColor: '#ef4444' };
             const label = isI ? 'i' : isLeft ? 'L' : isRight ? 'R' : '';
-            const labelColor = isI ? '#fb923c' : isLeft ? '#4ade80' : '#f87171';
+            const labelColor = isI ? '#fb923c' : isLeft ? 'var(--tier-3)' : '#f87171';
             return (
               <div key={idx} className="flex flex-col items-center gap-1">
-                <div className={`w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg ${bg} text-slate-100`}>{val}</div>
+                <div style={cellStyle} className="w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg">
+                  <span style={{ color: 'var(--text)' }}>{val}</span>
+                </div>
                 <div className="text-xs h-4 font-medium" style={{ color: label ? labelColor : 'transparent' }}>{label || '.'}</div>
-                <div className="text-xs text-slate-600">{idx}</div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{idx}</div>
               </div>
             );
           })}
@@ -313,28 +315,28 @@ function ThreeSumTab() {
       {triplets.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {triplets.map((t, idx) => (
-            <span key={idx} className="text-xs font-mono bg-green-900/40 border border-green-700 px-2 py-1 rounded text-green-300">
+            <span key={idx} style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.375rem', padding: '0.25rem 0.5rem', color: 'var(--tier-3)', fontFamily: 'var(--mono)', fontSize: '0.75rem' }}>
               [{t.join(', ')}]
             </span>
           ))}
         </div>
       )}
 
-      <div className={`rounded-lg px-4 py-3 text-sm min-h-12 font-mono ${done ? 'bg-green-900/40 text-green-300' : 'bg-slate-900/60 text-slate-300'}`}>{message}</div>
+      {done
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)', minHeight: '3rem' }}>{message}</div>
+        : <div className="viz-info">{message}</div>
+      }
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={nextStep} disabled={done}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">Next Step</button>
-        <button onClick={stepBack} disabled={history.length === 0}
-          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 text-sm font-medium rounded-lg">← Back</button>
-        <button onClick={togglePlay} disabled={done}
-          className="px-4 py-2 bg-purple-700 hover:bg-purple-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg">
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
           {playing ? 'Pause' : '▶ Play'}
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Speed</span>
-          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="w-24" />
-          <span className="text-xs text-slate-400">{speed}x</span>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
         </div>
       </div>
     </div>
@@ -346,15 +348,15 @@ export default function TwoPointersViz() {
   const [tab, setTab] = useState<'twosum2' | 'threesum'>('twosum2');
 
   return (
-    <div className="bg-slate-800/60 rounded-xl p-6 space-y-6">
+    <div className="panel p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-100 mb-1">Two Pointers</h3>
-        <p className="text-sm text-slate-400">Two boundaries that move toward each other on sorted input</p>
+        <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Two Pointers</h3>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Two boundaries that move toward each other on sorted input</p>
       </div>
 
       <div className="flex gap-2">
-        <button onClick={() => setTab('twosum2')} className={`${TAB_BTN} ${tab === 'twosum2' ? ACTIVE : INACTIVE}`}>Two Sum II</button>
-        <button onClick={() => setTab('threesum')} className={`${TAB_BTN} ${tab === 'threesum' ? ACTIVE : INACTIVE}`}>3Sum</button>
+        <button onClick={() => setTab('twosum2')} className={tab === 'twosum2' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Two Sum II</button>
+        <button onClick={() => setTab('threesum')} className={tab === 'threesum' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>3Sum</button>
       </div>
 
       {tab === 'twosum2' ? <TwoSumIITab /> : <ThreeSumTab />}
