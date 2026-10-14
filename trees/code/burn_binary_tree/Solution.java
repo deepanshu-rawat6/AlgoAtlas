@@ -60,7 +60,7 @@ public class Solution {
         Solution sol = new Solution();
         assert sol.amountOfTime(build(new Integer[]{1,5,3,null,4,10,6,9,2}), 3) == 4;
         assert sol.amountOfTime(build(new Integer[]{1}), 1) == 0;
-        assert sol.amountOfTime(build(new Integer[]{1,2}), 2) == 2;
+        assert sol.amountOfTime(build(new Integer[]{1,2}), 2) == 1;
         System.out.println("All tests passed.");
     }
 }
