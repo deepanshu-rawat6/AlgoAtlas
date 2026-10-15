@@ -1,180 +1,531 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 
-// Tree: [3, 9, 20, null, null, 15, 7]
-const TREE = [3, 9, 20, null, null, 15, 7];
-const W = 500, H = 200, R = 18;
+// ── Types ────────────────────────────────────────────────────────────────────
+interface TNode { val: number; left: TNode | null; right: TNode | null; idx: number; }
+type TraversalTab = 'level' | 'preorder' | 'inorder' | 'postorder';
+type MainTab = 'traversal' | 'bst' | 'paths';
+type BSTMode = 'search' | 'insert' | 'validate';
 
-const POS: Record<number, [number, number]> = {
-  0: [250, 30],
-  1: [120, 90],  2: [380, 90],
-  3: [55,  160], 4: [185, 160], 5: [315, 160], 6: [445, 160],
-};
+interface BSTStep { highlighted: number[]; current: number; newNode?: number; valid?: boolean; msg: string; }
+interface PathStep { currentPath: number[]; allPaths: number[][]; currentNode: number; msg: string; }
 
-const EDGES = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]].filter(
-  ([a, b]) => TREE[a] !== null && TREE[b] !== null
-);
+const DEFAULT_INPUT = '[3,9,20,null,null,15,7]';
+const BST_INPUT = '[8,4,12,2,6,10,15]';
+const R = 18;
 
-// Pre-computed visit sequences (indices into TREE)
-const SEQUENCES: Record<Tab, number[]> = {
-  'level':     [0,1,2,5,6],   // 3,9,20,15,7  (BFS; skip null children)
-  'preorder':  [0,1,2,5,6],   // 3,9,20,15,7
-  'inorder':   [1,0,5,2,6],   // 9,3,15,20,7
-  'postorder': [1,5,6,2,0],   // 9,15,7,20,3
-};
+// ── Tree helpers ─────────────────────────────────────────────────────────────
+function parseTree(input: string): (number | null)[] {
+  return input.replace(/[\[\]]/g, '').split(',').map(s => {
+    const t = s.trim();
+    return (t === 'null' || t === '') ? null : parseInt(t, 10);
+  });
+}
 
-type Tab = 'level' | 'preorder' | 'inorder' | 'postorder';
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'level',     label: 'Level Order (BFS)' },
-  { id: 'preorder',  label: 'Preorder (DFS)' },
-  { id: 'inorder',   label: 'Inorder' },
-  { id: 'postorder', label: 'Postorder' },
-];
+function buildTree(arr: (number | null)[]): TNode | null {
+  if (!arr.length || arr[0] == null) return null;
+  const root: TNode = { val: arr[0], left: null, right: null, idx: 0 };
+  const q: TNode[] = [root];
+  let i = 1;
+  while (q.length && i < arr.length) {
+    const node = q.shift()!;
+    if (i < arr.length && arr[i] != null) { node.left = { val: arr[i]!, left: null, right: null, idx: i }; q.push(node.left); }
+    i++;
+    if (i < arr.length && arr[i] != null) { node.right = { val: arr[i]!, left: null, right: null, idx: i }; q.push(node.right); }
+    i++;
+  }
+  return root;
+}
 
-export default function TreeViz() {
-  const [tab, setTab] = useState<Tab>('level');
-  const [step, setStep] = useState(0);   // 0 = nothing visited yet; step N = first N nodes visited
-  const [started, setStarted] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+function computePositions(root: TNode | null, svgW: number, svgH: number): Map<number, [number, number]> {
+  const depths = new Map<number, number>();
+  const inorderX = new Map<number, number>();
+  let counter = 0;
+  function assignDepth(node: TNode | null, d: number) {
+    if (!node) return;
+    depths.set(node.idx, d);
+    assignDepth(node.left, d + 1);
+    assignDepth(node.right, d + 1);
+  }
+  function inorder(node: TNode | null) {
+    if (!node) return;
+    inorder(node.left);
+    inorderX.set(node.idx, counter++);
+    inorder(node.right);
+  }
+  assignDepth(root, 0);
+  inorder(root);
+  const n = counter || 1;
+  const maxDepth = depths.size ? Math.max(...depths.values()) : 0;
+  const margin = 30;
+  const xScale = n > 1 ? (svgW - 2 * margin) / (n - 1) : 0;
+  const yStep = maxDepth > 0 ? (svgH - 2 * margin) / maxDepth : svgH / 2;
+  const pos = new Map<number, [number, number]>();
+  for (const [idx, xi] of inorderX) {
+    const x = n === 1 ? svgW / 2 : margin + xi * xScale;
+    const y = margin + depths.get(idx)! * yStep;
+    pos.set(idx, [x, y]);
+  }
+  return pos;
+}
+
+function getEdges(root: TNode | null): [number, number][] {
+  const edges: [number, number][] = [];
+  function dfs(n: TNode | null) {
+    if (!n) return;
+    if (n.left) { edges.push([n.idx, n.left.idx]); dfs(n.left); }
+    if (n.right) { edges.push([n.idx, n.right.idx]); dfs(n.right); }
+  }
+  dfs(root);
+  return edges;
+}
+
+function getTraversalSequence(root: TNode | null, type: TraversalTab): number[] {
+  const seq: number[] = [];
+  function level(r: TNode | null) {
+    if (!r) return;
+    const q = [r];
+    while (q.length) { const n = q.shift()!; seq.push(n.idx); if (n.left) q.push(n.left); if (n.right) q.push(n.right); }
+  }
+  function pre(n: TNode | null) { if (!n) return; seq.push(n.idx); pre(n.left); pre(n.right); }
+  function ino(n: TNode | null) { if (!n) return; ino(n.left); seq.push(n.idx); ino(n.right); }
+  function post(n: TNode | null) { if (!n) return; post(n.left); post(n.right); seq.push(n.idx); }
+  if (type === 'level') level(root);
+  else if (type === 'preorder') pre(root);
+  else if (type === 'inorder') ino(root);
+  else post(root);
+  return seq;
+}
+
+// ── BST step builders ────────────────────────────────────────────────────────
+function buildSearchSteps(root: TNode | null, target: number): BSTStep[] {
+  const steps: BSTStep[] = [];
+  const path: number[] = [];
+  let node = root;
+  while (node) {
+    path.push(node.idx);
+    if (target === node.val) {
+      steps.push({ highlighted: [...path], current: node.idx, path, msg: `✓ Found ${target}!`, valid: true });
+      return steps;
+    }
+    const dir = target < node.val ? 'left' : 'right';
+    steps.push({ highlighted: [...path], current: node.idx, msg: `${target} vs ${node.val} → go ${dir}` });
+    node = target < node.val ? node.left : node.right;
+  }
+  steps.push({ highlighted: [...path], current: -1, msg: `✗ ${target} not found.`, valid: false });
+  return steps;
+}
+
+function buildInsertSteps(root: TNode | null, val: number): BSTStep[] {
+  const steps: BSTStep[] = [];
+  if (!root) { steps.push({ highlighted: [], current: -1, msg: `Insert ${val} as root.` }); return steps; }
+  const path: number[] = [];
+  let node = root;
+  while (node) {
+    path.push(node.idx);
+    const dir = val < node.val ? 'left' : 'right';
+    steps.push({ highlighted: [...path], current: node.idx, msg: `${val} vs ${node.val} → go ${dir}` });
+    const child = val < node.val ? node.left : node.right;
+    if (!child) {
+      // ponytail: new node gets a synthetic idx for highlighting; doesn't actually mutate tree
+      const newIdx = 1000 + path.length;
+      steps.push({ highlighted: [...path, newIdx], current: newIdx, newNode: newIdx, msg: `Insert ${val} as ${dir} child of ${node.val}.` });
+      return steps;
+    }
+    node = child;
+  }
+  return steps;
+}
+
+function buildValidateSteps(root: TNode | null): BSTStep[] {
+  const steps: BSTStep[] = [];
+  function dfs(node: TNode | null, min: number, max: number) {
+    if (!node) return;
+    const valid = node.val > min && node.val < max;
+    const minStr = min === -Infinity ? '-∞' : String(min);
+    const maxStr = max === Infinity ? '+∞' : String(max);
+    steps.push({ highlighted: [node.idx], current: node.idx, valid, msg: `Node ${node.val}: range (${minStr}, ${maxStr}) → ${valid ? '✓ valid' : '✗ INVALID!'}` });
+    if (!valid) return;
+    dfs(node.left, min, node.val);
+    dfs(node.right, node.val, max);
+  }
+  dfs(root, -Infinity, Infinity);
+  return steps;
+}
+
+// ── Path step builder ────────────────────────────────────────────────────────
+function buildPathSteps(root: TNode | null): PathStep[] {
+  const steps: PathStep[] = [];
+  const allPaths: number[][] = [];
+  function dfs(node: TNode | null, path: number[]) {
+    if (!node) return;
+    path.push(node.val);
+    steps.push({ currentPath: [...path], allPaths: allPaths.map(p => [...p]), currentNode: node.idx, msg: `Visit ${node.val} → path: [${path.join(' → ')}]` });
+    if (!node.left && !node.right) {
+      allPaths.push([...path]);
+      steps.push({ currentPath: [...path], allPaths: allPaths.map(p => [...p]), currentNode: node.idx, msg: `Leaf! Path complete: [${path.join(' → ')}]` });
+    } else {
+      if (node.left) dfs(node.left, path);
+      if (node.right) dfs(node.right, path);
+    }
+    path.pop();
+  }
+  dfs(root, []);
+  if (steps.length) steps.push({ ...steps[steps.length - 1], msg: `Done. ${allPaths.length} path(s) found.` });
+  return steps;
+}
+
+// ── Shared SVG component ──────────────────────────────────────────────────────
+function TreeSVG({ positions, edges, highlighted, current, newNode, nodeVals, validMap }: {
+  positions: Map<number, [number, number]>;
+  edges: [number, number][];
+  highlighted: number[];
+  current: number;
+  newNode?: number;
+  nodeVals: Map<number, number>;
+  validMap?: Map<number, boolean>;
+}) {
+  const svgH = 200;
+  return (
+    <div className="panel p-3">
+      <svg viewBox={`0 0 500 ${svgH}`} className="w-full" style={{ maxHeight: svgH + 20 }}>
+        {edges.map(([a, b]) => {
+          const pa = positions.get(a), pb = positions.get(b);
+          if (!pa || !pb) return null;
+          return <line key={`${a}-${b}`} x1={pa[0]} y1={pa[1] + R} x2={pb[0]} y2={pb[1] - R} stroke="var(--border)" strokeWidth="2" />;
+        })}
+        {[...positions.entries()].map(([idx, [cx, cy]]) => {
+          const isCurrent = current === idx;
+          const isHl = highlighted.includes(idx);
+          const isNew = newNode === idx;
+          const vld = validMap?.get(idx);
+          let fill = 'var(--surface-raised)', stroke = 'var(--border)';
+          if (isNew) { fill = 'var(--tier-3)'; stroke = 'var(--tier-3)'; }
+          else if (isCurrent) { fill = 'var(--accent-soft)'; stroke = 'var(--accent)'; }
+          else if (vld === false) { fill = 'color-mix(in srgb, #ef4444 30%, transparent)'; stroke = '#ef4444'; }
+          else if (vld === true) { fill = 'color-mix(in srgb, var(--tier-3) 25%, transparent)'; stroke = 'var(--tier-3)'; }
+          else if (isHl) { fill = 'var(--accent)'; stroke = 'var(--accent)'; }
+          const val = nodeVals.get(idx);
+          return (
+            <g key={idx}>
+              <circle cx={cx} cy={cy} r={R} fill={fill} stroke={stroke} strokeWidth="2" />
+              <text x={cx} y={cy + 5} textAnchor="middle" fill="var(--text)" fontSize="12" fontWeight="bold">{val}</text>
+            </g>
+          );
+        })}
+        {newNode !== undefined && (() => {
+          // draw synthetic new node at a plausible position (below current)
+          const cp = positions.get(current);
+          if (!cp) return null;
+          const nx = cp[0] + 30, ny = cp[1] + 50;
+          const val = newNode; // will be labelled from outside
+          return (
+            <g>
+              <line x1={cp[0]} y1={cp[1] + R} x2={nx} y2={ny - R} stroke="var(--tier-3)" strokeWidth="2" strokeDasharray="4" />
+              <circle cx={nx} cy={ny} r={R} fill="color-mix(in srgb, var(--tier-3) 30%, transparent)" stroke="var(--tier-3)" strokeWidth="2" strokeDasharray="4" />
+              <text x={nx} y={ny + 5} textAnchor="middle" fill="var(--tier-3)" fontSize="12" fontWeight="bold">new</text>
+            </g>
+          );
+        })()}
+      </svg>
+    </div>
+  );
+}
+
+// ── Shared step controls ──────────────────────────────────────────────────────
+function StepControls({ onNext, onBack, onPlay, onReset, playing, done, histLen, speed, onSpeed }:
+  { onNext: () => void; onBack: () => void; onPlay: () => void; onReset: () => void; playing: boolean; done: boolean; histLen: number; speed: number; onSpeed: (n: number) => void; }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <button onClick={onNext} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+      <button onClick={onBack} disabled={histLen === 0} className="viz-btn">← Back</button>
+      <button onClick={onPlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>{playing ? 'Pause' : '▶ Play'}</button>
+      <button onClick={onReset} className="viz-btn">Reset</button>
+      <div className="flex items-center gap-2">
+        <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+        <input type="range" min={1} max={5} value={speed} onChange={e => onSpeed(Number(e.target.value))} className="speed-slider w-24" />
+        <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
+      </div>
+    </div>
+  );
+}
+
+// ── useStepPlayer hook ────────────────────────────────────────────────────────
+function useStepPlayer(totalSteps: number, speed: number) {
+  const [stepIdx, setStepIdx] = useState(-1);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(3);
-
-  const seq = SEQUENCES[tab];
-  const visitedIndices = seq.slice(0, step);
-  const currentIdx = step < seq.length ? seq[step] : -1;
-  const done = started && step >= seq.length;
+  const [history, setHistory] = useState<number[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const nextRef = useRef<() => void>(() => {});
 
   function stopPlay() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     setPlaying(false);
   }
-  function switchTab(t: Tab) { stopPlay(); setTab(t); setStep(0); setStarted(false); }
-  function reset() { stopPlay(); setStep(0); setStarted(false); }
-  function start() { setStarted(true); setStep(0); }
-  function nextStep() {
-    if (!started || done) return;
-    setStep(s => Math.min(seq.length, s + 1));
+  function reset() { stopPlay(); setStepIdx(-1); setHistory([]); }
+  function next() {
+    if (stepIdx >= totalSteps - 1) { setPlaying(false); return; }
+    setHistory(h => [...h, stepIdx]);
+    setStepIdx(s => s + 1);
   }
-  function prevStep() {
-    if (playing) stopPlay();
-    if (!started) return;
-    setStep(s => Math.max(0, s - 1));
-  }
+  function back() { stopPlay(); if (history.length === 0) return; setStepIdx(history[history.length - 1]); setHistory(h => h.slice(0, -1)); }
   function togglePlay() {
     if (playing) { stopPlay(); return; }
     setPlaying(true);
-    timerRef.current = setInterval(() => {
-      setStep(s => { if (s >= seq.length) { stopPlay(); return s; } return s + 1; });
-    }, 1100 - speed * 200);
+    timerRef.current = setInterval(() => nextRef.current(), 1100 - speed * 200);
   }
 
+  useEffect(() => { nextRef.current = next; });
+  useEffect(() => {
+    if (!playing) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => nextRef.current(), 1100 - speed * 200);
+  }, [speed, playing]);
   useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
-  const mountedRef = useRef(false);
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    if (!playing) return;
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-    timerRef.current = setInterval(() => {
-      setStep(s => { if (s >= seq.length) { stopPlay(); return s; } return s + 1; });
-    }, 1100 - speed * 200);
-  }, [speed]);
+  return { stepIdx, playing, history, reset, next, back, togglePlay, stopPlay };
+}
 
-  function nodeColor(i: number) {
-    if (currentIdx === i) return 'var(--accent-soft)';
-    if (visitedIndices.includes(i)) return 'var(--accent)';
-    return 'var(--surface-raised)';
-  }
-  function nodeStroke(i: number) {
-    if (currentIdx === i) return 'var(--accent)';
-    if (visitedIndices.includes(i)) return 'var(--accent)';
-    return 'var(--border)';
+// ── Input styles ──────────────────────────────────────────────────────────────
+const inputSm: React.CSSProperties = {
+  background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem',
+  padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none',
+};
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function TreeViz() {
+  const [treeInput, setTreeInput] = useState(DEFAULT_INPUT);
+  const [treeArr, setTreeArr] = useState<(number | null)[]>(() => parseTree(DEFAULT_INPUT));
+  const [mainTab, setMainTab] = useState<MainTab>('traversal');
+  const [traversalTab, setTraversalTab] = useState<TraversalTab>('level');
+  const [bstMode, setBstMode] = useState<BSTMode>('search');
+  const [bstInput, setBstInput] = useState('6');
+  const [bstSteps, setBstSteps] = useState<BSTStep[]>([]);
+  const [speed, setSpeed] = useState(3);
+
+  const treeRoot = useMemo(() => buildTree(treeArr), [treeArr]);
+  const positions = useMemo(() => computePositions(treeRoot, 500, 180), [treeRoot]);
+  const edges = useMemo(() => getEdges(treeRoot), [treeRoot]);
+  const nodeVals = useMemo(() => {
+    const m = new Map<number, number>();
+    function walk(n: TNode | null) { if (!n) return; m.set(n.idx, n.val); walk(n.left); walk(n.right); }
+    walk(treeRoot);
+    return m;
+  }, [treeRoot]);
+
+  // Traversal
+  const travSeq = useMemo(() => getTraversalSequence(treeRoot, traversalTab), [treeRoot, traversalTab]);
+  const trav = useStepPlayer(travSeq.length, speed);
+
+  // BST
+  const bst = useStepPlayer(bstSteps.length, speed);
+
+  // Paths
+  const pathSteps = useMemo(() => buildPathSteps(treeRoot), [treeRoot]);
+  const paths = useStepPlayer(pathSteps.length, speed);
+
+  function applyTree() {
+    const arr = parseTree(treeInput);
+    setTreeArr(arr);
+    trav.reset(); bst.reset(); setBstSteps([]); paths.reset();
   }
 
-  const msg = !started
-    ? `Press "Start" to begin ${TABS.find(t => t.id === tab)?.label}.`
-    : done
-      ? `Complete! Order: [${seq.map(i => TREE[i]).join(', ')}]`
-      : step === 0
-        ? `Ready. Press "Next Step" to visit first node.`
-        : `Visiting node ${TREE[currentIdx === -1 ? seq[step-1] : currentIdx]} — step ${step}/${seq.length}`;
+  function switchMainTab(t: MainTab) {
+    setMainTab(t);
+    trav.reset(); bst.reset(); setBstSteps([]); paths.reset();
+    if (t === 'bst') { setTreeInput(BST_INPUT); setTreeArr(parseTree(BST_INPUT)); }
+  }
+
+  function runBST() {
+    const val = parseInt(bstInput, 10);
+    if (isNaN(val)) return;
+    bst.reset();
+    if (bstMode === 'search') setBstSteps(buildSearchSteps(treeRoot, val));
+    else if (bstMode === 'insert') setBstSteps(buildInsertSteps(treeRoot, val));
+    else setBstSteps(buildValidateSteps(treeRoot));
+  }
+
+  // Current step data
+  const travStep = trav.stepIdx >= 0 ? trav.stepIdx : -1;
+  const travVisited = travSeq.slice(0, travStep + 1);
+  const travCurrent = travStep < travSeq.length ? travSeq[travStep] : -1;
+
+  const bstStep = bst.stepIdx >= 0 && bst.stepIdx < bstSteps.length ? bstSteps[bst.stepIdx] : null;
+  const pathStep = paths.stepIdx >= 0 && paths.stepIdx < pathSteps.length ? pathSteps[paths.stepIdx] : null;
+
+  // Validate map for coloring
+  const validateMap = useMemo(() => {
+    if (bstMode !== 'validate') return undefined;
+    const m = new Map<number, boolean>();
+    for (const s of bstSteps) { if (s.valid !== undefined) m.set(s.current, s.valid); }
+    return m;
+  }, [bstSteps, bstMode]);
 
   return (
     <div className="panel p-6 space-y-6">
       <div>
-        <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Tree Traversal</h3>
-        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Step through traversal orders on a binary tree</p>
+        <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Tree Visualizer</h3>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Traversals · BST operations · Path problems</p>
       </div>
 
-      {/* Tab bar */}
+      {/* Custom tree input */}
+      <div className="flex gap-2 items-end flex-wrap">
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>Tree (array notation)</label>
+          <input style={{ ...inputSm, width: '18rem' }} value={treeInput}
+            onChange={e => setTreeInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && applyTree()}
+            placeholder="[3,9,20,null,null,15,7]" />
+        </div>
+        <button onClick={applyTree} className="viz-btn viz-btn--primary">Apply</button>
+        <button onClick={() => { setTreeInput(DEFAULT_INPUT); setTreeArr(parseTree(DEFAULT_INPUT)); trav.reset(); bst.reset(); setBstSteps([]); paths.reset(); }} className="viz-btn">Reset Tree</button>
+      </div>
+
+      {/* Main tabs */}
       <div className="flex gap-2 flex-wrap">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => switchTab(t.id)}
-            className={tab === t.id ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
-            {t.label}
+        {(['traversal', 'bst', 'paths'] as MainTab[]).map(t => (
+          <button key={t} onClick={() => switchMainTab(t)} className={mainTab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
+            {t === 'traversal' ? 'Traversal' : t === 'bst' ? 'BST Operations' : 'Path Problems'}
           </button>
         ))}
       </div>
 
-      {/* SVG Tree */}
-      <div className="panel p-3">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 220 }}>
-          {EDGES.map(([a, b]) => (
-            <line key={`${a}-${b}`}
-              x1={POS[a][0]} y1={POS[a][1] + R}
-              x2={POS[b][0]} y2={POS[b][1] - R}
-              stroke="var(--border)" strokeWidth="2" />
-          ))}
-          {TREE.map((val, i) => {
-            if (val == null || !POS[i]) return null;
-            return (
-              <g key={i}>
-                <circle cx={POS[i][0]} cy={POS[i][1]} r={R} fill={nodeColor(i)} stroke={nodeStroke(i)} strokeWidth="2" />
-                <text x={POS[i][0]} y={POS[i][1]+5} textAnchor="middle" fill="var(--text)" fontSize="13" fontWeight="bold">{val}</text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+      {/* ── TRAVERSAL ── */}
+      {mainTab === 'traversal' && (
+        <div className="space-y-4">
+          <div className="flex gap-2 flex-wrap">
+            {(['level', 'preorder', 'inorder', 'postorder'] as TraversalTab[]).map(t => (
+              <button key={t} onClick={() => { setTraversalTab(t); trav.reset(); }}
+                className={traversalTab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'} style={{ fontSize: '0.8rem' }}>
+                {t === 'level' ? 'Level Order (BFS)' : t === 'preorder' ? 'Preorder' : t === 'inorder' ? 'Inorder' : 'Postorder'}
+              </button>
+            ))}
+          </div>
+          <TreeSVG positions={positions} edges={edges} highlighted={travVisited} current={travCurrent} nodeVals={nodeVals} />
+          {travStep >= 0 && (
+            <div className="flex gap-2 flex-wrap items-center">
+              <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Visited:</span>
+              {travVisited.map((idx, i) => (
+                <span key={i} style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)', border: '1px solid var(--accent)', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', fontFamily: 'var(--mono)', color: 'var(--accent)' }}>{nodeVals.get(idx)}</span>
+              ))}
+            </div>
+          )}
+          <div className="viz-info">
+            {trav.stepIdx < 0 ? `Press Next Step to begin ${traversalTab} traversal.`
+              : trav.stepIdx >= travSeq.length ? `Done! Order: [${travSeq.map(i => nodeVals.get(i)).join(', ')}]`
+              : `Visiting node ${nodeVals.get(travCurrent)} — step ${trav.stepIdx + 1}/${travSeq.length}`}
+          </div>
+          <StepControls onNext={trav.next} onBack={trav.back} onPlay={trav.togglePlay} onReset={trav.reset}
+            playing={trav.playing} done={trav.stepIdx >= travSeq.length} histLen={trav.history.length} speed={speed} onSpeed={setSpeed} />
+        </div>
+      )}
 
-      {/* Visit sequence badges */}
-      {visitedIndices.length > 0 && (
-        <div className="flex gap-2 flex-wrap items-center">
-          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Visited:</span>
-          {visitedIndices.map((idx, pos) => (
-            <span key={pos} style={{background:'color-mix(in srgb, var(--accent) 20%, transparent)',border:'1px solid var(--accent)',padding:'0.125rem 0.5rem',borderRadius:'0.25rem',fontSize:'0.875rem',fontFamily:'var(--mono)',color:'var(--accent)'}}>{TREE[idx]}</span>
-          ))}
-          {currentIdx !== -1 && (
-            <span className="animate-pulse" style={{background:'var(--accent-soft)',border:'1px solid var(--accent)',padding:'0.125rem 0.5rem',borderRadius:'0.25rem',fontSize:'0.875rem',fontFamily:'var(--mono)',color:'var(--text)'}}>{TREE[currentIdx]}</span>
+      {/* ── BST OPERATIONS ── */}
+      {mainTab === 'bst' && (
+        <div className="space-y-4">
+          <div className="flex gap-2 flex-wrap">
+            {(['search', 'insert', 'validate'] as BSTMode[]).map(m => (
+              <button key={m} onClick={() => { setBstMode(m); bst.reset(); setBstSteps([]); }}
+                className={bstMode === m ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
+                {m.charAt(0).toUpperCase() + m.slice(1)}
+              </button>
+            ))}
+          </div>
+          {bstMode !== 'validate' && (
+            <div className="flex gap-2 items-end">
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>
+                  {bstMode === 'search' ? 'Search for value' : 'Insert value'}
+                </label>
+                <input style={{ ...inputSm, width: '6rem' }} value={bstInput}
+                  onChange={e => setBstInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && runBST()} placeholder="e.g. 6" />
+              </div>
+              <button onClick={runBST} className="viz-btn viz-btn--primary">
+                {bstMode === 'search' ? 'Search' : 'Insert'}
+              </button>
+            </div>
+          )}
+          {bstMode === 'validate' && (
+            <button onClick={runBST} className="viz-btn viz-btn--primary">Run Validation</button>
+          )}
+          <TreeSVG positions={positions} edges={edges}
+            highlighted={bstStep?.highlighted ?? []}
+            current={bstStep?.current ?? -1}
+            newNode={bstStep?.newNode}
+            nodeVals={nodeVals}
+            validMap={bstMode === 'validate' && bstStep ? (() => {
+              const m = new Map<number, boolean>();
+              for (let i = 0; i <= bst.stepIdx && i < bstSteps.length; i++) {
+                const s = bstSteps[i];
+                if (s.valid !== undefined) m.set(s.current, s.valid);
+              }
+              return m;
+            })() : undefined}
+          />
+          <div className="viz-info" style={bstStep?.valid === false ? { color: '#ef4444' } : bstStep?.valid === true ? { color: 'var(--tier-3)' } : {}}>
+            {bstSteps.length === 0 ? `Configure and press ${bstMode === 'validate' ? 'Run Validation' : bstMode.charAt(0).toUpperCase() + bstMode.slice(1)} to start.`
+              : bstStep ? bstStep.msg
+              : 'Press Next Step.'}
+          </div>
+          {bstSteps.length > 0 && (
+            <StepControls onNext={bst.next} onBack={bst.back} onPlay={bst.togglePlay} onReset={bst.reset}
+              playing={bst.playing} done={bst.stepIdx >= bstSteps.length - 1} histLen={bst.history.length} speed={speed} onSpeed={setSpeed} />
+          )}
+          {bstMode !== 'validate' && (
+            <p style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>
+              Tip: Use BST tree <code>[8,4,12,2,6,10,15]</code> for best results. The tree input above controls the tree.
+            </p>
           )}
         </div>
       )}
 
-      <div className="viz-info">{msg}</div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        {!started
-          ? <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
-          : <>
-              <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
-              <button onClick={prevStep} disabled={step === 0} className="viz-btn">← Back</button>
-              <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
-                {playing ? 'Pause' : '▶ Play'}
-              </button>
-              <button onClick={reset} className="viz-btn">Reset</button>
-              <div className="flex items-center gap-2">
-                <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
-                <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
-                <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
-              </div>
-            </>
-        }
-      </div>
+      {/* ── PATH PROBLEMS ── */}
+      {mainTab === 'paths' && (
+        <div className="space-y-4">
+          <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Root-to-leaf DFS — watch each path build and complete.</p>
+          <TreeSVG positions={positions} edges={edges}
+            highlighted={pathStep ? pathSteps.slice(0, paths.stepIdx + 1).map(s => s.currentNode) : []}
+            current={pathStep?.currentNode ?? -1}
+            nodeVals={nodeVals}
+          />
+          {/* Found paths */}
+          {pathStep && pathStep.allPaths.length > 0 && (
+            <div className="space-y-1">
+              <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Completed paths:</div>
+              {pathStep.allPaths.map((p, i) => (
+                <div key={i} style={{ fontFamily: 'var(--mono)', fontSize: '0.875rem', color: 'var(--tier-3)' }}>
+                  [{p.join(' → ')}]
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Current path progress */}
+          {pathStep && (
+            <div className="flex gap-1 flex-wrap items-center">
+              <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Current path:</span>
+              {pathStep.currentPath.map((v, i) => (
+                <span key={i} style={{ background: 'color-mix(in srgb, var(--accent) 20%, transparent)', border: '1px solid var(--accent)', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem', fontFamily: 'var(--mono)', color: 'var(--accent)' }}>{v}</span>
+              ))}
+            </div>
+          )}
+          <div className="viz-info">
+            {paths.stepIdx < 0 ? 'Press Next Step to start DFS path enumeration.'
+              : pathStep ? pathStep.msg
+              : 'Done.'}
+          </div>
+          <StepControls onNext={paths.next} onBack={paths.back} onPlay={paths.togglePlay} onReset={paths.reset}
+            playing={paths.playing} done={paths.stepIdx >= pathSteps.length - 1} histLen={paths.history.length} speed={speed} onSpeed={setSpeed} />
+        </div>
+      )}
 
       {/* Legend */}
-      <div className="flex gap-4 text-xs" style={{color:'var(--text-dim)'}}>
-        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--accent-soft)',border:'2px solid var(--accent)'}}></span>Current</span>
-        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--accent)'}}></span>Visited</span>
-        <span className="flex items-center gap-1"><span style={{display:'inline-block',width:'0.75rem',height:'0.75rem',borderRadius:'50%',background:'var(--surface-raised)',border:'2px solid var(--border)'}}></span>Unvisited</span>
+      <div className="flex gap-4 text-xs flex-wrap" style={{ color: 'var(--text-dim)' }}>
+        <span className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '0.75rem', height: '0.75rem', borderRadius: '50%', background: 'var(--accent-soft)', border: '2px solid var(--accent)' }}></span>Current</span>
+        <span className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '0.75rem', height: '0.75rem', borderRadius: '50%', background: 'var(--accent)' }}></span>Visited/Path</span>
+        {mainTab === 'bst' && bstMode === 'validate' && <>
+          <span className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '0.75rem', height: '0.75rem', borderRadius: '50%', background: 'color-mix(in srgb, var(--tier-3) 25%, transparent)', border: '2px solid var(--tier-3)' }}></span>Valid</span>
+          <span className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '0.75rem', height: '0.75rem', borderRadius: '50%', background: 'color-mix(in srgb, #ef4444 30%, transparent)', border: '2px solid #ef4444' }}></span>Invalid</span>
+        </>}
       </div>
     </div>
   );

@@ -399,11 +399,238 @@ function DijkstraTab() {
   );
 }
 
+// ── Union-Find ───────────────────────────────────────────────────────────────
+const UF_N = 8;
+const NODE_X = [28, 83, 138, 193, 248, 303, 358, 413];
+const NODE_Y = 90;
+const UF_R = 20;
+const COMP_COLORS = ['#3b82f6','#22c55e','#f97316','#a855f7','#ec4899','#06b6d4','#eab308','#ef4444'];
+
+type UFStep = { parent: number[]; rank: number[]; highlight: number[]; msg: string };
+
+function ufGetRoot(p: number[], i: number): number {
+  let cur = i; while (p[cur] !== cur) cur = p[cur]; return cur;
+}
+
+function buildUnionSteps(par: number[], rnk: number[], a: number, b: number): UFStep[] {
+  const steps: UFStep[] = [];
+  const p = [...par], r = [...rnk];
+
+  function findRoot(arr: number[], start: number) {
+    const path: number[] = [];
+    let cur = start;
+    while (arr[cur] !== cur) { path.push(cur); cur = arr[cur]; }
+    path.push(cur);
+    return { root: cur, path };
+  }
+
+  const { root: rootA, path: pathA } = findRoot(p, a);
+  steps.push({ parent: [...p], rank: [...r], highlight: pathA, msg: `Find root of ${a}: path [${pathA.join('→')}], root = ${rootA}` });
+  for (const n of pathA) p[n] = rootA;
+  steps.push({ parent: [...p], rank: [...r], highlight: pathA, msg: `Path compression: all nodes in [${pathA.join('→')}] now point directly to ${rootA}` });
+
+  const { root: rootB, path: pathB } = findRoot(p, b);
+  steps.push({ parent: [...p], rank: [...r], highlight: pathB, msg: `Find root of ${b}: path [${pathB.join('→')}], root = ${rootB}` });
+  for (const n of pathB) p[n] = rootB;
+  if (pathB.length > 2) steps.push({ parent: [...p], rank: [...r], highlight: pathB, msg: `Path compression: all nodes in [${pathB.join('→')}] now point directly to ${rootB}` });
+
+  if (rootA === rootB) {
+    steps.push({ parent: [...p], rank: [...r], highlight: [rootA], msg: `${a} and ${b} already in same component (root=${rootA}). No union needed.` });
+    return steps;
+  }
+
+  if (r[rootA] < r[rootB]) {
+    p[rootA] = rootB;
+    steps.push({ parent: [...p], rank: [...r], highlight: [rootA, rootB], msg: `Union by rank: rank[${rootA}]=${r[rootA]} < rank[${rootB}]=${r[rootB]} → attach ${rootA} under ${rootB}` });
+  } else if (r[rootA] > r[rootB]) {
+    p[rootB] = rootA;
+    steps.push({ parent: [...p], rank: [...r], highlight: [rootA, rootB], msg: `Union by rank: rank[${rootA}]=${r[rootA]} > rank[${rootB}]=${r[rootB]} → attach ${rootB} under ${rootA}` });
+  } else {
+    p[rootB] = rootA; r[rootA]++;
+    steps.push({ parent: [...p], rank: [...r], highlight: [rootA, rootB], msg: `Equal ranks → attach ${rootB} under ${rootA}, rank[${rootA}] → ${r[rootA]}` });
+  }
+  steps.push({ parent: [...p], rank: [...r], highlight: [], msg: `Done! ${a} and ${b} are now connected.` });
+  return steps;
+}
+
+function UnionFindTab() {
+  const [parent, setParent] = useState<number[]>(() => Array.from({ length: UF_N }, (_, i) => i));
+  const [rank,   setRank]   = useState<number[]>(() => Array(UF_N).fill(0));
+  const [nodeA,  setNodeA]  = useState('0');
+  const [nodeB,  setNodeB]  = useState('1');
+  const [steps,  setSteps]  = useState<UFStep[]>([]);
+  const [stepIdx, setStepIdx] = useState(-1);
+  const [playing, setPlaying] = useState(false);
+  const [speed,  setSpeed]  = useState(3);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const nextStepRef = useRef<() => void>(() => {});
+
+  const inProgress = stepIdx >= 0 && steps.length > 0;
+  const cur = inProgress ? steps[stepIdx] : null;
+  const dispParent = cur ? cur.parent : parent;
+  const dispRank   = cur ? cur.rank   : rank;
+  const dispHL     = cur ? cur.highlight : [];
+  const dispMsg    = cur ? cur.msg : 'Enter two nodes (0–7) and click Union.';
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function doNextStep() {
+    if (!inProgress) return;
+    if (stepIdx >= steps.length - 1) {
+      // commit last step's state
+      setParent(steps[steps.length - 1].parent);
+      setRank(steps[steps.length - 1].rank);
+      setSteps([]); setStepIdx(-1); stopPlay();
+    } else {
+      setStepIdx(s => s + 1);
+    }
+  }
+
+  useEffect(() => { nextStepRef.current = doNextStep; });
+
+  useEffect(() => {
+    if (!playing) {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+      return;
+    }
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
+  }, [playing, speed]);
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  function startUnion() {
+    const a = parseInt(nodeA), b = parseInt(nodeB);
+    if (isNaN(a) || isNaN(b) || a < 0 || a >= UF_N || b < 0 || b >= UF_N) return;
+    stopPlay();
+    const s = buildUnionSteps(parent, rank, a, b);
+    setSteps(s); setStepIdx(0);
+  }
+
+  function stepBack() {
+    stopPlay();
+    if (stepIdx <= 0) { setSteps([]); setStepIdx(-1); }
+    else setStepIdx(s => s - 1);
+  }
+
+  function reset() {
+    stopPlay();
+    setParent(Array.from({ length: UF_N }, (_, i) => i));
+    setRank(Array(UF_N).fill(0));
+    setSteps([]); setStepIdx(-1);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    background: 'var(--surface-raised)', border: '1px solid var(--border)',
+    borderRadius: '0.375rem', padding: '0.375rem 0.5rem', width: '3.5rem',
+    color: 'var(--text)', fontSize: '0.875rem', outline: 'none', textAlign: 'center',
+  };
+
+  return (
+    <div className="space-y-5">
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>
+        Union-Find groups nodes into components. Find uses <strong>path compression</strong>; Union uses <strong>rank</strong> to keep trees shallow.
+      </p>
+
+      {/* SVG */}
+      <div className="panel p-2">
+        <svg viewBox="0 0 440 140" className="w-full" style={{ maxHeight: 150 }}>
+          <defs>
+            <marker id="uf-arr" markerWidth="7" markerHeight="5" refX="5" refY="2.5" orient="auto">
+              <polygon points="0 0, 7 2.5, 0 5" fill="var(--text-faint)" />
+            </marker>
+          </defs>
+          {/* Parent arrows */}
+          {dispParent.map((p, i) => {
+            if (p === i) return null;
+            const x1 = NODE_X[i], x2 = NODE_X[p], y = NODE_Y;
+            const mx = (x1 + x2) / 2;
+            const my = y - Math.abs(x2 - x1) * 0.45 - UF_R - 5;
+            const dx = x2 - x1, dy = 0;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const ex = x2 - (dx / len) * (UF_R + 7), ey = y;
+            return (
+              <path key={i}
+                d={`M ${x1} ${y - UF_R} Q ${mx} ${my} ${ex} ${ey - UF_R}`}
+                fill="none" stroke="var(--text-faint)" strokeWidth="1.5"
+                markerEnd="url(#uf-arr)" />
+            );
+          })}
+          {/* Nodes */}
+          {Array.from({ length: UF_N }, (_, i) => {
+            const isHL = dispHL.includes(i);
+            const color = COMP_COLORS[ufGetRoot(dispParent, i) % COMP_COLORS.length];
+            return (
+              <g key={i}>
+                <circle cx={NODE_X[i]} cy={NODE_Y} r={UF_R}
+                  fill={isHL ? color : `${color}33`}
+                  stroke={color} strokeWidth={isHL ? 3 : 1.5} />
+                <text x={NODE_X[i]} y={NODE_Y + 5} textAnchor="middle"
+                  fill="var(--text)" fontSize="13" fontWeight="bold">{i}</text>
+                <text x={NODE_X[i]} y={NODE_Y + UF_R + 14} textAnchor="middle"
+                  fill="var(--text-faint)" fontSize="10">p:{dispParent[i]}</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* rank row */}
+      <div className="flex gap-1 items-center flex-wrap">
+        <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem', fontFamily: 'var(--mono)', minWidth: '3rem' }}>rank:</span>
+        {dispRank.map((v, i) => (
+          <span key={i} className="px-2 py-0.5 rounded border text-xs font-mono"
+            style={{ background: 'var(--surface-raised)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>{v}</span>
+        ))}
+      </div>
+
+      <div className="viz-info">{dispMsg}</div>
+
+      {/* Controls */}
+      {!inProgress ? (
+        <div className="flex gap-3 items-end flex-wrap">
+          <div>
+            <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-faint)', marginBottom: '0.2rem' }}>Node A</label>
+            <input style={inputStyle} value={nodeA} onChange={e => setNodeA(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-faint)', marginBottom: '0.2rem' }}>Node B</label>
+            <input style={inputStyle} value={nodeB} onChange={e => setNodeB(e.target.value)} />
+          </div>
+          <button onClick={startUnion} className="viz-btn viz-btn--primary">Union</button>
+          <button onClick={reset} className="viz-btn">Reset</button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={doNextStep} className="viz-btn viz-btn--primary">
+            {stepIdx >= steps.length - 1 ? 'Commit' : 'Next Step'}
+          </button>
+          <button onClick={stepBack} className="viz-btn">← Back</button>
+          <button onClick={() => setPlaying(p => !p)} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
+            {playing ? 'Pause' : '▶ Play'}
+          </button>
+          <button onClick={() => { stopPlay(); setSteps([]); setStepIdx(-1); }} className="viz-btn">Cancel</button>
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>{stepIdx + 1}/{steps.length}</span>
+          <div className="flex items-center gap-2">
+            <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+            <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+            <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
-type Tab = 'grid' | 'dijkstra';
+type Tab = 'grid' | 'dijkstra' | 'unionfind';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'grid', label: 'Grid BFS/DFS' },
   { id: 'dijkstra', label: 'Dijkstra' },
+  { id: 'unionfind', label: 'Union-Find' },
 ];
 
 export default function BFSViz() {
@@ -413,11 +640,11 @@ export default function BFSViz() {
     <div className="panel p-6 space-y-6">
       <div>
         <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Graph Traversal</h3>
-        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>BFS, DFS, and Dijkstra's shortest path</p>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>BFS, DFS, Dijkstra's shortest path, and Union-Find</p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={tab === t.id ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
@@ -426,7 +653,7 @@ export default function BFSViz() {
         ))}
       </div>
 
-      {tab === 'grid' ? <GridTab /> : <DijkstraTab />}
+      {tab === 'grid' ? <GridTab /> : tab === 'dijkstra' ? <DijkstraTab /> : <UnionFindTab />}
     </div>
   );
 }

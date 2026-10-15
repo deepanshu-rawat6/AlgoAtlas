@@ -88,7 +88,16 @@ const currentSlug = Astro.url.pathname.split('/').filter(Boolean).pop();
   <script>
     // ── Mermaid ──────────────────────────────────────────────────────
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+
+    const mermaidStore: Array<{ el: HTMLElement; src: string }> = [];
+
+    function getMermaidTheme() {
+      const t = document.documentElement.dataset.theme;
+      if (t) return t === 'dark' ? 'dark' : 'default';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default';
+    }
+
+    mermaid.initialize({ startOnLoad: false, theme: getMermaidTheme(), securityLevel: 'loose' });
 
     function renderMermaid() {
       document.querySelectorAll('pre > code.language-mermaid').forEach((el, i) => {
@@ -98,9 +107,21 @@ const currentSlug = Astro.url.pathname.split('/').filter(Boolean).pop();
         div.className = 'mermaid my-6';
         div.id = `mermaid-${Date.now()}-${i}`;
         div.textContent = src;
+        mermaidStore.push({ el: div, src });
         pre.replaceWith(div);
       });
       mermaid.run();
+    }
+
+    function rerenderMermaid(theme: string) {
+      if (mermaidStore.length === 0) return;
+      mermaid.initialize({ startOnLoad: false, theme, securityLevel: 'loose' });
+      mermaidStore.forEach(({ el, src }) => {
+        el.removeAttribute('data-processed');
+        el.innerHTML = '';
+        el.textContent = src;
+      });
+      mermaid.run({ nodes: mermaidStore.map(m => m.el) });
     }
 
     // ── Difficulty badges ────────────────────────────────────────────
@@ -152,6 +173,7 @@ const currentSlug = Astro.url.pathname.split('/').filter(Boolean).pop();
         document.documentElement.dataset.theme = next;
         localStorage.setItem('algoatlas-theme', next);
         updateLabel();
+        rerenderMermaid(next === 'dark' ? 'dark' : 'default');
       });
     }
 
