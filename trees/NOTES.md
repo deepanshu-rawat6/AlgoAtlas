@@ -14,17 +14,17 @@ Trees are recursive structures. Almost every tree problem reduces to: **what do 
 
 ```mermaid
 flowchart TD
-    A[Tree Problem] --> B{Need level-by-level info?}
+    A[Tree Problem] --> B{"Need level-by-level info?"}
     B -- Yes --> C[BFS with queue]
-    B -- No --> D{Is it a BST?}
-    D -- Yes --> E{Exploit sorted order?}
+    B -- No --> D{"Is it a BST?"}
+    D -- Yes --> E{"Exploit sorted order?"}
     E -- Yes --> F[Inorder / BST property]
     E -- No --> G[Standard DFS]
-    D -- No --> H{Path problem?}
-    H -- Yes --> I{Path through root?}
+    D -- No --> H{"Path problem?"}
+    H -- Yes --> I{"Path through root?"}
     I -- Yes --> J[Return value up + track global max]
     I -- No --> K[Pass value down as parameter]
-    H -- No --> L{Need parent info?}
+    H -- No --> L{"Need parent info?"}
     L -- Yes --> M[Pass parent/state as param]
     L -- No --> N[Pure recursive DFS]
 ```

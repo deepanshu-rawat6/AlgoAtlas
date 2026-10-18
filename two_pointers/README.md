@@ -53,7 +53,7 @@ This section covers 13 problems focusing on the two-pointer technique — using 
 
 ```mermaid
 flowchart TD
-    A[Two Pointer Problem] --> B{Pointer placement?}
+    A[Two Pointer Problem] --> B{"Pointer placement?"}
     
     B -->|Start & End| C[Opposite-End Pointers]
     B -->|Both at start| D[Slow & Fast Pointers]
@@ -76,7 +76,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Array/String with left=0, right=n-1"] --> B{Move which pointer?}
+    A["Array/String with left=0, right=n-1"] --> B{"Move which pointer?"}
     
     B -->|Always both| C[Palindrome Check]
     B -->|Smaller value side| D[Maximize area/sum]
@@ -106,10 +106,10 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[String Input] --> B[Set left=0, right=len-1]
-    B --> C{left < right?}
+    B --> C{"left < right?"}
     
     C -->|No| D[✓ Is Palindrome]
-    C -->|Yes| E{Characters match?}
+    C -->|Yes| E{"Characters match?"}
     
     E -->|Yes| F[left++, right--]
     F --> C
@@ -117,10 +117,10 @@ flowchart TD
     E -->|No - LC 125| G[Skip non-alphanumeric]
     G --> C
     
-    E -->|No - LC 680| H{Can delete one?}
+    E -->|No - LC 680| H{"Can delete one?"}
     H -->|Try skip left| I["Check s[left+1:right+1]"]
     H -->|Try skip right| J["Check s[left:right]"]
-    I --> K{Either palindrome?}
+    I --> K{"Either palindrome?"}
     J --> K
     K -->|Yes| L[✓ Valid with one deletion]
     K -->|No| M[✗ Not valid]
@@ -131,7 +131,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Unsorted Array] --> B[Sort Array]
-    B --> C{k-Sum variant?}
+    B --> C{"k-Sum variant?"}
     
     C -->|2Sum II| D["left=0, right=n-1, find target"]
     C -->|3Sum| E["Fix i, two-pointer on i+1..n-1"]
@@ -157,7 +157,7 @@ flowchart TD
 flowchart TD
     A["nums1 = [1,2,3,0,0,0], nums2 = [2,5,6]"] --> B["p1=m-1, p2=n-1, write=m+n-1"]
     
-    B --> C{p1 >= 0 AND p2 >= 0?}
+    B --> C{"p1 >= 0 AND p2 >= 0?"}
     C -->|Yes| D{"nums1[p1] > nums2[p2]?"}
     
     D -->|Yes| E["nums1[write] = nums1[p1], p1--, write--"]
@@ -166,7 +166,7 @@ flowchart TD
     E --> C
     F --> C
     
-    C -->|No| G{p2 >= 0?}
+    C -->|No| G{"p2 >= 0?"}
     G -->|Yes| H["Copy remaining nums2 elements"]
     G -->|No| I[Done - nums1 already in place]
     
@@ -204,7 +204,7 @@ flowchart TD
     D -->|Yes| E["left++ (move shorter side)"]
     D -->|No| F["right-- (move shorter side)"]
     
-    E --> G{left < right?}
+    E --> G{"left < right?"}
     F --> G
     G -->|Yes| B
     G -->|No| H["Return max_area"]
@@ -222,7 +222,7 @@ flowchart TD
     A["height array"] --> B["left=0, right=n-1"]
     B --> C["left_max=0, right_max=0"]
     
-    C --> D{left < right?}
+    C --> D{"left < right?"}
     D -->|No| E["Return total water"]
     
     D -->|Yes| F{"h[left] < h[right]?"}
@@ -252,7 +252,7 @@ flowchart TD
     A["Sorted array: [1,1,2,2,3]"] --> B["slow=0 (write position)"]
     B --> C["fast=1 (scan position)"]
     
-    C --> D{fast < n?}
+    C --> D{"fast < n?"}
     D -->|No| E["Return slow+1 (new length)"]
     
     D -->|Yes| F{"nums[fast] != nums[slow]?"}
@@ -326,21 +326,21 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[Problem Input] --> B{Sorted array/string?}
+    A[Problem Input] --> B{"Sorted array/string?"}
     
-    B -->|Yes| C{Find pair with target?}
+    B -->|Yes| C{"Find pair with target?"}
     C -->|Yes| D[Opposite-end pointers]
     
-    B -->|Yes| E{Remove/deduplicate in-place?}
+    B -->|Yes| E{"Remove/deduplicate in-place?"}
     E -->|Yes| F[Slow/fast pointers]
     
-    B -->|No| G{Can sort first?}
+    B -->|No| G{"Can sort first?"}
     G -->|Yes| H[Sort + two pointers]
     G -->|No| I[Consider hash map instead]
     
-    A --> J{Palindrome/symmetry?}
+    A --> J{"Palindrome/symmetry?"}
     J -->|Yes| K[Opposite-end pointers]
     
-    A --> L{Merge two sorted inputs?}
+    A --> L{"Merge two sorted inputs?"}
     L -->|Yes| M[Parallel pointers]
 ```

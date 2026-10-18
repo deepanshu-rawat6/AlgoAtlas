@@ -670,19 +670,19 @@ class UnionFind:
 
 ```mermaid
 flowchart TD
-    A[Problem Type] --> B{Array/String?}
+    A[Problem Type] --> B{"Array/String?"}
     B -->|Find pair/group| C["Hash Map O(n)"]
     B -->|Subarray sum = K| D["Prefix Sum + Hash Map"]
     B -->|Longest/shortest window| E["Sliding Window"]
     B -->|Sorted + find pair| F["Two Pointers"]
 
-    A --> G{Tree/Graph?}
+    A --> G{"Tree/Graph?"}
     G -->|Level processing| H["BFS + deque"]
     G -->|Path/depth| I["DFS recursive"]
     G -->|Shortest path| J["BFS (unweighted) / Dijkstra (weighted)"]
     G -->|Dependencies| K["Topological Sort"]
 
-    A --> L{Optimization?}
+    A --> L{"Optimization?"}
     L -->|Overlapping subproblems| M["DP + memoization"]
     L -->|Local = global optimal| N["Greedy"]
     L -->|Try all possibilities| O["Backtracking"]

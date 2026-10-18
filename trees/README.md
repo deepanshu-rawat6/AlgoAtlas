@@ -59,11 +59,11 @@
 
 ```mermaid
 flowchart TD
-    A[Tree Problem] --> B{Need level-by-level<br>or shortest path?}
+    A[Tree Problem] --> B{"Need level-by-level or shortest path?"}
     B -- Yes --> C[BFS with Queue<br>LC 102, 199]
-    B -- No --> D{Need to explore<br>all paths?}
+    B -- No --> D{"Need to explore all paths?"}
     D -- Yes --> E[DFS]
-    E --> F{Order matters?}
+    E --> F{"Order matters?"}
     F -- Pre --> G[Preorder: root→left→right<br>LC 144, 105]
     F -- In --> H[Inorder: left→root→right<br>LC 94, 230]
     F -- Post --> I[Postorder: left→right→root<br>LC 145, 124]
@@ -89,18 +89,18 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[BST Operation] --> B{Type}
+    A[BST Operation] --> B{"Type"}
     B -- Search/Insert --> C[Compare with root]
     C -- val < root --> D[Go Left]
     C -- val > root --> E[Go Right]
     C -- val == root --> F[Found / Insert here]
     B -- Delete --> G[Find node]
-    G --> H{Children?}
+    G --> H{"Children?"}
     H -- No child --> I[Remove node]
     H -- One child --> J[Replace with child]
     H -- Two children --> K[Replace with<br>inorder successor<br>min of right subtree]
     B -- Validate --> L[Pass min/max bounds<br>down recursively]
-    L --> M{node.val in range?}
+    L --> M{"node.val in range?"}
     M -- Yes --> N[Check children<br>with updated bounds]
     M -- No --> O[Invalid BST]
 ```
@@ -169,7 +169,7 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[solve node] --> B{Base case:<br>node is None?}
+    A[solve node] --> B{"Base case: node is None?"}
     B -- Yes --> C[Return base value<br>0, True, None, etc.]
     B -- No --> D[Recurse left<br>left = solve node.left]
     D --> E[Recurse right<br>right = solve node.right]

@@ -12,17 +12,17 @@ Explore all possibilities via DFS, pruning branches that can't lead to a valid s
 
 ```mermaid
 flowchart TD
-    A[Backtracking Problem] --> B{What are we building?}
+    A[Backtracking Problem] --> B{"What are we building?"}
     B -->|All subsets| C["Subset pattern\nno start constraint"]
     B -->|k-size groups, order irrelevant| D["Combination pattern\nstart index, no reuse"]
     B -->|k-size groups, reuse allowed| E["Combination with reuse\nCombination Sum I"]
     B -->|All orderings| F["Permutation pattern\nused array or swap"]
     B -->|Valid string construction| G["Construction\nGenerate Parentheses"]
     B -->|2D grid search| H["Grid DFS\nWord Search"]
-    B -->|Partition into groups| I{Groups equal size?}
+    B -->|Partition into groups| I{"Groups equal size?"}
     I -->|Yes| J["Partition DP/BT\nMatchsticks, K Subsets"]
     I -->|No| K["Partition by rule\nPalindrome Partition"]
-    F --> L{Duplicates in input?}
+    F --> L{"Duplicates in input?"}
     L -->|Yes| M["Sort + skip duplicates\nSubsets II, Perms II"]
     L -->|No| N[Standard permutation]
 ```

@@ -31,7 +31,7 @@ At first glance: outer `for` loop is O(n), inner `while` loop could be O(n) → 
 
 ```mermaid
 flowchart TD
-    A["Array: [100, 4, 200, 1, 3, 2]"] --> B["Set: {100, 4, 200, 1, 3, 2}"]
+    A["Array: [100, 4, 200, 1, 3, 2]"] --> B["Set: {"100, 4, 200, 1, 3, 2"}"]
     B --> C["Iterate over set:"]
     C --> D["100: is 99 in set? NO → start sequence<br>  100+1=101 in set? NO → length=1"]
     C --> E["4: is 3 in set? YES → SKIP (not a start)"]

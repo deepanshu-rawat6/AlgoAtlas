@@ -83,17 +83,17 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[Graph Problem] --> B{Need shortest path?}
+    A[Graph Problem] --> B{"Need shortest path?"}
     B -->|Yes, unweighted| C[BFS]
-    B -->|No| D{Need connected components<br>or cycle detection?}
+    B -->|No| D{"Need connected components or cycle detection?"}
     D -->|Yes, dynamic union ops| E[Union-Find]
-    D -->|No| F{Directed graph<br>with ordering?}
+    D -->|No| F{"Directed graph with ordering?"}
     F -->|Yes| G[Topological Sort]
-    F -->|No| H{Grid problem?}
-    H -->|Yes| I{Explore all reachable?}
+    F -->|No| H{"Grid problem?"}
+    H -->|Yes| I{"Explore all reachable?"}
     I -->|Yes| J[DFS - simpler stack]
     I -->|No, level-by-level| K[BFS]
-    H -->|No, adjacency list| L{Explore all paths?}
+    H -->|No, adjacency list| L{"Explore all paths?"}
     L -->|Yes| M[DFS + backtrack]
     L -->|No| N[BFS]
 ```
@@ -103,13 +103,13 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Grid Problem] --> B[Define directions<br>4-dir or 8-dir]
-    B --> C{Multi-source start?}
+    B --> C{"Multi-source start?"}
     C -->|Yes - Walls&Gates, Rotting| D[Enqueue ALL sources at once<br>before BFS loop]
     C -->|No - single source| E[Enqueue/push single cell]
     D --> F[BFS/DFS loop]
     E --> F
     F --> G[For each neighbor<br>check bounds + visited]
-    G --> H{Valid & unvisited?}
+    G --> H{"Valid & unvisited?"}
     H -->|Yes| I[Mark visited<br>Add to queue/stack]
     H -->|No| J[Skip]
     I --> F
@@ -122,7 +122,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["Build adjacency list + in-degree map"] --> B[Enqueue all nodes<br>with in-degree = 0]
-    B --> C{Queue empty?}
+    B --> C{"Queue empty?"}
     C -->|No| D[Dequeue node u<br>Append to result]
     D --> E[For each neighbor v<br>of u]
     E --> F["in-degree[v] -= 1"]
@@ -131,7 +131,7 @@ flowchart TD
     G -->|No| I[Continue]
     H --> C
     I --> C
-    C -->|Yes| J{len result == n?}
+    C -->|Yes| J{"len result == n?"}
     J -->|Yes| K[Valid order / no cycle]
     J -->|No| L[Cycle detected]
 ```
@@ -146,7 +146,7 @@ flowchart TD
     C -->|No| E["Path compression: parent[x] = find(parent[x])"]
     E --> D
     B -->|union x,y| F[rx = find x<br>ry = find y]
-    F --> G{rx == ry?}
+    F --> G{"rx == ry?"}
     G -->|Yes| H[Already connected<br>return False]
     G -->|No| I{"rank[rx] vs rank[ry]"}
     I -->|rx higher| J["parent[ry] = rx"]
@@ -165,7 +165,7 @@ flowchart TD
     B --> C[BFS level by level]
     C --> D[Process current level]
     D --> E[Expand to neighbors]
-    E --> F{Unvisited neighbor?}
+    E --> F{"Unvisited neighbor?"}
     F -->|Yes| G["dist[neighbor] = dist[cur]+1, Enqueue"]
     F -->|No| H[Skip]
     G --> C

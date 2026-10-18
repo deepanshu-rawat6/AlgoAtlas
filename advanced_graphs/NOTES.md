@@ -13,7 +13,7 @@ Advanced graph problems go beyond plain BFS/DFS. The key is recognizing **which 
 
 ```mermaid
 flowchart TD
-    A[Advanced Graph Problem] --> B{What is the goal?}
+    A[Advanced Graph Problem] --> B{"What is the goal?"}
 
     B --> C[Shortest path with weights]
     B --> D[Minimum spanning tree]
@@ -21,11 +21,11 @@ flowchart TD
     B --> F[Order from constraints]
     B --> G[Detect critical structure]
 
-    C --> C1{Negative edges or K-hop limit?}
+    C --> C1{"Negative edges or K-hop limit?"}
     C1 -->|No| C2[Dijkstra: min-heap, relax neighbors]
     C1 -->|Yes| C3[Bellman-Ford: relax all edges V-1 times]
 
-    D --> D1{Graph density?}
+    D --> D1{"Graph density?"}
     D1 -->|Dense| D2[Prim's: min-heap from any node]
     D1 -->|Sparse| D3[Kruskal's: sort edges, union-find]
 

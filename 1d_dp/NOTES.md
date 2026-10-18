@@ -12,12 +12,12 @@ Break a problem into overlapping subproblems. Each state depends on a fixed numb
 
 ```mermaid
 flowchart TD
-    A[1D DP Problem] --> B{Choices at each step?}
+    A[1D DP Problem] --> B{"Choices at each step?"}
     B -->|Fixed recurrence| C[Linear DP\nClimbing Stairs, Tribonacci]
-    B -->|Include/Exclude item| D{Bounded quantity?}
+    B -->|Include/Exclude item| D{"Bounded quantity?"}
     D -->|Yes| E[0/1 Knapsack\nPartition Equal Subset]
     D -->|No| F[Unbounded Knapsack\nCoin Change, Combination Sum IV]
-    B -->|Substring/Subsequence| G{Contiguous?}
+    B -->|Substring/Subsequence| G{"Contiguous?"}
     G -->|Yes| H[Subarray DP\nMax Product, Palindromic Substr]
     G -->|No| I[Subsequence DP\nLIS, Decode Ways]
     B -->|Game / Optimal play| J[Min-Max DP\nStone Game III]

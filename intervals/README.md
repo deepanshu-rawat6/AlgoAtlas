@@ -34,7 +34,7 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[Interval Problem] --> B{What is asked?}
+    A[Interval Problem] --> B{"What is asked?"}
     B --> C[Merge / Insert]
     B --> D[Count rooms / resources]
     B --> E[Remove minimum intervals]
@@ -62,10 +62,10 @@ flowchart TD
 flowchart TD
     A[Sort intervals by start time] --> B[result = first interval]
     B --> C[For each remaining interval]
-    C --> D{current.start <= last.end?}
+    C --> D{"current.start <= last.end?"}
     D -- Yes --> E[Merge: last.end = max of last.end and current.end]
     D -- No --> F[Append current to result as new interval]
-    E --> G{More intervals?}
+    E --> G{"More intervals?"}
     F --> G
     G -- Yes --> C
     G -- No --> H[Return result]
@@ -85,7 +85,7 @@ flowchart TD
     C --> D[For each event in order]
     D --> E[active += event.delta]
     E --> F[maxActive = max of maxActive and active]
-    F --> G{More events?}
+    F --> G{"More events?"}
     G -- Yes --> D
     G -- No --> H[Return maxActive]
 
@@ -103,12 +103,12 @@ flowchart TD
 flowchart TD
     A[Sort meetings by start time] --> B[min-heap = empty, rooms = 0]
     B --> C[For each meeting start, end]
-    C --> D{heap not empty AND heap.top <= start?}
+    C --> D{"heap not empty AND heap.top <= start?"}
     D -- Yes --> E[Pop earliest ending room — reuse it]
     D -- No --> F[No room free — allocate new room]
     E --> G[Push end time to heap]
     F --> G
-    G --> H{More meetings?}
+    G --> H{"More meetings?"}
     H -- Yes --> C
     H -- No --> I[Return heap size = rooms needed]
 
@@ -122,9 +122,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Two intervals A = a1,a2 and B = b1,b2] --> B{Do they overlap?}
+    A[Two intervals A = a1,a2 and B = b1,b2] --> B{"Do they overlap?"}
     B --> C["Overlap condition: a1 <= b2 AND b1 <= a2"]
-    C --> D{True?}
+    C --> D{"True?"}
     D -- Yes --> E[Overlapping — merged = min a1 b1, max a2 b2]
     D -- No --> F[Non-overlapping — keep separate]
 

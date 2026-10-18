@@ -70,9 +70,9 @@ This section covers 22 problems focusing on array manipulation, hashing techniqu
 
 ```mermaid
 flowchart TD
-    A[Input Array] --> B{Need to track seen elements?}
+    A[Input Array] --> B{"Need to track seen elements?"}
     B -->|Yes| C[Use Hash Set]
-    B -->|No| D{Need key-value mapping?}
+    B -->|No| D{"Need key-value mapping?"}
     D -->|Yes| E[Use Hash Map]
     D -->|No| F[Array manipulation]
     
@@ -92,10 +92,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Input Data] --> B{Count frequencies}
+    A[Input Data] --> B{"Count frequencies"}
     B --> C[Hash Map / Counter]
     
-    C --> D{What to find?}
+    C --> D{"What to find?"}
     D -->|Top K elements| E[Top K Frequent Elements]
     D -->|Majority > n/2| F[Majority Element]
     D -->|Majority > n/3| G[Majority Element II]
@@ -114,7 +114,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Array/Matrix"] --> B{Repeated range queries?}
+    A["Array/Matrix"] --> B{"Repeated range queries?"}
     B -->|1D Array| C[Prefix Sum Array]
     B -->|2D Matrix| D[2D Prefix Sum]
     B -->|Product queries| E[Prefix & Suffix Products]
@@ -133,7 +133,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Unsorted Array] --> B{Which sort?}
+    A[Unsorted Array] --> B{"Which sort?"}
     
     B -->|Divide & Conquer| C[Merge Sort O-n log n-]
     B -->|Partition| D[Quick Sort O-n log n- avg]
@@ -155,7 +155,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Design Problem] --> B{Data Structure}
+    A[Design Problem] --> B{"Data Structure"}
     
     B -->|HashSet| C[MyHashSet]
     B -->|HashMap| D[MyHashMap]
@@ -177,7 +177,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Array with values in [1, n]"] --> B{Find missing/duplicate?}
+    A["Array with values in [1, n]"] --> B{"Find missing/duplicate?"}
     
     B -->|Missing positive| C[First Missing Positive]
     
@@ -194,7 +194,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["List of Strings"] --> B{Encode to single string}
+    A["List of Strings"] --> B{"Encode to single string"}
     
     B --> C[Approach 1: Delimiter with Escaping]
     B --> D[Approach 2: Length Prefix]
@@ -205,7 +205,7 @@ flowchart TD
     D --> D1["For each str: len + '#' + str"]
     D --> D2["'5#Hello5#World'"]
     
-    D2 --> E{Decode}
+    D2 --> E{"Decode"}
     E --> F["Read length → read that many chars → repeat"]
     
     style D fill:#90EE90
@@ -215,7 +215,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Price Array] --> B{Multiple transactions allowed?}
+    A[Price Array] --> B{"Multiple transactions allowed?"}
     
     B -->|Yes - LC 122| C[Best Time to Buy/Sell Stock II]
     

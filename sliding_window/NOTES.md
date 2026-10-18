@@ -16,12 +16,12 @@ Sliding window converts O(n²) brute force (check every subarray) into O(n) by m
 
 ```mermaid
 flowchart TD
-    A[Sliding Window Problem] --> B{Window size fixed?}
+    A[Sliding Window Problem] --> B{"Window size fixed?"}
     B -- Yes --> C[Fixed window\nAdd right, remove left at each step]
-    B -- No --> D{Minimize or Maximize?}
+    B -- No --> D{"Minimize or Maximize?"}
     D -- Maximize --> E[Expand right freely\nShrink left when invalid\nTrack max valid window]
     D -- Minimize --> F[Expand until valid\nShrink left while still valid\nTrack min window size]
-    E --> G{Need element ordering\nin window?}
+    E --> G{"Need element ordering\nin window?"}
     G -- Yes --> H[Monotonic Deque]
     G -- No --> I[HashMap / frequency array]
     F --> I

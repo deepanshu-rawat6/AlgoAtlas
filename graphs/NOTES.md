@@ -16,17 +16,17 @@ Graphs are about **connectivity and traversal**. The key questions: Is it a grid
 
 ```mermaid
 flowchart TD
-    A[Graph Problem] --> B{Grid / implicit graph?}
-    B -- Yes --> C{Shortest path / min steps?}
+    A[Graph Problem] --> B{"Grid / implicit graph?"}
+    B -- Yes --> C{"Shortest path / min steps?"}
     C -- Yes --> D[BFS from source]
     C -- No --> E[DFS / flood fill]
-    B -- No --> F{Directed graph?}
-    F -- Yes --> G{Cycle detection or ordering?}
+    B -- No --> F{"Directed graph?"}
+    F -- Yes --> G{"Cycle detection or ordering?"}
     G -- Yes --> H[Topological Sort\nKahn's BFS or DFS]
     G -- No --> I[DFS with visited set]
-    F -- No --> J{Dynamic connectivity?}
+    F -- No --> J{"Dynamic connectivity?"}
     J -- Yes --> K[Union-Find]
-    J -- No --> L{Multiple sources?}
+    J -- No --> L{"Multiple sources?"}
     L -- Yes --> M[Multi-source BFS]
     L -- No --> N[BFS / DFS from single source]
 ```

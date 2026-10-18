@@ -65,7 +65,7 @@ CI runs the same suite on Python 3.10–3.13 via GitHub Actions (`.github/workfl
 
 ```mermaid
 flowchart TD
-    A["Graph/Tree Problem"] --> B{What are you finding?}
+    A["Graph/Tree Problem"] --> B{"What are you finding?"}
     B -->|Connected components/regions| C[DFS or BFS flood fill]
     B -->|Shortest path unweighted| D[BFS level-by-level]
     B -->|Shortest path weighted| E[Dijkstra / Bellman-Ford]
@@ -120,7 +120,7 @@ def bfs(grid, start_r, start_c):
 
 ```mermaid
 flowchart TD
-    A["Array/String Problem"] --> B{What operation?}
+    A["Array/String Problem"] --> B{"What operation?"}
     B -->|Find pair summing to target| C["Hash Map: complement lookup O(n)"]
     B -->|Group by property| D["Hash Map: sorted/counted key"]
     B -->|Subarray sum = K| E["Prefix Sum + Hash Map"]
@@ -159,11 +159,11 @@ If prefix[j] - K exists in seen → there's a subarray summing to K
 
 ```mermaid
 flowchart TD
-    A[Sequential Data Problem] --> B{Input sorted?}
-    B -->|Yes| C{Find target pair?}
+    A[Sequential Data Problem] --> B{"Input sorted?"}
+    B -->|Yes| C{"Find target pair?"}
     C -->|Yes| D["Two pointers: left=0, right=n-1"]
-    B -->|No| F{Substring/subarray constraint?}
-    F -->|Yes| G{Fixed or variable size?}
+    B -->|No| F{"Substring/subarray constraint?"}
+    F -->|Yes| G{"Fixed or variable size?"}
     G -->|Fixed size K| H["Slide window of size K"]
     G -->|Variable| I["Expand right, shrink left when invalid"]
 ```
@@ -203,7 +203,7 @@ for right in range(len(s)):
 
 ```mermaid
 flowchart TD
-    A["Need repeated min/max access?"] --> B{What variant?}
+    A["Need repeated min/max access?"] --> B{"What variant?"}
     B -->|Top K elements| C["Min-heap of size K"]
     B -->|Merge K sorted| D["Min-heap of K heads"]
     B -->|Running median| E["Two heaps (max-heap + min-heap)"]
@@ -225,7 +225,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Binary Search Problem] --> B{Search space?}
+    A[Binary Search Problem] --> B{"Search space?"}
     B -->|Array index| C[Classic BS on sorted array]
     B -->|Answer value| D["BS on answer: min/max satisfying condition"]
     B -->|Rotated array| E["Identify which half is sorted"]
@@ -275,7 +275,7 @@ def binary_search_on_answer(lo, hi):
 
 ```mermaid
 flowchart TD
-    A[DP Problem] --> B{Dimensions?}
+    A[DP Problem] --> B{"Dimensions?"}
     B -->|Single sequence| C["1D DP: dp[i] depends on dp[i-1], dp[i-2]..."]
     B -->|Two sequences| D["2D DP: dp[i][j] = f(dp[i-1][j], dp[i][j-1])"]
     B -->|Choices with capacity| E["Knapsack: include or exclude item i"]
@@ -306,7 +306,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Optimization/Enumeration Problem"] --> B{Greedy works?}
+    A["Optimization/Enumeration Problem"] --> B{"Greedy works?"}
     B -->|"Yes: local optimal = global optimal"| C[Greedy]
     B -->|"No: need to explore all paths"| D[Backtracking]
     D --> D1[Choose: pick an option]

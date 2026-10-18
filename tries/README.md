@@ -41,10 +41,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Operation] --> B{Type}
+    A[Operation] --> B{"Type"}
     B -- insert word --> C[node = root]
     C --> D[For each char in word]
-    D --> E{char in<br>node.children?}
+    D --> E{"char in node.children?"}
     E -- No --> F[Create new TrieNode]
     E -- Yes --> G[Move to child]
     F --> G
@@ -52,7 +52,7 @@ flowchart TD
     D --> H[Mark last node<br>is_end = True]
     B -- search word --> I[node = root]
     I --> J[For each char in word]
-    J --> K{char in<br>node.children?}
+    J --> K{"char in node.children?"}
     K -- No --> L[Return False]
     K -- Yes --> M[Move to child]
     M --> J
@@ -66,12 +66,12 @@ flowchart TD
 flowchart TD
     A[search word with dots] --> B[DFS from root]
     B --> C[For each char in word]
-    C --> D{char == dot?}
+    C --> D{"char == dot?"}
     D -- Yes --> E[Recurse into ALL<br>children nodes]
-    D -- No --> F{char in<br>node.children?}
+    D -- No --> F{"char in node.children?"}
     F -- No --> G[Return False]
     F -- Yes --> H[Move to child]
-    E --> I{Any child<br>returns True?}
+    E --> I{"Any child returns True?"}
     I -- Yes --> J[Return True]
     I -- No --> G
     H --> C
@@ -83,16 +83,16 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Build Trie from word list] --> B[DFS on each board cell]
-    B --> C{char at cell<br>in trie node children?}
+    B --> C{"char at cell in trie node children?"}
     C -- No --> D[Prune: return early]
     C -- Yes --> E[Move to trie child node]
-    E --> F{node.is_end?}
+    E --> F{"node.is_end?"}
     F -- Yes --> G[Add word to results<br>mark node.is_end = False<br>to avoid duplicates]
     F -- No --> H[Continue DFS]
     G --> H
     H --> I[Mark cell visited<br>explore 4 neighbors]
     I --> J[Unmark cell<br>backtrack]
-    J --> K{Trie node has<br>no children left?}
+    J --> K{"Trie node has no children left?"}
     K -- Yes --> L[Prune trie branch<br>for efficiency]
     K -- No --> B
 ```
@@ -101,16 +101,16 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[String lookup problem] --> B{Need prefix<br>operations?}
-    B -- Yes --> C{How many words?}
+    A[String lookup problem] --> B{"Need prefix operations?"}
+    B -- Yes --> C{"How many words?"}
     C -- Many, shared prefixes --> D[Trie<br>space-efficient<br>LC 208, 211, 212]
     C -- Few words --> E[HashSet is fine]
-    B -- No --> F{Exact match only?}
+    B -- No --> F{"Exact match only?"}
     F -- Yes --> G[HashMap / HashSet<br>simpler, O1 lookup]
     F -- No, need wildcard --> H[Trie + DFS<br>LC 211]
-    A --> I{Need to find all<br>words in a grid?}
+    A --> I{"Need to find all words in a grid?"}
     I -- Yes --> J[Trie + Backtracking<br>LC 212<br>better than running<br>search per word]
-    A --> K{DP with word<br>boundary checks?}
+    A --> K{"DP with word boundary checks?"}
     K -- Yes --> L[Trie speeds up<br>boundary lookup<br>LC 2707]
 ```
 

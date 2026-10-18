@@ -17,7 +17,7 @@ flowchart TD
     B -->|Insert into sorted list| D["Binary search + merge<br/>Insert Interval"]
     B -->|Remove min intervals to make non-overlapping| E["Sort by end<br/>greedy keep<br/>Non-Overlapping"]
     B -->|Can one person attend all?| F["Sort by start<br/>check overlap<br/>Meeting Rooms I"]
-    B -->|Min rooms needed| G{Method preference?}
+    B -->|Min rooms needed| G{"Method preference?"}
     G -->|Sweep line| H["Sort starts and ends<br/>two-pointer<br/>Meeting Rooms II"]
     G -->|Heap| I["Min-heap of end times<br/>Meeting Rooms II/III"]
     B -->|Answer range queries| J["Sort queries + intervals<br/>min-heap<br/>Min Interval Query"]

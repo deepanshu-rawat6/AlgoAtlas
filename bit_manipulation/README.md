@@ -91,7 +91,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[count = 0, n = input] --> B{n != 0?}
+    A[count = 0, n = input] --> B{"n != 0?"}
     B -- No --> E[Return count]
     B -- Yes --> C["n = n AND n-1  ← clears lowest set bit"]
     C --> D[count += 1]
@@ -111,7 +111,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["a = x, b = y"] --> B{b != 0?}
+    A["a = x, b = y"] --> B{"b != 0?"}
     B -- No --> F[Return a]
     B -- Yes --> C["sum_bits = a XOR b  ← add without carry"]
     C --> D["carry = a AND b shifted left 1  ← carry positions"]
@@ -130,7 +130,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["left, right"] --> B{left != right?}
+    A["left, right"] --> B{"left != right?"}
     B -- No --> E["Return left  ← common prefix"]
     B -- Yes --> C["left = left >> 1"]
     C --> D["right = right >> 1, shift_count++"]

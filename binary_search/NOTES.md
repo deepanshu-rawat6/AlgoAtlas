@@ -15,7 +15,7 @@ Sub-patterns:
 
 ```mermaid
 flowchart TD
-    A[Monotonic predicate exists?] -->|Yes| B{Search space?}
+    A[Monotonic predicate exists?] -->|Yes| B{"Search space?"}
     A -->|No| Z[Not a BS problem]
 
     B --> C[Index in sorted array]

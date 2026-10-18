@@ -66,15 +66,15 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[Shortest Path Problem] --> B{Weighted edges?}
+    A[Shortest Path Problem] --> B{"Weighted edges?"}
     B -->|No| C[BFS — O V+E]
-    B -->|Yes| D{Negative weights?}
-    D -->|Yes| E{K-step constraint?}
+    B -->|Yes| D{"Negative weights?"}
+    D -->|Yes| E{"K-step constraint?"}
     E -->|Yes| F[Bellman-Ford<br>K relaxation rounds]
     E -->|No| G[Bellman-Ford<br>full V-1 rounds]
-    D -->|No| H{All weights equal?}
+    D -->|No| H{"All weights equal?"}
     H -->|Yes| C
-    H -->|No| I{Single source?}
+    H -->|No| I{"Single source?"}
     I -->|Yes| J[Dijkstra — O E log V]
     I -->|No| K[Floyd-Warshall — O V³]
 ```
@@ -83,7 +83,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Minimum Spanning Tree] --> B{Dense or sparse graph?}
+    A[Minimum Spanning Tree] --> B{"Dense or sparse graph?"}
     B -->|Dense — E ≈ V²| C[Prim's with min-heap<br>O E log V]
     B -->|Sparse — E ≈ V| D[Kruskal's with Union-Find<br>O E log E]
     C --> E[Start from any node<br>Greedily pick min edge<br>to unvisited node]
@@ -96,9 +96,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Init dist[src]=0, All others=∞, Min-heap: src,0"] --> B{Heap empty?}
+    A["Init dist[src]=0, All others=∞, Min-heap: src,0"] --> B{"Heap empty?"}
     B -->|No| C[Pop u, d with min dist]
-    C --> D{d > dist[u]?}
+    C --> D{"d > dist[u]?"}
     D -->|Yes — stale| B
     D -->|No| E[For each neighbor v, w]
     E --> F{"dist[u]+w < dist[v]?"}
@@ -132,13 +132,13 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Build adjacency list<br>sort neighbors for lex order] --> B[Start DFS from source]
-    B --> C{Current node has<br>unvisited edges?}
+    B --> C{"Current node has unvisited edges?"}
     C -->|Yes| D[Take next edge<br>Move to neighbor]
     D --> C
     C -->|No — dead end| E[Prepend node to result]
     E --> F[Backtrack to previous node]
     F --> C
-    F --> G{Back at start<br>with no edges left?}
+    F --> G{"Back at start with no edges left?"}
     G -->|Yes| H[Result is Euler path<br>reversed = itinerary]
     G -->|No| F
 ```

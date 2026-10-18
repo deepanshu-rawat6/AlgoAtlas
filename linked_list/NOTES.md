@@ -15,7 +15,7 @@ Sub-patterns:
 
 ```mermaid
 flowchart TD
-    A[Linked List Problem] --> B{Core operation?}
+    A[Linked List Problem] --> B{"Core operation?"}
 
     B --> C[Reverse / Rearrange]
     B --> D[Detect cycle / Find position]

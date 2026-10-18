@@ -62,7 +62,7 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[solve args] --> B{Base case?}
+    A[solve args] --> B{"Base case?"}
     B -- Yes --> C[Return base value]
     B -- No --> D[Reduce problem<br>smaller input / index+1]
     D --> E[Recurse on smaller problem]
@@ -74,7 +74,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["solve(index, current)"] --> B{index == n?}
+    A["solve(index, current)"] --> B{"index == n?"}
     B -- Yes --> C[Process / count current]
     B -- No --> D[EXCLUDE: solve index+1, current]
     D --> E["INCLUDE: solve(index+1, current + arr[index])"]
@@ -85,14 +85,14 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[sort_stack stack] --> B{stack empty?}
+    A[sort_stack stack] --> B{"stack empty?"}
     B -- Yes --> C[Return]
     B -- No --> D[Pop top element]
     D --> E[sort_stack remaining stack]
     E --> F[insert_sorted top into sorted stack]
     F --> G[Return]
 
-    H[insert_sorted stack, elem] --> I{stack empty OR<br>top >= elem?}
+    H[insert_sorted stack, elem] --> I{"stack empty OR top >= elem?"}
     I -- Yes --> J[Push elem]
     I -- No --> K[Pop top]
     K --> L[insert_sorted stack, elem]

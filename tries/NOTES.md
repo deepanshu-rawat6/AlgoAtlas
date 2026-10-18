@@ -14,12 +14,12 @@ A trie stores strings character by character in a tree. Each node represents a p
 
 ```mermaid
 flowchart TD
-    A[Trie Problem] --> B{Operation needed?}
+    A[Trie Problem] --> B{"Operation needed?"}
     B -->|Insert / exact search / prefix| C[Standard Trie\nImplement Trie LC 208]
     B -->|Wildcard / regex search| D[DFS through trie\non dot branch all children\nAdd Search Words LC 211]
     B -->|Find min extra chars| E[Trie + DP\nExtra Characters LC 2707]
     B -->|Find multiple words in grid| F[Build trie from words\nDFS grid with trie node\nWord Search II LC 212]
-    F --> G{Optimization?}
+    F --> G{"Optimization?"}
     G -->|Prune found words| H[Delete leaf nodes after finding\nprevent re-visiting]
     G -->|Prune dead branches| I[Track word count in subtree\ndelete when count=0]
 ```

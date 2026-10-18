@@ -12,13 +12,13 @@ Make the locally optimal choice at each step, trusting it leads to a global opti
 
 ```mermaid
 flowchart TD
-    A[Greedy Problem] --> B{What are we optimizing?}
+    A[Greedy Problem] --> B{"What are we optimizing?"}
     B -->|Max/min contiguous subarray| C[Kadane's variant\nMax Subarray, Max Product, Turbulent]
     B -->|Reachability / coverage| D[Jump Game pattern\ntrack max reach]
-    B -->|Resource allocation| E{Circular / global constraint?}
+    B -->|Resource allocation| E{"Circular / global constraint?"}
     E -->|Yes| F[Two-pass or total check\nGas Station]
     E -->|No| G[Local greedy\nLemonade Change]
-    B -->|Interval / partition| H{Minimize intervals?}
+    B -->|Interval / partition| H{"Minimize intervals?"}
     H -->|Yes| I[Sort by end, count overlaps\nNon-Overlapping]
     H -->|No| J[Extend partition greedily\nPartition Labels]
     B -->|Sequence / game| K[Simulation\nDota2 Senate, Hand of Straights]

@@ -54,9 +54,9 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A([slow=head<br>fast=head]) --> B{fast and fast.next exist?}
+    A([slow=head<br>fast=head]) --> B{"fast and fast.next exist?"}
     B -->|Yes| C[slow = slow.next<br>fast = fast.next.next]
-    C --> D{Cycle detection?<br>slow == fast?}
+    C --> D{"Cycle detection? slow == fast?"}
     D -->|Yes - cycle found| E[Floyd's: reset one to head<br>move both by 1 to find entry]
     D -->|No| B
     B -->|No - fast reached end| F[slow = middle node<br>Use for: find mid, remove nth]
@@ -67,7 +67,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A([prev=None<br>curr=head]) --> B{curr != None?}
+    A([prev=None<br>curr=head]) --> B{"curr != None?"}
     B -->|Yes| C[next_node = curr.next]
     C --> D[curr.next = prev]
     D --> E[prev = curr]
@@ -80,10 +80,10 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[Two sorted lists L1, L2] --> B{L1.val <= L2.val?}
+    A[Two sorted lists L1, L2] --> B{"L1.val <= L2.val?"}
     B -->|Yes| C[Append L1.val<br>L1 = L1.next]
     B -->|No| D[Append L2.val<br>L2 = L2.next]
-    C --> E{Both lists have nodes?}
+    C --> E{"Both lists have nodes?"}
     D --> E
     E -->|Yes| B
     E -->|No| F[Append remaining list]
@@ -91,7 +91,7 @@ flowchart TD
 
     H[K sorted lists] --> I[Use Min Heap<br>push head of each list]
     I --> J[Pop min node<br>push node.next if exists]
-    J --> K{Heap empty?}
+    J --> K{"Heap empty?"}
     K -->|No| J
     K -->|Yes| L[Return merged]
 ```
@@ -108,13 +108,13 @@ flowchart TD
         N1 <--> N2[node2]
         N2 <-->|least recent| T[TAIL<br>dummy]
     end
-    A[get-key] --> B{key in map?}
+    A[get-key] --> B{"key in map?"}
     B -->|Yes| C[Move node to HEAD<br>Return val]
     B -->|No| D[Return -1]
-    E[put-key,val] --> F{key in map?}
+    E[put-key,val] --> F{"key in map?"}
     F -->|Yes| G[Update val<br>Move to HEAD]
     F -->|No| H[Create node<br>Insert at HEAD<br>Add to map]
-    H --> I{capacity exceeded?}
+    H --> I{"capacity exceeded?"}
     I -->|Yes| J[Remove TAIL.prev<br>Delete from map]
 ```
 

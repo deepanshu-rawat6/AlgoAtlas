@@ -13,14 +13,14 @@ State requires two dimensions — typically two indices into strings/arrays, or 
 
 ```mermaid
 flowchart TD
-    A[2D DP Problem] --> B{What are the two dimensions?}
+    A[2D DP Problem] --> B{"What are the two dimensions?"}
     B -->|Row, Col in grid| C[Grid DP\nUnique Paths, Min Path Sum]
-    B -->|Two string indices| D{Operation type?}
+    B -->|Two string indices| D{"Operation type?"}
     D -->|Match / align| E[String DP\nLCS, Edit Distance, Interleaving]
     D -->|Count subsequences| F[Subsequence DP\nDistinct Subsequences]
     D -->|Regex / wildcard| G[Pattern Matching\nRegex Match]
     B -->|Single array, range i..j| H[Interval DP\nBurst Balloons]
-    B -->|Array + extra state| I{State type?}
+    B -->|Array + extra state| I{"State type?"}
     I -->|Game turn| J[Game Theory\nStone Game I/II]
     I -->|Mode / phase| K[State Machine\nStock Cooldown]
     I -->|Capacity| L[2D Knapsack\nCoin Change II, Target Sum]

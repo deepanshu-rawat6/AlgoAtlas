@@ -15,14 +15,14 @@ Sub-patterns:
 
 ```mermaid
 flowchart TD
-    A[Stack Problem] --> B{Core need?}
+    A[Stack Problem] --> B{"Core need?"}
     B --> C[Match open/close pairs]
     B --> D[Find nearest greater/smaller]
     B --> E[Evaluate expression / simulate]
     B --> F[Track running min/max]
 
     C --> C1["Push open, pop and validate on close"]
-    D --> D1{Direction?}
+    D --> D1{"Direction?"}
     D1 --> D2[Next Greater: increasing stack, pop when cur > top]
     D1 --> D3[Next Smaller: decreasing stack, pop when cur < top]
     E --> E1[RPN: single operand stack]

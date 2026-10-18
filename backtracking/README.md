@@ -69,7 +69,7 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[backtrack state] --> B{Base case<br>met?}
+    A[backtrack state] --> B{"Base case met?"}
     B -- Yes --> C[Add to results<br>or count]
     B -- No --> D[Loop over choices]
     D --> E[CHOOSE:<br>add choice to state]
@@ -83,9 +83,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[What are you building?] --> B{Order matters?}
-    B -- No --> C{Repetition allowed?}
-    B -- Yes --> D{Duplicates in input?}
+    A[What are you building?] --> B{"Order matters?"}
+    B -- No --> C{"Repetition allowed?"}
+    B -- Yes --> D{"Duplicates in input?"}
     C -- No, pick any subset --> E[Subsets<br>LC 78, 90<br>start index moves forward]
     C -- Yes, reuse elements --> F[Combination Sum<br>LC 39<br>start index stays]
     C -- No, pick exactly k --> G[Combinations<br>LC 77<br>start index moves forward]
@@ -99,7 +99,7 @@ flowchart TD
 flowchart TD
     A[Input has duplicates] --> B[Sort the array first]
     B --> C[In the loop at each level]
-    C --> D{i > start AND<br>nums i == nums i-1?}
+    C --> D{"i > start AND nums i == nums i-1?"}
     D -- Yes --> E[Skip: continue<br>avoids duplicate branches]
     D -- No --> F[Choose nums i]
     F --> G[Recurse with i+1<br>or i for reuse]
@@ -113,10 +113,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Place queen in row r] --> B{row == n?}
+    A[Place queen in row r] --> B{"row == n?"}
     B -- Yes --> C[Valid solution found]
     B -- No --> D[Try each column c in row r]
-    D --> E{Is c safe?<br>check col, diag, anti-diag}
+    D --> E{"Is c safe? check col, diag, anti-diag"}
     E -- No --> F[Try next column]
     E -- Yes --> G[Place queen at r,c<br>mark col, diag, anti-diag]
     G --> H[Recurse row r+1]
@@ -129,7 +129,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Pruning Type] --> B{When to prune?}
+    A[Pruning Type] --> B{"When to prune?"}
     B -- Sum exceeds target --> C[Combination Sum<br>if curr_sum > target: return]
     B -- Remaining elements<br>not enough --> D[Combinations<br>if n-i+1 < k-len: return]
     B -- Partition impossible --> E[Matchsticks / K Subsets<br>if bucket_sum > target: skip<br>sort descending first]

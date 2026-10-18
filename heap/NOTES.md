@@ -15,7 +15,7 @@ Sub-patterns:
 
 ```mermaid
 flowchart TD
-    A[Heap Problem] --> B{What do you need?}
+    A[Heap Problem] --> B{"What do you need?"}
 
     B --> C[K largest / smallest elements]
     B --> D[Running median]

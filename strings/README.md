@@ -38,23 +38,23 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[String Problem] --> B{What is the goal?}
+    A[String Problem] --> B{"What is the goal?"}
 
-    B -->|Find a pattern / substring| C{Need exact match?}
+    B -->|Find a pattern / substring| C{"Need exact match?"}
     C -->|Yes, one pattern| D[KMP — O(n+m)]
     C -->|Yes, many patterns| E[Rabin-Karp rolling hash]
     C -->|Anagram or shift match| F[Z-Function or sliding window]
 
-    B -->|Palindrome related| G{Build or count?}
+    B -->|Palindrome related| G{"Build or count?"}
     G -->|Shortest palindrome by prepending| H[KMP on s + '#' + rev(s)]
     G -->|Count palindromic subsequences| I[Interval DP]
     G -->|Longest prefix = suffix| J[KMP LPS array]
 
-    B -->|Bracket balance / depth| K{Stack or greedy?}
+    B -->|Bracket balance / depth| K{"Stack or greedy?"}
     K -->|Remove or track depth| L[Stack simulation]
     K -->|Minimum flips to balance| M[Greedy + stack count]
 
-    B -->|Frequency or ordering| N{Count chars?}
+    B -->|Frequency or ordering| N{"Count chars?"}
     N -->|Sort by frequency| O[Counter + bucket sort]
     N -->|Substrings with constraint| P[Sliding window + hash map]
     N -->|Character beauty sum| Q[Frequency array per window]

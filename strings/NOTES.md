@@ -4,20 +4,20 @@
 
 ```mermaid
 flowchart TD
-    A[String Problem] --> B{What are you doing?}
+    A[String Problem] --> B{"What are you doing?"}
     B --> C[Pattern Matching]
     B --> D[Palindrome]
     B --> E[Bracket Balancing]
     B --> F[Sequence Generation]
 
-    C --> G{Need exact match?}
-    G -->|Yes, single pattern| H{Priority?}
+    C --> G{"Need exact match?"}
+    G -->|Yes, single pattern| H{"Priority?"}
     G -->|Yes, multiple patterns| I[Aho-Corasick]
     H -->|Worst-case guarantee| J[KMP O(n+m)]
     H -->|Simple implementation| K[Rabin-Karp O(n+m) avg]
     H -->|Also need prefix info| L[Z-Function O(n)]
 
-    D --> M{What kind?}
+    D --> M{"What kind?"}
     M -->|Longest palindromic prefix| N[KMP on s+'#'+rev(s)]
     M -->|Count palindromic subsequences| O[Interval DP O(n²)]
     M -->|Longest palindromic substring| P[Manacher / Expand Center]

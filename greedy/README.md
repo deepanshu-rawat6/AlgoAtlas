@@ -80,12 +80,12 @@ graph TD
 ```mermaid
 flowchart TD
     A["Start: maxSum = nums[0], cur = nums[0]"] --> B[For each num in nums from index 1]
-    B --> C{cur < 0?}
+    B --> C{"cur < 0?"}
     C -- Yes --> D[cur = num]
     C -- No --> E[cur = cur + num]
     D --> F[maxSum = max of maxSum and cur]
     E --> F
-    F --> G{More elements?}
+    F --> G{"More elements?"}
     G -- Yes --> B
     G -- No --> H[Return maxSum]
 
@@ -102,10 +102,10 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Start: farthest = 0] --> B[For i = 0 to n-1]
-    B --> C{i > farthest?}
+    B --> C{"i > farthest?"}
     C -- Yes --> D[Return False — can't reach i]
     C -- No --> E[farthest = max of farthest and i + nums_i]
-    E --> F{i == n-1?}
+    E --> F{"i == n-1?"}
     F -- Yes --> G[Return True]
     F -- No --> B
 
@@ -124,12 +124,12 @@ flowchart TD
     A[total = 0, tank = 0, start = 0] --> B[For i = 0 to n-1]
     B --> C[gain = gas_i - cost_i]
     C --> D[total += gain, tank += gain]
-    D --> E{tank < 0?}
+    D --> E{"tank < 0?"}
     E -- Yes --> F[start = i + 1, tank = 0]
-    E -- No --> G{More stations?}
+    E -- No --> G{"More stations?"}
     F --> G
     G -- Yes --> B
-    G -- No --> H{total >= 0?}
+    G -- No --> H{"total >= 0?"}
     H -- Yes --> I[Return start]
     H -- No --> J[Return -1 — impossible]
 
@@ -147,9 +147,9 @@ flowchart TD
     B --> C[For i, char in enumerate s]
     C --> D[end = max of end and last_char]
     D --> E[size += 1]
-    E --> F{i == end?}
+    E --> F{"i == end?"}
     F -- Yes --> G[Append size to result, size = 0]
-    F -- No --> H{More chars?}
+    F -- No --> H{"More chars?"}
     G --> H
     H -- Yes --> C
     H -- No --> I[Return result]

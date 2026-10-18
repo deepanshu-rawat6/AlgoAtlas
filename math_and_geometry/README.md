@@ -71,14 +71,14 @@ graph TD
 
 ```mermaid
 flowchart TD
-    A[top=0, bottom=n-1, left=0, right=m-1] --> B{top <= bottom AND left <= right?}
+    A[top=0, bottom=n-1, left=0, right=m-1] --> B{"top <= bottom AND left <= right?"}
     B -- No --> Z[Return result]
     B -- Yes --> C[Traverse top row left to right, top++]
     C --> D[Traverse right col top to bottom, right--]
-    D --> E{top <= bottom?}
+    D --> E{"top <= bottom?"}
     E -- Yes --> F[Traverse bottom row right to left, bottom--]
     E -- No --> B
-    F --> G{left <= right?}
+    F --> G{"left <= right?"}
     G -- Yes --> H[Traverse left col bottom to top, left++]
     G -- No --> B
     H --> B
@@ -93,13 +93,13 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[pow x, n] --> B{n < 0?}
+    A[pow x, n] --> B{"n < 0?"}
     B -- Yes --> C[x = 1/x, n = -n]
     B -- No --> D[result = 1]
     C --> D
-    D --> E{n > 0?}
+    D --> E{"n > 0?"}
     E -- No --> K[Return result]
-    E -- Yes --> F{n is odd?}
+    E -- Yes --> F{"n is odd?"}
     F -- Yes --> G[result *= x]
     F -- No --> H[skip]
     G --> I[x = x * x, n = n // 2]
@@ -121,9 +121,9 @@ flowchart TD
     A[slow = n, fast = n] --> B[Compute next: sum of squares of digits]
     B --> C[slow = next of slow]
     C --> D[fast = next of next of fast]
-    D --> E{slow == fast?}
+    D --> E{"slow == fast?"}
     E -- No --> C
-    E -- Yes --> F{slow == 1?}
+    E -- Yes --> F{"slow == 1?"}
     F -- Yes --> G[Return True — Happy Number]
     F -- No --> H[Return False — cycle, not happy]
 
@@ -139,18 +139,18 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Number Theory Problem] --> B{Involves strings?}
+    A[Number Theory Problem] --> B{"Involves strings?"}
     B -- Yes --> C[GCD of Strings #1071]
     C --> D["Check s+t == t+s, then return s[:gcd(len s, len t)]"]
 
-    B -- No --> E{Involves linked list?}
+    B -- No --> E{"Involves linked list?"}
     E -- Yes --> F[Insert GCD in Linked List #2807]
     F --> G[Between each pair, insert node with gcd of values]
 
-    E -- No --> H{Involves exponentiation?}
+    E -- No --> H{"Involves exponentiation?"}
     H -- Yes --> I[Pow x,n #50 — fast exponentiation]
 
-    H -- No --> J{Involves digit sum cycle?}
+    H -- No --> J{"Involves digit sum cycle?"}
     J -- Yes --> K[Happy Number #202 — Floyd's cycle detection]
 
     J -- No --> L[Excel Column #168 — base-26 with offset]

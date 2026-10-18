@@ -56,7 +56,7 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[2D DP Problem] --> B{What are the two dimensions?}
+    A[2D DP Problem] --> B{"What are the two dimensions?"}
     B -->|Row & col of grid| C[Grid DP<br>62 63 64 329]
     B -->|Two string indices| D[String Matching DP<br>1143 72 115 97 10]
     B -->|Left & right bounds of array| E[Interval DP<br>312 Burst Balloons]
@@ -70,7 +70,7 @@ flowchart TD
     A["Init dp[0][0] = grid[0][0]"] --> B["Fill first row: dp[0][j] = dp[0][j-1] + cost"]
     B --> C["Fill first col: dp[i][0] = dp[i-1][0] + cost"]
     C --> D["For i=1..m, j=1..n"]
-    D --> E{Obstacle at i,j?}
+    D --> E{"Obstacle at i,j?"}
     E -->|Yes| F["dp[i][j] = ∞ or 0"]
     E -->|No| G["dp[i][j] = min/+ of<br>dp[i-1][j] and dp[i][j-1]"]
     G --> D

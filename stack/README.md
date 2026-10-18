@@ -52,14 +52,14 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[For each element arr-i] --> B{Stack not empty AND<br>condition met?}
+    A[For each element arr-i] --> B{"Stack not empty AND condition met?"}
     B -->|Next Greater: arr-i > stack.top| C[Pop top<br>result-top = i]
     B -->|Next Smaller: arr-i < stack.top| C
     C --> B
     B -->|Condition not met| D[Push i onto stack]
     D --> E[Next element]
     E --> A
-    D --> F{End of array?}
+    D --> F{"End of array?"}
     F -->|Yes, remaining in stack| G[No next greater/smaller<br>result = -1 or 0]
 ```
 
@@ -67,18 +67,18 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Read char c] --> B{c is opening bracket?}
+    A[Read char c] --> B{"c is opening bracket?"}
     B -->|Yes| C[Push c onto stack]
-    B -->|No - closing bracket| D{Stack empty?}
+    B -->|No - closing bracket| D{"Stack empty?"}
     D -->|Yes| E[Return False]
-    D -->|No| F{stack.top matches c?}
+    D -->|No| F{"stack.top matches c?"}
     F -->|Yes| G[Pop stack]
     F -->|No| E
     G --> H[Next char]
     C --> H
-    H --> I{More chars?}
+    H --> I{"More chars?"}
     I -->|Yes| A
-    I -->|No| J{Stack empty?}
+    I -->|No| J{"Stack empty?"}
     J -->|Yes| K[Return True]
     J -->|No| E
 ```
@@ -87,12 +87,12 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Need temporary storage?] --> B{Access order?}
+    A[Need temporary storage?] --> B{"Access order?"}
     B -->|Last In First Out<br>Undo, backtrack, nested| C[Stack]
     B -->|First In First Out<br>BFS, scheduling, order| D[Queue]
     C --> C1[Monotonic problems<br>Matching brackets<br>Expression eval]
     D --> D1[BFS traversal<br>Sliding window<br>Task scheduling]
-    C --> C2{Need O-1 min/max?}
+    C --> C2{"Need O-1 min/max?"}
     C2 -->|Yes| C3[Auxiliary stack<br>Min Stack LC155]
     C2 -->|No| C4[Regular stack]
 ```

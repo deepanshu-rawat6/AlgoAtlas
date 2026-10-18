@@ -16,15 +16,15 @@ Arrays + hashing problems are about **trading space for time**. A hash map/set t
 
 ```mermaid
 flowchart TD
-    A["Array/Hashing Problem"] --> B{Need O(1) range sum?}
+    A["Array/Hashing Problem"] --> B{"Need O(1) range sum?"}
     B -- Yes --> C[Prefix Sum / 2D Prefix Sum]
-    B -- No --> D{Grouping by equivalence?}
+    B -- No --> D{"Grouping by equivalence?"}
     D -- Yes --> E[HashMap with canonical key\ne.g. sorted string, char count]
-    D -- No --> F{Finding pair/complement?}
+    D -- No --> F{"Finding pair/complement?"}
     F -- Yes --> G[HashMap: store seen values\ncheck complement]
-    F -- No --> H{Frequency / count based?}
+    F -- No --> H{"Frequency / count based?"}
     H -- Yes --> I[Frequency array or Counter]
-    H -- No --> J{In-place, O(1) space?}
+    H -- No --> J{"In-place, O(1) space?"}
     J -- Yes --> K[Index marking / cyclic sort]
     J -- No --> L[HashSet for O(1) lookup]
 ```

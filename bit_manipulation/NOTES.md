@@ -13,7 +13,7 @@ Operate directly on binary representations. Key tricks:
 flowchart TD
     A["Bit Manipulation Problem"] --> B{"What's the goal?"}
     B -->|Find unique element| C["XOR all elements<br/>duplicates cancel<br/>Single Number"]
-    B -->|Count set bits| D{Single number or array?}
+    B -->|Count set bits| D{"Single number or array?"}
     D -->|Single| E["n AND (n-1) loop<br/>Number of 1 Bits"]
     D -->|Array 0..n| F["DP: bits[i] = bits[i>>1] + (i AND 1)<br/>Counting Bits"]
     B -->|Find missing number| G["XOR with indices 0..n<br/>Missing Number"]

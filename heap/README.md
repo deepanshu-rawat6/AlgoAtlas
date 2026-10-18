@@ -46,7 +46,7 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A[Heap Problem] --> B{What do you need?}
+    A[Heap Problem] --> B{"What do you need?"}
     B -- Kth largest<br>or top-K smallest --> C[Min Heap of size K<br>heapq in Python]
     B -- Kth smallest<br>or top-K largest --> D[Max Heap of size K<br>negate values in Python]
     B -- Always need<br>smallest next --> E[Min Heap<br>LC 1834 CPU, 1094 Car Pooling]
@@ -60,9 +60,9 @@ flowchart TD
 flowchart TD
     A[Find Top-K elements] --> B[Use Min Heap of size K]
     B --> C[For each element x]
-    C --> D{heap size < K?}
+    C --> D{"heap size < K?"}
     D -- Yes --> E[Push x]
-    D -- No --> F{x > heap top?}
+    D -- No --> F{"x > heap top?"}
     F -- Yes --> G[Pop min, push x]
     F -- No --> H[Skip]
     E --> C
@@ -76,10 +76,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Add number n] --> B{n <= max_heap top?}
+    A[Add number n] --> B{"n <= max_heap top?"}
     B -- Yes --> C[Push to max_heap<br>lower half]
     B -- No --> D[Push to min_heap<br>upper half]
-    C --> E{Balance heaps<br>size diff > 1?}
+    C --> E{"Balance heaps size diff > 1?"}
     D --> E
     E -- max_heap bigger --> F[Move top of max_heap<br>to min_heap]
     E -- min_heap bigger --> G[Move top of min_heap<br>to max_heap]
@@ -87,7 +87,7 @@ flowchart TD
     F --> I[Get Median]
     G --> I
     H --> I
-    I --> J{Equal sizes?}
+    I --> J{"Equal sizes?"}
     J -- Yes --> K[avg of both tops]
     J -- No --> L[top of larger heap]
 ```
@@ -96,7 +96,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Greedy + Heap Problems] --> B{Pattern type}
+    A[Greedy + Heap Problems] --> B{"Pattern type"}
     B -- Always pick most frequent --> C[Max Heap by frequency<br>LC 767 Reorganize, 1405 Happy String]
     C --> D[Pop max freq char<br>append to result<br>decrement and re-push]
     B -- Unlock tasks by capital --> E[Two heaps: available vs locked<br>LC 502 IPO]
@@ -112,7 +112,7 @@ flowchart TD
     A[Event Simulation] --> B[Sort events by start time]
     B --> C[Min heap tracks active events<br>by end time or priority]
     C --> D[Process next event]
-    D --> E{Any events ended<br>before current start?}
+    D --> E{"Any events ended before current start?"}
     E -- Yes --> F[Pop from heap<br>free resources]
     E -- No --> G[All slots busy]
     F --> H[Assign to freed slot]

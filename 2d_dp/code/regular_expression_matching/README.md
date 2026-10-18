@@ -98,7 +98,7 @@ graph TD
 
     subgraph OneMore["One-or-More Occurrences (inductive)"]
         O1["dp[i-1][j] = true<br>(s[0:i-1] matches p[0:j]<br>with x* matching k-1 chars)"]
-        O2{"p[j-2] matches s[i-1]?<br>(letter match or '.')"}
+        O2{"p[j-2] matches s[i-1]? (letter match or '.')"}
         O1 --> O2
         O2 -->|"YES: peel off one more char"| O3["dp[i][j] = true<br>(x* now matches k chars)"]
         O2 -->|"NO"| O4["cannot extend"]

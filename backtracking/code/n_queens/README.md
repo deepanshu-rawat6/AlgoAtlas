@@ -84,7 +84,7 @@ graph TD
 
     subgraph Backtrack["Backtracking Flow"]
         R0["Row 0: try col 0,1,2,3"]
-        R0 --> V0{"Valid?<br>col, r-c, r+c<br>not in sets"}
+        R0 --> V0{"Valid? col, r-c, r+c not in sets"}
         V0 -->|"Yes"| ADD["Add to sets<br>Recurse row+1"]
         ADD --> R1["Row 1: try col 0,1,2,3"]
         R1 --> V1{"Valid?"}

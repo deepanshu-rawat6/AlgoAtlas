@@ -14,14 +14,14 @@ Two pointers eliminate the need for nested loops by maintaining two indices that
 
 ```mermaid
 flowchart TD
-    A[Two Pointer Problem] --> B{In-place modification?}
+    A[Two Pointer Problem] --> B{"In-place modification?"}
     B -- Yes --> C["Slow/fast pointers\nwrite pointer + read pointer"]
-    B -- No --> D{Sorted or can sort?}
-    D -- Yes --> E{Finding pairs/triplets?}
+    B -- No --> D{"Sorted or can sort?"}
+    D -- Yes --> E{"Finding pairs/triplets?"}
     E -- Yes --> F[Opposite-end pointersafter sorting]
-    E -- No --> G{Palindrome / symmetric?}
+    E -- No --> G{"Palindrome / symmetric?"}
     G -- Yes --> H[Left/right convergecheck equality]
-    D -- No --> I{Merging two sequences?}
+    D -- No --> I{"Merging two sequences?"}
     I -- Yes --> J[Two pointers ontwo separate arrays]
     I -- No --> K[Sliding windowor fast/slow]
 ```

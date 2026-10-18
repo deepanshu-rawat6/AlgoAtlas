@@ -75,9 +75,9 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Subarray/Substring Problem"] --> B{Window size given?}
+    A["Subarray/Substring Problem"] --> B{"Window size given?"}
     B -->|Yes - size k| C[Fixed Window]
-    B -->|No| D{Optimize for?}
+    B -->|No| D{"Optimize for?"}
     C --> C1[Slide: remove left, add right<br>Maintain window invariant]
     D -->|Minimum length| E[Variable - Shrink when valid<br>LC 76, LC 209]
     D -->|Maximum length| F[Variable - Shrink when invalid<br>LC 3, LC 424]
@@ -89,13 +89,13 @@ flowchart TD
 ```mermaid
 flowchart LR
     A([Start<br>l=0, r=0]) --> B[Expand: add arr-r to window]
-    B --> C{Window valid?}
+    B --> C{"Window valid?"}
     C -->|Yes| D[Update answer]
     D --> E[r++]
     E --> B
     C -->|No - shrink needed| F[Remove arr-l from window<br>l++]
     F --> C
-    E --> G{r == n?}
+    E --> G{"r == n?"}
     G -->|Yes| H([Return answer])
     G -->|No| B
 ```
@@ -104,11 +104,11 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[New element arr-i] --> B{Deque not empty AND<br>deque.back <= arr-i?}
+    A[New element arr-i] --> B{"Deque not empty AND deque.back <= arr-i?"}
     B -->|Yes - pop smaller| C[deque.pop_back]
     C --> B
     B -->|No| D[deque.push_back index i]
-    D --> E{deque.front out of window?<br>front < i - k + 1}
+    D --> E{"deque.front out of window? front < i - k + 1"}
     E -->|Yes| F[deque.pop_front]
     F --> E
     E -->|No| G[Window max = arr-deque.front]

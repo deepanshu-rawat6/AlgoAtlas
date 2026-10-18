@@ -12,13 +12,13 @@ These problems rely on mathematical properties or careful simulation. Key skills
 
 ```mermaid
 flowchart TD
-    A["Math/Geometry Problem"] --> B{Problem type?}
-    B -->|Matrix traversal| C{Pattern?}
+    A["Math/Geometry Problem"] --> B{"Problem type?"}
+    B -->|Matrix traversal| C{"Pattern?"}
     C -->|Layer by layer| D[Rotate Image\nin-place 4-way swap]
     C -->|Boundary shrink| E[Spiral Matrix\nfour pointers]
     C -->|Row/col zeroing| F[Set Matrix Zeroes\nflag first row/col]
     C -->|Simple transpose| G[Transpose\nswap i,j]
-    B -->|Number properties| H{Operation?}
+    B -->|Number properties| H{"Operation?"}
     H -->|Digit manipulation| I[Plus One, Reverse Integer\nhandle carry/overflow]
     H -->|Cycle detection| J[Happy Number\nFloyd's or set]
     H -->|GCD based| K[GCD Strings, Insert GCD LL\nEuclidean algorithm]
