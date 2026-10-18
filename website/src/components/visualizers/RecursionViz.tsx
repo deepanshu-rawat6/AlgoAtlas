@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 
 // ── Fibonacci ────────────────────────────────────────────────────────────────
 
-interface FibCall { id: string; n: number; result: number | null; parentId: string | null; depth: number; }
+interface FibCall { id: string; n: number; result: number | null; parentId: string | null; depth: number; isMemoHit?: boolean; }
 
 function buildCalls(n: number): FibCall[] {
   const calls: FibCall[] = [];
@@ -21,8 +21,37 @@ function buildCalls(n: number): FibCall[] {
   return calls;
 }
 
+function buildMemoCalls(n: number): FibCall[] {
+  const calls: FibCall[] = [];
+  const memoCache = new Map<number, number>();
+  let id = 0;
+  function fib(n: number, parentId: string | null, depth: number): number {
+    const cid = String(id++);
+    if (memoCache.has(n)) {
+      const memoResult = memoCache.get(n)!;
+      calls.push({ id: cid, n, result: memoResult, parentId, depth, isMemoHit: true });
+      return memoResult;
+    }
+    calls.push({ id: cid, n, result: null, parentId, depth, isMemoHit: false });
+    if (n <= 1) {
+      calls[calls.length - 1].result = n;
+      memoCache.set(n, n);
+      return n;
+    }
+    const l = fib(n - 1, cid, depth + 1);
+    const r = fib(n - 2, cid, depth + 1);
+    const res = l + r;
+    calls.find(c => c.id === cid)!.result = res;
+    memoCache.set(n, res);
+    return res;
+  }
+  fib(n, null, 0);
+  return calls;
+}
+
 function FibonacciViz() {
   const [n, setN] = useState(5);
+  const [memo, setMemo] = useState(false);
   const [calls, setCalls] = useState<FibCall[]>([]);
   const [step, setStep] = useState(-1);
   const [started, setStarted] = useState(false);
@@ -48,7 +77,7 @@ function FibonacciViz() {
 
   function start() {
     stopPlay();
-    const c = buildCalls(Math.min(n, 7));
+    const c = memo ? buildMemoCalls(Math.min(n, 7)) : buildCalls(Math.min(n, 7));
     callsRef.current = c;
     setCalls(c); setStep(0); setStarted(true);
   }
@@ -56,6 +85,11 @@ function FibonacciViz() {
   function reset() {
     stopPlay();
     setCalls([]); callsRef.current = []; setStep(-1); setStarted(false);
+  }
+
+  function toggleMemo() {
+    reset();
+    setMemo(m => !m);
   }
 
   const isDone = started && step >= calls.length - 1;
@@ -93,6 +127,9 @@ function FibonacciViz() {
   const byDepth: Record<number, FibCall[]> = {};
   for (const c of visible) { byDepth[c.depth] = byDepth[c.depth] || []; byDepth[c.depth].push(c); }
 
+  const naiveCount = buildCalls(Math.min(n, 7)).length;
+  const memoCount = memo ? calls.length : null;
+
   return (
     <div className="space-y-6">
       <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Visualize overlapping subproblems (why memoization helps)</p>
@@ -104,6 +141,16 @@ function FibonacciViz() {
             value={n} onChange={e => setN(Math.min(7, Math.max(1, parseInt(e.target.value) || 1)))} />
         </div>
         <button onClick={start} className="viz-btn viz-btn--primary">Build Tree</button>
+        <button onClick={toggleMemo}
+          className={memo ? 'viz-btn viz-btn--primary' : 'viz-btn'}
+          title="Toggle memoization">
+          {memo ? 'With Memo' : 'Naive'}
+        </button>
+        {memo && (
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem',alignSelf:'center'}}>
+            Naive: {naiveCount} calls → Memo: {buildMemoCalls(Math.min(n, 7)).length} calls
+          </span>
+        )}
       </div>
       {started && (
         <div style={{background:'var(--surface-sunken)',borderRadius:'0.5rem',padding:'1rem'}} className="space-y-3 max-h-72 overflow-y-auto">
@@ -112,16 +159,31 @@ function FibonacciViz() {
               <span style={{color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'0.75rem',width:'3rem'}}>d={depth}:</span>
               {depthCalls.map(c => {
                 const isCurr = c.id === current?.id;
-                const memoHit = depthCalls.filter(x => x.n === c.n && x.id < c.id).length > 0;
                 let cellStyle: React.CSSProperties;
-                if (isCurr) cellStyle = {background:'var(--accent-soft)',border:'1px solid var(--accent)',color:'var(--text)'};
-                else if (memoHit) cellStyle = {background:'color-mix(in srgb, #ef4444 15%, transparent)',border:'1px solid #ef4444',color:'var(--text)'};
-                else if (c.result !== null) cellStyle = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text-secondary)'};
-                else cellStyle = {background:'var(--surface-sunken)',border:'1px solid var(--border-soft)',color:'var(--text-faint)'};
+                if (isCurr) {
+                  cellStyle = {background:'var(--accent-soft)',border:'1px solid var(--accent)',color:'var(--text)'};
+                } else if (memo && c.isMemoHit) {
+                  cellStyle = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text-faint)'};
+                } else if (!memo) {
+                  const memoHit = depthCalls.filter(x => x.n === c.n && x.id < c.id).length > 0;
+                  if (memoHit) {
+                    cellStyle = {background:'color-mix(in srgb, #ef4444 15%, transparent)',border:'1px solid #ef4444',color:'var(--text)'};
+                  } else if (c.result !== null) {
+                    cellStyle = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text-secondary)'};
+                  } else {
+                    cellStyle = {background:'var(--surface-sunken)',border:'1px solid var(--border-soft)',color:'var(--text-faint)'};
+                  }
+                } else if (c.result !== null) {
+                  cellStyle = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text-secondary)'};
+                } else {
+                  cellStyle = {background:'var(--surface-sunken)',border:'1px solid var(--border-soft)',color:'var(--text-faint)'};
+                }
                 return (
                   <div key={c.id} className="flex flex-col items-center px-2 py-1 rounded text-xs font-mono" style={cellStyle}>
                     <span>fib({c.n})</span>
-                    {c.result !== null && <span style={{color:'var(--tier-3)'}}>={c.result}</span>}
+                    {memo && c.isMemoHit
+                      ? <span style={{color:'var(--text-faint)'}}>cache</span>
+                      : c.result !== null && <span style={{color:'var(--tier-3)'}}>={c.result}</span>}
                   </div>
                 );
               })}
@@ -131,8 +193,9 @@ function FibonacciViz() {
       )}
       {started && (
         <div className="viz-info">
-          {current ? `Call ${step + 1}/${calls.length}: fib(${current.n})${current.result !== null ? ` = ${current.result}` : ' (computing...)'}` : ''}
-          {step === calls.length - 1 && ` | Total calls: ${calls.length} (naive)`}
+          {current ? `Call ${step + 1}/${calls.length}: fib(${current.n})${current.isMemoHit ? ' (cache hit)' : current.result !== null ? ` = ${current.result}` : ' (computing...)'}` : ''}
+          {step === calls.length - 1 && memo && memoCount !== null && ` | Memo: ${memoCount} calls (naive would need ${naiveCount})`}
+          {step === calls.length - 1 && !memo && ` | Total calls: ${calls.length} (naive)`}
         </div>
       )}
       <div className="flex flex-wrap items-center gap-3">

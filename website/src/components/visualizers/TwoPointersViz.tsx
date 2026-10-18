@@ -343,9 +343,183 @@ function ThreeSumTab() {
   );
 }
 
+// ── Container With Most Water tab ────────────────────────────────────────────
+const CWW_DEFAULT = [1, 8, 6, 2, 5, 4, 8, 3, 7];
+
+interface ContainerStep { left: number; right: number; currentArea: number; maxArea: number; msg: string; }
+
+function buildContainerSteps(heights: number[]): ContainerStep[] {
+  const steps: ContainerStep[] = [];
+  const n = heights.length;
+  let left = 0, right = n - 1, maxArea = 0;
+
+  while (left < right) {
+    const area = Math.min(heights[left], heights[right]) * (right - left);
+    maxArea = Math.max(maxArea, area);
+    const moveLeft = heights[left] <= heights[right];
+    const nextLeft = moveLeft ? left + 1 : left;
+    const nextRight = moveLeft ? right : right - 1;
+    steps.push({
+      left, right, currentArea: area, maxArea,
+      msg: `L=${left}(h=${heights[left]}), R=${right}(h=${heights[right]}): area = min(${heights[left]},${heights[right]})×${right - left} = ${area}. maxArea=${maxArea}. Move ${moveLeft ? 'L right' : 'R left'}.`,
+    });
+    left = nextLeft;
+    right = nextRight;
+  }
+  if (steps.length > 0) {
+    const last = steps[steps.length - 1];
+    steps.push({ ...last, left, right, currentArea: 0, msg: `Done! Max area = ${last.maxArea}` });
+  }
+  return steps;
+}
+
+function ContainerTab() {
+  const [heightsInput, setHeightsInput] = useState(CWW_DEFAULT.join(', '));
+  const [heights, setHeights] = useState(CWW_DEFAULT);
+  const [steps, setSteps] = useState<ContainerStep[]>(() => buildContainerSteps(CWW_DEFAULT));
+  const [stepIdx, setStepIdx] = useState(0);
+  const [history, setHistory] = useState<number[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
+
+  const step = steps[stepIdx] ?? steps[0];
+  const isDone = stepIdx >= steps.length - 1;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function reset() {
+    stopPlay();
+    const h = heightsInput.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v) && v > 0);
+    const arr = h.length >= 2 ? h : CWW_DEFAULT;
+    setHeights(arr);
+    const s = buildContainerSteps(arr);
+    setSteps(s); setStepIdx(0); setHistory([]);
+  }
+
+  function nextStep() {
+    if (isDone) { stopPlay(); return; }
+    setHistory(h => [...h, stepIdx]);
+    setStepIdx(s => Math.min(steps.length - 1, s + 1));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setStepIdx(s);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay(); setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // SVG bar chart
+  const SVG_W = 360, SVG_H = 130, PAD_B = 20;
+  const n = heights.length;
+  const maxH = Math.max(...heights);
+  const barW = Math.min(28, Math.floor((SVG_W - 20) / n));
+  const gap = Math.floor((SVG_W - 20 - barW * n) / (n + 1));
+  const scaleY = (SVG_H - PAD_B - 10) / maxH;
+
+  function barX(i: number) { return 10 + gap + i * (barW + gap); }
+  function barY(h: number) { return SVG_H - PAD_B - h * scaleY; }
+
+  const waterH = step ? Math.min(heights[step.left], heights[step.right]) * scaleY : 0;
+  const waterLeft = step ? barX(step.left) : 0;
+  const waterRight = step ? barX(step.right) + barW : 0;
+  const waterTop = step ? SVG_H - PAD_B - waterH : 0;
+
+  return (
+    <div className="space-y-6">
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Move the shorter side inward — area = min(h[L],h[R]) × (R−L)</p>
+      <div className="flex flex-wrap gap-3">
+        <div className="flex-1 min-w-40">
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Heights</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
+            value={heightsInput} onChange={e => setHeightsInput(e.target.value)} />
+        </div>
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
+      </div>
+
+      <div style={{ background: 'var(--surface-sunken)', borderRadius: '0.5rem', padding: '0.75rem', overflowX: 'auto' }}>
+        <svg width={SVG_W} height={SVG_H}>
+          {/* water fill */}
+          {step && step.currentArea > 0 && (
+            <rect x={waterLeft} y={waterTop} width={waterRight - waterLeft} height={waterH}
+              fill="rgba(59,130,246,0.18)" stroke="rgba(59,130,246,0.4)" strokeWidth={1} />
+          )}
+          {/* bars */}
+          {heights.map((h, i) => {
+            const isL = step && i === step.left;
+            const isR = step && i === step.right;
+            const bx = barX(i), bh = h * scaleY, by = barY(h);
+            return (
+              <g key={i}>
+                <rect x={bx} y={by} width={barW} height={bh} rx={2}
+                  fill={isL ? '#3b82f6' : isR ? '#f97316' : 'var(--border)'}
+                  opacity={0.85} />
+                <text x={bx + barW / 2} y={by - 3} textAnchor="middle" fontSize={9} fill="var(--text-faint)">{h}</text>
+                <text x={bx + barW / 2} y={SVG_H - 6} textAnchor="middle" fontSize={9}
+                  fill={isL ? '#3b82f6' : isR ? '#f97316' : 'var(--text-faint)'}>
+                  {isL ? 'L' : isR ? 'R' : i}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        {step && (
+          <div className="flex gap-4 mt-2 text-xs font-mono" style={{ color: 'var(--text-dim)' }}>
+            <span>Current area: <span style={{ color: 'var(--accent)' }}>{step.currentArea}</span></span>
+            <span>Max area: <span style={{ color: 'var(--tier-3)' }}>{step.maxArea}</span></span>
+          </div>
+        )}
+      </div>
+
+      {isDone
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>{step?.msg}</div>
+        : <div className="viz-info">{step?.msg}</div>
+      }
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone} className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">← Back</button>
+        <button onClick={togglePlay} disabled={isDone} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root ─────────────────────────────────────────────────────────────────────
 export default function TwoPointersViz() {
-  const [tab, setTab] = useState<'twosum2' | 'threesum'>('twosum2');
+  const [tab, setTab] = useState<'twosum2' | 'threesum' | 'container'>('twosum2');
 
   return (
     <div className="panel p-6 space-y-6">
@@ -357,9 +531,10 @@ export default function TwoPointersViz() {
       <div className="flex gap-2">
         <button onClick={() => setTab('twosum2')} className={tab === 'twosum2' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Two Sum II</button>
         <button onClick={() => setTab('threesum')} className={tab === 'threesum' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>3Sum</button>
+        <button onClick={() => setTab('container')} className={tab === 'container' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Container</button>
       </div>
 
-      {tab === 'twosum2' ? <TwoSumIITab /> : <ThreeSumTab />}
+      {tab === 'twosum2' ? <TwoSumIITab /> : tab === 'threesum' ? <ThreeSumTab /> : <ContainerTab />}
     </div>
   );
 }

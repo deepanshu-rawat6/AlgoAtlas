@@ -350,10 +350,187 @@ function MinStackTab() {
   );
 }
 
+// ── Valid Parentheses tab ─────────────────────────────────────────────────────
+
+type ParenAction = 'push' | 'pop' | 'mismatch' | 'exhausted' | 'done';
+interface ParenStep { charIdx: number; stack: string[]; action: ParenAction; msg: string; }
+
+const MATCHES: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+const OPENS = new Set(['(', '[', '{']);
+
+function buildParenSteps(input: string): ParenStep[] {
+  const steps: ParenStep[] = [];
+  const stack: string[] = [];
+  let valid = true;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (OPENS.has(ch)) {
+      stack.push(ch);
+      steps.push({ charIdx: i, stack: [...stack], action: 'push', msg: `Push '${ch}' onto stack` });
+    } else if (MATCHES[ch]) {
+      if (stack.length === 0) {
+        steps.push({ charIdx: i, stack: [], action: 'exhausted', msg: `Stack empty! No matching bracket for '${ch}' at pos ${i} → Invalid` });
+        valid = false; break;
+      } else if (stack[stack.length - 1] !== MATCHES[ch]) {
+        steps.push({ charIdx: i, stack: [...stack], action: 'mismatch', msg: `Mismatch: top='${stack[stack.length - 1]}', expected '${MATCHES[ch]}' for '${ch}' → Invalid` });
+        valid = false; break;
+      } else {
+        const popped = stack.pop()!;
+        steps.push({ charIdx: i, stack: [...stack], action: 'pop', msg: `Match! Pop '${popped}' ← closed by '${ch}'` });
+      }
+    }
+  }
+  if (valid) {
+    steps.push(stack.length === 0
+      ? { charIdx: input.length, stack: [], action: 'done', msg: 'Stack empty → Valid ✓' }
+      : { charIdx: input.length, stack: [...stack], action: 'exhausted', msg: 'Unclosed brackets remain → Invalid ✗' });
+  }
+  return steps;
+}
+
+function ValidParensTab() {
+  const [input, setInput] = useState('({[]})');
+  const [steps, setSteps] = useState<ParenStep[]>(() => buildParenSteps('({[]})'));
+  const [stepIdx, setStepIdx] = useState(-1);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
+
+  const step = stepIdx >= 0 ? steps[stepIdx] : null;
+  const isDone = stepIdx === steps.length - 1 && stepIdx >= 0;
+  const isInvalid = step && (step.action === 'mismatch' || step.action === 'exhausted');
+  const isValid = step && step.action === 'done';
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function reset() {
+    stopPlay();
+    setSteps(buildParenSteps(input));
+    setStepIdx(-1);
+  }
+
+  function nextStep() {
+    if (isDone) { stopPlay(); return; }
+    setStepIdx(s => Math.min(steps.length - 1, s + 1));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setStepIdx(s => Math.max(-1, s - 1));
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay(); setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const charIdx = step?.charIdx ?? -1;
+  const stack = step?.stack ?? [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-3">
+        <div className="flex-1 min-w-40">
+          <label style={{display:'block',color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Input string</label>
+          <input className="w-full"
+            style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none'}}
+            value={input} onChange={e => { setInput(e.target.value); setStepIdx(-1); setSteps(buildParenSteps(e.target.value)); }} />
+        </div>
+      </div>
+
+      {/* Input character boxes */}
+      <div className="flex flex-wrap gap-1">
+        {input.split('').map((ch, idx) => {
+          const isCurr = idx === charIdx;
+          const isPast = stepIdx >= 0 && idx < charIdx;
+          let cellStyle: React.CSSProperties;
+          if (isCurr && isInvalid) cellStyle = {background:'color-mix(in srgb, #ef4444 20%, transparent)',borderColor:'#ef4444',color:'var(--text)'};
+          else if (isCurr) cellStyle = {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
+          else if (isPast) cellStyle = {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
+          else cellStyle = {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
+          return (
+            <div key={idx} className="w-10 h-10 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg" style={cellStyle}>{ch}</div>
+          );
+        })}
+      </div>
+
+      {/* Stack */}
+      <div>
+        <div style={{color:'var(--text-dim)',fontSize:'0.75rem',marginBottom:'0.5rem',fontFamily:'var(--mono)'}}>Stack (top on left)</div>
+        <div className="flex gap-1">
+          {stack.length === 0
+            ? <span style={{color:'var(--text-faint)',fontSize:'0.875rem'}}>[ empty ]</span>
+            : [...stack].reverse().map((ch, si) => {
+                const isTop = si === 0;
+                const topStyle: React.CSSProperties = isTop
+                  ? (step?.action === 'pop' ? {background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',borderColor:'var(--tier-3)',color:'var(--text)'}
+                    : step?.action === 'push' ? {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'}
+                    : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text)'})
+                  : {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
+                return (
+                  <div key={si} className="w-10 h-10 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg" style={topStyle}>{ch}</div>
+                );
+              })}
+        </div>
+      </div>
+
+      {isValid && (
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
+          Valid ✓
+        </div>
+      )}
+      {isInvalid && (
+        <div style={{background:'color-mix(in srgb, #ef4444 15%, transparent)',border:'1px solid #ef4444',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'#ef4444',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
+          Invalid ✗
+        </div>
+      )}
+
+      <div className="viz-info">{step?.msg ?? 'Press "Next Step" or "▶ Play" to start.'}</div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone}
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
+          Next Step
+        </button>
+        <button onClick={stepBack} disabled={stepIdx < 0}
+          className="viz-btn disabled:opacity-40 disabled:cursor-not-allowed">
+          ← Back
+        </button>
+        <button onClick={togglePlay} disabled={isDone}
+          className="viz-btn viz-btn--primary disabled:opacity-40 disabled:cursor-not-allowed">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset} className="viz-btn">Reset</button>
+        <div className="flex items-center gap-2">
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ─────────────────────────────────────────────────────────────
 
-type Tab = 'Monotonic Stack' | 'Min Stack';
-const TABS: Tab[] = ['Monotonic Stack', 'Min Stack'];
+type Tab = 'Monotonic Stack' | 'Min Stack' | 'Valid Parens';
+const TABS: Tab[] = ['Monotonic Stack', 'Min Stack', 'Valid Parens'];
 
 export default function StackViz() {
   const [tab, setTab] = useState<Tab>('Monotonic Stack');
@@ -362,10 +539,10 @@ export default function StackViz() {
     <div className="panel p-6 space-y-6">
       <div>
         <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Stack</h3>
-        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Monotonic stack · Min stack O(1) getMin</p>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Monotonic stack · Min stack O(1) getMin · Valid parentheses matching</p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={tab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
@@ -374,7 +551,7 @@ export default function StackViz() {
         ))}
       </div>
 
-      {tab === 'Monotonic Stack' ? <MonotonicStackTab /> : <MinStackTab />}
+      {tab === 'Monotonic Stack' ? <MonotonicStackTab /> : tab === 'Min Stack' ? <MinStackTab /> : <ValidParensTab />}
     </div>
   );
 }

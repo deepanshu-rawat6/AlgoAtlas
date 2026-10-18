@@ -333,10 +333,233 @@ function CycleDetectionTab() {
   );
 }
 
+// ── Merge Two Sorted Lists tab ─────────────────────────────────────────────────
+
+interface MergeStep {
+  p1: number;      // index into list1, -1 = exhausted
+  p2: number;      // index into list2, -1 = exhausted
+  result: number[];
+  msg: string;
+}
+
+function buildMergeSteps(list1: number[], list2: number[]): MergeStep[] {
+  const steps: MergeStep[] = [];
+  const push = (p1: number, p2: number, result: number[], msg: string) =>
+    steps.push({ p1, p2, result: [...result], msg });
+
+  push(0, 0, [], `Start: p1 at list1[0]=${list1[0]}, p2 at list2[0]=${list2[0]}. Compare and take smaller.`);
+
+  let p1 = 0, p2 = 0;
+  const result: number[] = [];
+
+  while (p1 < list1.length && p2 < list2.length) {
+    if (list1[p1] <= list2[p2]) {
+      result.push(list1[p1]);
+      push(p1 + 1 < list1.length ? p1 + 1 : -1, p2,
+        result, `list1[${p1}]=${list1[p1]} ≤ list2[${p2}]=${list2[p2]} → take ${list1[p1]} from list1, advance p1`);
+      p1++;
+    } else {
+      result.push(list2[p2]);
+      push(p1, p2 + 1 < list2.length ? p2 + 1 : -1,
+        result, `list1[${p1}]=${list1[p1]} > list2[${p2}]=${list2[p2]} → take ${list2[p2]} from list2, advance p2`);
+      p2++;
+    }
+  }
+
+  while (p1 < list1.length) {
+    result.push(list1[p1]);
+    push(p1 + 1 < list1.length ? p1 + 1 : -1, -1,
+      result, `list2 exhausted. Append list1[${p1}]=${list1[p1]}`);
+    p1++;
+  }
+
+  while (p2 < list2.length) {
+    result.push(list2[p2]);
+    push(-1, p2 + 1 < list2.length ? p2 + 1 : -1,
+      result, `list1 exhausted. Append list2[${p2}]=${list2[p2]}`);
+    p2++;
+  }
+
+  push(-1, -1, result, `Merged! Result: [${result.join(', ')}]`);
+  return steps;
+}
+
+const DEFAULT_L1 = [1, 3, 5];
+const DEFAULT_L2 = [2, 4, 6];
+
+function MergeListsTab() {
+  const [input1, setInput1] = useState(DEFAULT_L1.join(', '));
+  const [input2, setInput2] = useState(DEFAULT_L2.join(', '));
+  const [list1, setList1] = useState(DEFAULT_L1);
+  const [list2, setList2] = useState(DEFAULT_L2);
+  const [steps, setSteps] = useState<MergeStep[]>(() => buildMergeSteps(DEFAULT_L1, DEFAULT_L2));
+  const [stepIdx, setStepIdx] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
+
+  const isDone = stepIdx >= steps.length - 1;
+  const step = steps[stepIdx];
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function reset() {
+    stopPlay();
+    const l1 = input1.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+    const l2 = input2.split(',').map(v => parseInt(v.trim())).filter(v => !isNaN(v));
+    const nl1 = l1.length ? l1 : DEFAULT_L1;
+    const nl2 = l2.length ? l2 : DEFAULT_L2;
+    setList1(nl1); setList2(nl2);
+    setSteps(buildMergeSteps(nl1, nl2));
+    setStepIdx(0);
+  }
+
+  function nextStep() {
+    if (isDone) { stopPlay(); return; }
+    setStepIdx(i => Math.min(steps.length - 1, i + 1));
+  }
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setStepIdx(i => Math.max(0, i - 1));
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay();
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const nodeBox = (val: number, highlight: 'p1' | 'p2' | 'done' | 'none') => {
+    const styles: Record<typeof highlight, React.CSSProperties> = {
+      p1: { background: 'var(--accent-soft)', borderColor: 'var(--accent)' },
+      p2: { background: 'color-mix(in srgb, #eab308 20%, transparent)', borderColor: '#eab308' },
+      done: { background: 'var(--surface-sunken)', borderColor: 'var(--border)', opacity: 0.4 },
+      none: { background: 'var(--surface-raised)', borderColor: 'var(--border)' },
+    };
+    return (
+      <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm"
+        style={{ color: 'var(--text)', ...styles[highlight] }}>
+        {val}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>
+        Dummy head + two pointers. Compare heads, attach smaller, advance that pointer.
+      </p>
+
+      <div className="flex flex-wrap gap-3">
+        {[['List 1', input1, setInput1], ['List 2', input2, setInput2]].map(([label, val, set]) => (
+          <div key={label as string} className="flex-1 min-w-32">
+            <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{label as string} (comma separated)</label>
+            <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
+              value={val as string} onChange={e => (set as (v: string) => void)(e.target.value)} />
+          </div>
+        ))}
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
+      </div>
+
+      {/* List 1 */}
+      <div>
+        <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem', fontFamily: 'var(--mono)' }}>
+          List 1 <span style={{ color: 'var(--accent)' }}>(p1{step.p1 === -1 ? '=exhausted' : `→[${step.p1}]`})</span>
+        </div>
+        <div className="flex items-center gap-1 flex-wrap">
+          {list1.map((v, i) => {
+            const highlight = step.p1 === i ? 'p1' : step.p1 === -1 || i < step.p1 ? 'done' : 'none';
+            return (
+              <div key={i} className="flex items-center">
+                {nodeBox(v, highlight)}
+                {i < list1.length - 1 && <span style={{ color: 'var(--text-faint)', margin: '0 2px' }}>→</span>}
+              </div>
+            );
+          })}
+          <span style={{ color: 'var(--text-faint)', fontFamily: 'var(--mono)', fontSize: '0.875rem', marginLeft: '4px' }}>→ null</span>
+        </div>
+      </div>
+
+      {/* List 2 */}
+      <div>
+        <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem', fontFamily: 'var(--mono)' }}>
+          List 2 <span style={{ color: '#eab308' }}>(p2{step.p2 === -1 ? '=exhausted' : `→[${step.p2}]`})</span>
+        </div>
+        <div className="flex items-center gap-1 flex-wrap">
+          {list2.map((v, i) => {
+            const highlight = step.p2 === i ? 'p2' : step.p2 === -1 || i < step.p2 ? 'done' : 'none';
+            return (
+              <div key={i} className="flex items-center">
+                {nodeBox(v, highlight)}
+                {i < list2.length - 1 && <span style={{ color: 'var(--text-faint)', margin: '0 2px' }}>→</span>}
+              </div>
+            );
+          })}
+          <span style={{ color: 'var(--text-faint)', fontFamily: 'var(--mono)', fontSize: '0.875rem', marginLeft: '4px' }}>→ null</span>
+        </div>
+      </div>
+
+      {/* Result */}
+      <div>
+        <div style={{ color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem', fontFamily: 'var(--mono)' }}>Result</div>
+        <div className="flex items-center gap-1 flex-wrap min-h-12">
+          {step.result.length === 0
+            ? <span style={{ color: 'var(--text-faint)', fontFamily: 'var(--mono)', fontSize: '0.875rem' }}>[ empty ]</span>
+            : step.result.map((v, i) => (
+                <div key={i} className="flex items-center">
+                  <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm"
+                    style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', borderColor: 'var(--tier-3)', color: 'var(--text)' }}>
+                    {v}
+                  </div>
+                  {i < step.result.length - 1 && <span style={{ color: 'var(--text-faint)', margin: '0 2px' }}>→</span>}
+                </div>
+              ))}
+        </div>
+      </div>
+
+      {isDone
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>{step.msg}</div>
+        : <div className="viz-info">{step.msg}</div>
+      }
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={stepIdx === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={isDone} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={reset} className="viz-btn">Reset</button>
+        <div className="flex items-center gap-2">
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ─────────────────────────────────────────────────────────────
 
-type Tab = 'Reversal' | 'Cycle Detection';
-const TABS: Tab[] = ['Reversal', 'Cycle Detection'];
+type Tab = 'Reversal' | 'Cycle Detection' | 'Merge Lists';
+const TABS: Tab[] = ['Reversal', 'Cycle Detection', 'Merge Lists'];
 
 export default function LinkedListViz() {
   const [tab, setTab] = useState<Tab>('Reversal');
@@ -345,11 +568,11 @@ export default function LinkedListViz() {
     <div className="panel p-6 space-y-6">
       <div>
         <h3 style={{ color: 'var(--text)', fontSize: '1.05rem', fontWeight: 600, marginBottom: '0.25rem' }}>Linked List</h3>
-        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Three-pointer reversal · Floyd's cycle detection</p>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Three-pointer reversal · Floyd's cycle detection · Merge two sorted lists</p>
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={tab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
@@ -358,7 +581,7 @@ export default function LinkedListViz() {
         ))}
       </div>
 
-      {tab === 'Reversal' ? <ReversalTab /> : <CycleDetectionTab />}
+      {tab === 'Reversal' ? <ReversalTab /> : tab === 'Cycle Detection' ? <CycleDetectionTab /> : <MergeListsTab />}
     </div>
   );
 }

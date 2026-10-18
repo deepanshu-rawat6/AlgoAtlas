@@ -323,22 +323,192 @@ function EditDistance() {
   );
 }
 
+// ── Knapsack ───────────────────────────────────────────────────────────────────
+const DEFAULT_ITEMS = [{w:2,v:3},{w:3,v:4},{w:4,v:5},{w:5,v:6}];
+const DEFAULT_CAP = 5;
+
+function Knapsack() {
+  const [items] = useState(DEFAULT_ITEMS);
+  const [cap] = useState(DEFAULT_CAP);
+  const [dp, setDp] = useState<number[][]>([]);
+  const [i, setI] = useState(1);
+  const [j, setJ] = useState(1);
+  const [started, setStarted] = useState(false);
+  const [done, setDone] = useState(false);
+  const [msg, setMsg] = useState('0/1 Knapsack DP. Press "Start".');
+  const [traceback, setTraceback] = useState<Set<string>>(new Set());
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<DP2DSnap[]>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+  const mountedRef = useRef(false);
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function start() {
+    stopPlay();
+    const rows = items.length + 1, cols = cap + 1;
+    const table = Array.from({ length: rows }, () => Array(cols).fill(0));
+    setDp(table); setI(1); setJ(1); setStarted(true); setDone(false); setHistory([]); setTraceback(new Set());
+    setMsg(`Initialized ${rows}×${cols} table with 0s. Row 0 = no items (all 0). Filling from dp[1][1].`);
+  }
+
+  function computeTraceback(table: number[][]): Set<string> {
+    const cells = new Set<string>();
+    let w = cap;
+    for (let ii = items.length; ii >= 1; ii--) {
+      if (table[ii][w] !== table[ii-1][w]) {
+        cells.add(`${ii},${w}`);
+        w -= items[ii-1].w;
+        cells.add(`${ii-1},${w}`);
+      }
+    }
+    return cells;
+  }
+
+  function next() {
+    if (!started || done) { stopPlay(); return; }
+    setHistory(h => [...h, { dp: dp.map(r => [...r]), i, j, done, msg }]);
+    const table = dp.map(r => [...r]);
+    const ci = i, cj = j;
+    const item = items[ci - 1];
+    let newMsg: string;
+    if (cj < item.w) {
+      table[ci][cj] = table[ci-1][cj];
+      newMsg = `w=${cj} < item weight=${item.w} → skip. dp[${ci}][${cj}] = dp[${ci-1}][${cj}] = ${table[ci][cj]}`;
+    } else {
+      const skip = table[ci-1][cj];
+      const take = table[ci-1][cj-item.w] + item.v;
+      table[ci][cj] = Math.max(skip, take);
+      newMsg = `w=${cj} ≥ weight=${item.w} → max(skip=${skip}, take=${table[ci-1][cj-item.w]}+${item.v}=${take}) = ${table[ci][cj]}`;
+    }
+    setDp(table);
+    let ni = ci, nj = cj + 1;
+    if (nj > cap) { ni++; nj = 1; }
+    if (ni > items.length) {
+      const tb = computeTraceback(table);
+      setTraceback(tb);
+      setDone(true);
+      setMsg(newMsg + ` | Knapsack max value = ${table[items.length][cap]}`);
+      stopPlay();
+    } else {
+      setI(ni); setJ(nj);
+      setMsg(newMsg);
+    }
+  }
+
+  useEffect(() => { nextStepRef.current = next; });
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const s = prev.pop()!;
+      setDp(s.dp); setI(s.i); setJ(s.j); setDone(s.done); setMsg(s.msg); setTraceback(new Set());
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay(); setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]);
+
+  const thStyle: React.CSSProperties = {width:'2.5rem',height:'2rem',color:'var(--text-faint)',border:'1px solid var(--border)',background:'var(--surface-sunken)',textAlign:'center',fontSize:'0.7rem',fontFamily:'var(--mono)'};
+  const thLabelStyle: React.CSSProperties = {...thStyle,color:'var(--text-dim)'};
+
+  return (
+    <div className="space-y-6">
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>dp[i][w] = max value using first i items with capacity w. Items: {items.map((it,k) => `i${k+1}(w=${it.w},v=${it.v})`).join(', ')}. Capacity={cap}.</p>
+      <div className="flex items-end gap-2">
+        <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
+      </div>
+      {dp.length > 0 && (
+        <div className="overflow-x-auto pb-2">
+          <table className="border-collapse text-xs font-mono">
+            <thead>
+              <tr>
+                <th style={{...thStyle,width:'5rem'}}></th>
+                {Array.from({length:cap+1},(_,w)=>(
+                  <th key={w} style={thLabelStyle}>w={w}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {dp.map((row, ri) => (
+                <tr key={ri}>
+                  <td style={{...thLabelStyle,textAlign:'left',paddingLeft:'0.25rem',width:'5rem',whiteSpace:'nowrap'}}>
+                    {ri === 0 ? '∅' : `i${ri}(w=${items[ri-1].w},v=${items[ri-1].v})`}
+                  </td>
+                  {row.map((val, ci) => {
+                    const isCurr = ri === i && ci === j && started && !done;
+                    const isFilled = started && (ri < i || (ri === i && ci <= j));
+                    const isTrace = traceback.has(`${ri},${ci}`);
+                    let cellStyle: React.CSSProperties = {background:'var(--surface-raised)',border:'1px solid var(--border)',color:'var(--text)',textAlign:'center',width:'2.5rem',height:'2rem'};
+                    if (isTrace) cellStyle = {...cellStyle,background:'color-mix(in srgb, var(--tier-3) 25%, transparent)',borderColor:'var(--tier-3)',color:'var(--tier-3)',fontWeight:700};
+                    else if (isCurr) cellStyle = {...cellStyle,background:'var(--accent-soft)',borderColor:'var(--accent)'};
+                    else if (isFilled) cellStyle = {...cellStyle,background:'var(--surface-sunken)',color:'var(--text-secondary)'};
+                    return <td key={ci} style={cellStyle}>{val}</td>;
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {done && (
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
+          ✓ Max value = {dp[items.length]?.[cap]} — traceback path highlighted in green
+        </div>
+      )}
+      <div className="viz-info">{msg}</div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className="viz-btn viz-btn--primary">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={() => { stopPlay(); setDp([]); setStarted(false); setDone(false); setHistory([]); setTraceback(new Set()); setMsg('0/1 Knapsack DP. Press "Start".'); }} className="viz-btn">Reset</button>
+        <div className="flex items-center gap-2">
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root ───────────────────────────────────────────────────────────────────────
 export default function DP2DViz() {
-  const [tab, setTab] = useState<'LCS' | 'Edit Distance'>('LCS');
-  const tabs = ['LCS', 'Edit Distance'] as const;
+  const [tab, setTab] = useState<'LCS' | 'Edit Distance' | 'Knapsack'>('LCS');
+  const tabs = ['LCS', 'Edit Distance', 'Knapsack'] as const;
 
   return (
     <div className="panel p-6 space-y-6">
       <div>
         <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.75rem'}}>2D Dynamic Programming</h3>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {tabs.map(t => (
             <button key={t} onClick={() => setTab(t)} className={`viz-btn${tab === t ? ' viz-btn--primary' : ''}`}>{t}</button>
           ))}
         </div>
       </div>
-      {tab === 'LCS' ? <LCS /> : <EditDistance />}
+      {tab === 'LCS' ? <LCS /> : tab === 'Edit Distance' ? <EditDistance /> : <Knapsack />}
     </div>
   );
 }
