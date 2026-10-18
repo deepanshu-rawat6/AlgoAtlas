@@ -309,10 +309,198 @@ function HouseRobber() {
   );
 }
 
+// ── LIS ────────────────────────────────────────────────────────────────────────
+const DEFAULT_LIS = [10, 9, 2, 5, 3, 7, 101, 18];
+
+interface LISSnap { dp: (number | null)[]; i: number; j: number; done: boolean; msg: string; }
+
+function buildLISSteps(nums: number[]): LISSnap[] {
+  const n = nums.length;
+  const dp: (number | null)[] = Array(n).fill(null);
+  dp[0] = 1;
+  const steps: LISSnap[] = [];
+  steps.push({ dp: [...dp], i: 0, j: -1, done: false,
+    msg: `Initialize: dp[0]=1 (LIS ending at nums[0]=${nums[0]} has length 1)` });
+  for (let i = 1; i < n; i++) {
+    dp[i] = 1;
+    for (let j = 0; j < i; j++) {
+      if (nums[j] < nums[i]) {
+        const prev = dp[i]!;
+        dp[i] = Math.max(dp[i]!, dp[j]! + 1);
+        steps.push({ dp: [...dp], i, j, done: false,
+          msg: `i=${i}(${nums[i]}), j=${j}(${nums[j]}): ${nums[j]}<${nums[i]} → dp[${i}]=max(${prev},${dp[j]}+1)=${dp[i]}` });
+      } else {
+        steps.push({ dp: [...dp], i, j, done: false,
+          msg: `i=${i}(${nums[i]}), j=${j}(${nums[j]}): ${nums[j]}≥${nums[i]}, skip` });
+      }
+    }
+  }
+  const ans = Math.max(...(dp as number[]));
+  steps.push({ dp: [...dp], i: n, j: -1, done: true, msg: `Done! LIS length = ${ans}` });
+  return steps;
+}
+
+function LIS() {
+  const [numsInput, setNumsInput] = useState(DEFAULT_LIS.join(', '));
+  const [steps, setSteps] = useState<LISSnap[]>([]);
+  const [stepIdx, setStepIdx] = useState(-1);
+  const [started, setStarted] = useState(false);
+  const [msg, setMsg] = useState('LIS DP. dp[i] = length of LIS ending at i. Press "Start".');
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const [history, setHistory] = useState<number[]>([]);
+  const nextStepRef = useRef<() => void>(() => {});
+  const mountedRef = useRef(false);
+
+  const nums = numsInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+  const snap = steps[stepIdx];
+  const done = snap?.done ?? false;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function start() {
+    stopPlay();
+    if (nums.length === 0) return;
+    const s = buildLISSteps(nums);
+    setSteps(s); setStepIdx(0); setStarted(true); setHistory([]);
+    setMsg(s[0].msg);
+  }
+
+  function next() {
+    if (!started || done || stepIdx >= steps.length - 1) { stopPlay(); return; }
+    setHistory(h => [...h, stepIdx]);
+    const ni = stepIdx + 1;
+    setStepIdx(ni);
+    setMsg(steps[ni].msg);
+    if (steps[ni].done) stopPlay();
+  }
+
+  useEffect(() => { nextStepRef.current = next; });
+
+  function stepBack() {
+    if (playing) stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      const si = prev.pop()!;
+      setStepIdx(si); setMsg(steps[si].msg);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay(); setPlaying(true);
+    timerRef.current = setInterval(() => { nextStepRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const dp = snap?.dp ?? [];
+  const maxDP = done ? Math.max(...(dp as number[])) : -1;
+
+  return (
+    <div className="space-y-6">
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>dp[i] = length of LIS ending at index i. O(n²) — check all j&lt;i where nums[j]&lt;nums[i].</p>
+      <div className="flex flex-wrap gap-3">
+        <div className="flex-1 min-w-40">
+          <label className="block" style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem'}}>Array</label>
+          <input style={{background:'var(--surface-raised)',border:'1px solid var(--border)',borderRadius:'0.375rem',padding:'0.375rem 0.75rem',color:'var(--text)',fontSize:'0.875rem',outline:'none',width:'100%'}}
+            value={numsInput} onChange={e => setNumsInput(e.target.value)} />
+        </div>
+        <div className="flex items-end">
+          <button onClick={start} className="viz-btn viz-btn--primary">Start</button>
+        </div>
+      </div>
+
+      {started && nums.length > 0 && (
+        <>
+          <div>
+            <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem'}}>nums</div>
+            <div className="flex gap-2 flex-wrap">
+              {nums.map((v, idx) => {
+                const isI = snap && idx === snap.i;
+                const isJ = snap && idx === snap.j;
+                let cellStyle: React.CSSProperties = {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
+                if (isI) cellStyle = {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
+                else if (isJ) cellStyle = {background:'color-mix(in srgb, #eab308 20%, transparent)',borderColor:'#eab308',color:'var(--text)'};
+                else if (dp[idx] !== null) cellStyle = {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1">
+                    <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm" style={cellStyle}>{v}</div>
+                    <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>[{idx}]</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.5rem'}}>dp</div>
+            <div className="flex gap-2 flex-wrap">
+              {nums.map((_, idx) => {
+                const val = dp[idx];
+                const isI = snap && idx === snap.i;
+                const isJ = snap && idx === snap.j;
+                const isMax = done && val === maxDP;
+                let cellStyle: React.CSSProperties = {background:'var(--surface-sunken)',borderColor:'var(--border-soft)',color:'var(--text-faint)'};
+                if (isMax) cellStyle = {background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',borderColor:'var(--tier-3)',color:'var(--text)'};
+                else if (isI) cellStyle = {background:'var(--accent-soft)',borderColor:'var(--accent)',color:'var(--text)'};
+                else if (isJ) cellStyle = {background:'color-mix(in srgb, #eab308 20%, transparent)',borderColor:'#eab308',color:'var(--text)'};
+                else if (val !== null) cellStyle = {background:'var(--surface-raised)',borderColor:'var(--border)',color:'var(--text-secondary)'};
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1">
+                    <div className="w-12 h-12 flex items-center justify-center font-mono font-bold border-2 rounded-lg text-sm" style={cellStyle}>
+                      {val === null ? '–' : val}
+                    </div>
+                    <div style={{color:'var(--text-faint)',fontSize:'0.7rem'}}>dp[{idx}]</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {done && (
+        <div style={{background:'color-mix(in srgb, var(--tier-3) 15%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.5rem',padding:'0.75rem 1rem',color:'var(--tier-3)',fontSize:'0.875rem',fontFamily:'var(--mono)'}}>
+          ✓ LIS length = {maxDP}
+        </div>
+      )}
+      <div className="viz-info">{msg}</div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={next} disabled={!started || done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={!started || done} className="viz-btn viz-btn--primary">
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <button onClick={start} className="viz-btn">Reset</button>
+        <div className="flex items-center gap-2">
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))}
+            className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root ───────────────────────────────────────────────────────────────────────
 export default function DPViz() {
-  const [tab, setTab] = useState<'Coin Change' | 'House Robber'>('Coin Change');
-  const tabs = ['Coin Change', 'House Robber'] as const;
+  const [tab, setTab] = useState<'Coin Change' | 'House Robber' | 'LIS'>('Coin Change');
+  const tabs = ['Coin Change', 'House Robber', 'LIS'] as const;
 
   return (
     <div className="panel p-6 space-y-6">
@@ -324,7 +512,7 @@ export default function DPViz() {
           ))}
         </div>
       </div>
-      {tab === 'Coin Change' ? <CoinChange /> : <HouseRobber />}
+      {tab === 'Coin Change' ? <CoinChange /> : tab === 'House Robber' ? <HouseRobber /> : <LIS />}
     </div>
   );
 }

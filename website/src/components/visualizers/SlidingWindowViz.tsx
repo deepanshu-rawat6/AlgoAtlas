@@ -317,9 +317,169 @@ function LongestNoRepeatTab() {
   );
 }
 
+// ── Fixed Window tab ─────────────────────────────────────────────────────────
+const FW_DEFAULT = [2, 1, 5, 1, 3, 2];
+const FW_DEFAULT_K = 3;
+
+interface FixedStep {
+  left: number; right: number;
+  windowSum: number; maxSum: number;
+  maxLeft: number; maxRight: number;
+  msg: string;
+}
+
+function buildFixedSteps(arr: number[], k: number): FixedStep[] {
+  if (arr.length < k || k < 1) return [];
+  const steps: FixedStep[] = [];
+  let windowSum = arr.slice(0, k).reduce((a, b) => a + b, 0);
+  let maxSum = windowSum, maxLeft = 0, maxRight = k - 1;
+  steps.push({ left: 0, right: k - 1, windowSum, maxSum, maxLeft, maxRight,
+    msg: `Initial window [0..${k - 1}] sum=${windowSum}. This is our first maxSum.` });
+  for (let i = k; i < arr.length; i++) {
+    windowSum = windowSum - arr[i - k] + arr[i];
+    const left = i - k + 1, right = i;
+    const isNew = windowSum > maxSum;
+    if (isNew) { maxSum = windowSum; maxLeft = left; maxRight = right; }
+    steps.push({ left, right, windowSum, maxSum, maxLeft, maxRight,
+      msg: `Slide: remove arr[${i - k}]=${arr[i - k]}, add arr[${i}]=${arr[i]}. Sum=${windowSum}.${isNew ? ` New max=${maxSum} [${left}..${right}]` : ` MaxSum still ${maxSum} [${maxLeft}..${maxRight}]`}` });
+  }
+  // final done step
+  const last = steps[steps.length - 1];
+  steps.push({ ...last, msg: `Done! Max subarray sum = ${maxSum}, indices [${maxLeft}..${maxRight}].` });
+  return steps;
+}
+
+function FixedWindowTab() {
+  const [arrayInput, setArrayInput] = useState(FW_DEFAULT.join(', '));
+  const [kInput, setKInput] = useState(String(FW_DEFAULT_K));
+  const [steps, setSteps] = useState<FixedStep[]>(() => buildFixedSteps(FW_DEFAULT, FW_DEFAULT_K));
+  const [stepIdx, setStepIdx] = useState(0);
+  const [history, setHistory] = useState<number[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
+
+  const arr = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+  const step = steps[stepIdx] ?? steps[steps.length - 1];
+  const done = stepIdx >= steps.length - 1;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+
+  function reset() {
+    stopPlay();
+    const a = arrayInput.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    const k = Math.max(1, Math.min(parseInt(kInput) || FW_DEFAULT_K, a.length));
+    const s = buildFixedSteps(a.length ? a : FW_DEFAULT, k);
+    setSteps(s); setStepIdx(0); setHistory([]);
+  }
+
+  function nextStep() {
+    if (done) { stopPlay(); return; }
+    setHistory(h => [...h, stepIdx]);
+    setStepIdx(s => Math.min(steps.length - 1, s + 1));
+  }
+
+  function stepBack() {
+    stopPlay();
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const prev = [...h];
+      setStepIdx(prev.pop()!);
+      return prev;
+    });
+  }
+
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay(); setPlaying(true);
+    timerRef.current = setInterval(() => { nextRef.current(); }, 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!step) return null;
+  const { left, right, windowSum, maxSum, maxLeft, maxRight, msg } = step;
+
+  return (
+    <div className="space-y-6">
+      <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Fixed-size window of k slides across array in O(n) — no nested loops.</p>
+      <div className="flex flex-wrap gap-3">
+        <div className="flex-1 min-w-40">
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>Array (comma-separated)</label>
+          <input style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
+            value={arrayInput} onChange={e => setArrayInput(e.target.value)} />
+        </div>
+        <div className="w-20">
+          <label style={{ display: 'block', color: 'var(--text-faint)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>k</label>
+          <input type="number" min={1} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', color: 'var(--text)', fontSize: '0.875rem', outline: 'none', width: '100%' }}
+            value={kInput} onChange={e => setKInput(e.target.value)} />
+        </div>
+        <div className="flex items-end"><button onClick={reset} className="viz-btn">Reset</button></div>
+      </div>
+
+      <div className="overflow-x-auto pb-2">
+        <div className="flex gap-1 min-w-max">
+          {arr.map((val, i) => {
+            const inWindow = i >= left && i <= right;
+            const isMax = i >= maxLeft && i <= maxRight;
+            const isBoth = inWindow && isMax;
+            let cellStyle = { background: 'var(--surface-raised)', borderColor: 'var(--border)' };
+            if (isBoth || (done && isMax)) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 20%, transparent)', borderColor: 'var(--tier-3)' };
+            else if (inWindow) cellStyle = { background: 'var(--accent-soft)', borderColor: 'var(--accent)' };
+            else if (isMax) cellStyle = { background: 'color-mix(in srgb, var(--tier-3) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--tier-3) 50%, transparent)' };
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div style={cellStyle} className="w-12 h-12 flex items-center justify-center font-mono font-bold text-lg border-2 rounded-lg">
+                  <span style={{ color: 'var(--text)' }}>{val}</span>
+                </div>
+                <div style={{ color: 'var(--text-faint)', fontSize: '0.7rem' }}>{i}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', fontFamily: 'var(--mono)' }}>
+        <span style={{ color: 'var(--text-dim)' }}>Window sum: <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{windowSum}</span></span>
+        <span style={{ color: 'var(--text-dim)' }}>Max sum: <span style={{ color: 'var(--tier-3)', fontWeight: 700 }}>{maxSum}</span> [{maxLeft}..{maxRight}]</span>
+      </div>
+
+      {done
+        ? <div style={{ background: 'color-mix(in srgb, var(--tier-3) 15%, transparent)', border: '1px solid var(--tier-3)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--tier-3)', fontSize: '0.875rem', fontFamily: 'var(--mono)' }}>{msg}</div>
+        : <div className="viz-info">{msg}</div>
+      }
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={done} className="viz-btn viz-btn--primary">Next Step</button>
+        <button onClick={stepBack} disabled={history.length === 0} className="viz-btn">← Back</button>
+        <button onClick={togglePlay} disabled={done} className={playing ? 'viz-btn' : 'viz-btn viz-btn--primary'}>
+          {playing ? 'Pause' : '▶ Play'}
+        </button>
+        <div className="flex items-center gap-2">
+          <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Root ─────────────────────────────────────────────────────────────────────
 export default function SlidingWindowViz() {
-  const [tab, setTab] = useState<'min' | 'norepeat'>('min');
+  const [tab, setTab] = useState<'min' | 'norepeat' | 'fixed'>('min');
 
   return (
     <div className="panel p-6 space-y-6">
@@ -328,12 +488,13 @@ export default function SlidingWindowViz() {
         <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Avoid nested loops by maintaining a dynamic window</p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button onClick={() => setTab('min')} className={tab === 'min' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Min Subarray Sum</button>
         <button onClick={() => setTab('norepeat')} className={tab === 'norepeat' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Longest No Repeat</button>
+        <button onClick={() => setTab('fixed')} className={tab === 'fixed' ? 'viz-btn viz-btn--primary' : 'viz-btn'}>Fixed Window (Max Sum)</button>
       </div>
 
-      {tab === 'min' ? <MinSubarrayTab /> : <LongestNoRepeatTab />}
+      {tab === 'min' ? <MinSubarrayTab /> : tab === 'norepeat' ? <LongestNoRepeatTab /> : <FixedWindowTab />}
     </div>
   );
 }

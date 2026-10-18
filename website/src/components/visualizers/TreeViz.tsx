@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 // ── Types ────────────────────────────────────────────────────────────────────
 interface TNode { val: number; left: TNode | null; right: TNode | null; idx: number; }
 type TraversalTab = 'level' | 'preorder' | 'inorder' | 'postorder';
-type MainTab = 'traversal' | 'bst' | 'paths';
+type MainTab = 'traversal' | 'bst' | 'paths' | 'lca';
 type BSTMode = 'search' | 'insert' | 'validate';
 
 interface BSTStep { highlighted: number[]; current: number; newNode?: number; valid?: boolean; msg: string; }
@@ -150,6 +150,49 @@ function buildValidateSteps(root: TNode | null): BSTStep[] {
   }
   dfs(root, -Infinity, Infinity);
   return steps;
+}
+
+// ── LCA step builder ─────────────────────────────────────────────────────────
+interface LCAStep { highlighted: number[]; current: number; lcaIdx: number; msg: string; }
+
+function findPath(root: TNode | null, targetVal: number): number[] {
+  function dfs(node: TNode | null, path: number[]): boolean {
+    if (!node) return false;
+    path.push(node.idx);
+    if (node.val === targetVal) return true;
+    if (dfs(node.left, path) || dfs(node.right, path)) return true;
+    path.pop();
+    return false;
+  }
+  const path: number[] = [];
+  dfs(root, path);
+  return path;
+}
+
+function buildLCASteps(root: TNode | null, pVal: number, qVal: number, nodeVals: Map<number, number>): LCAStep[] {
+  if (!root) return [];
+  const pPath = findPath(root, pVal);
+  const qPath = findPath(root, qVal);
+  if (!pPath.length || !qPath.length) return [{
+    highlighted: [], current: -1, lcaIdx: -1,
+    msg: `Node ${!pPath.length ? pVal : qVal} not found in tree.`,
+  }];
+  // deepest common prefix
+  let lcaIdx = -1;
+  for (let i = 0; i < Math.min(pPath.length, qPath.length); i++) {
+    if (pPath[i] === qPath[i]) lcaIdx = pPath[i]; else break;
+  }
+  const lcaVal = nodeVals.get(lcaIdx) ?? '?';
+  return [
+    { highlighted: pPath, current: pPath[pPath.length - 1], lcaIdx: -1,
+      msg: `Path to p=${pVal}: [${pPath.map(i => nodeVals.get(i)).join(' → ')}]` },
+    { highlighted: qPath, current: qPath[qPath.length - 1], lcaIdx: -1,
+      msg: `Path to q=${qVal}: [${qPath.map(i => nodeVals.get(i)).join(' → ')}]` },
+    { highlighted: [...new Set([...pPath, ...qPath])], current: -1, lcaIdx: -1,
+      msg: `Both paths traced. Finding deepest common node...` },
+    { highlighted: [...new Set([...pPath, ...qPath])], current: lcaIdx, lcaIdx,
+      msg: `LCA(${pVal}, ${qVal}) = ${lcaVal} ✓ — deepest node that is ancestor of both.` },
+  ];
 }
 
 // ── Path step builder ────────────────────────────────────────────────────────
@@ -300,6 +343,9 @@ export default function TreeViz() {
   const [bstMode, setBstMode] = useState<BSTMode>('search');
   const [bstInput, setBstInput] = useState('6');
   const [bstSteps, setBstSteps] = useState<BSTStep[]>([]);
+  const [lcaInputP, setLcaInputP] = useState('15');
+  const [lcaInputQ, setLcaInputQ] = useState('7');
+  const [lcaSteps, setLcaSteps] = useState<LCAStep[]>([]);
   const [speed, setSpeed] = useState(3);
 
   const treeRoot = useMemo(() => buildTree(treeArr), [treeArr]);
@@ -323,16 +369,27 @@ export default function TreeViz() {
   const pathSteps = useMemo(() => buildPathSteps(treeRoot), [treeRoot]);
   const paths = useStepPlayer(pathSteps.length, speed);
 
+  // LCA
+  const lca = useStepPlayer(lcaSteps.length, speed);
+
   function applyTree() {
     const arr = parseTree(treeInput);
     setTreeArr(arr);
-    trav.reset(); bst.reset(); setBstSteps([]); paths.reset();
+    trav.reset(); bst.reset(); setBstSteps([]); paths.reset(); lca.reset(); setLcaSteps([]);
   }
 
   function switchMainTab(t: MainTab) {
     setMainTab(t);
-    trav.reset(); bst.reset(); setBstSteps([]); paths.reset();
+    trav.reset(); bst.reset(); setBstSteps([]); paths.reset(); lca.reset(); setLcaSteps([]);
     if (t === 'bst') { setTreeInput(BST_INPUT); setTreeArr(parseTree(BST_INPUT)); }
+    if (t === 'lca') { setTreeInput(DEFAULT_INPUT); setTreeArr(parseTree(DEFAULT_INPUT)); }
+  }
+
+  function runLCA() {
+    const p = parseInt(lcaInputP, 10), q = parseInt(lcaInputQ, 10);
+    if (isNaN(p) || isNaN(q)) return;
+    lca.reset();
+    setLcaSteps(buildLCASteps(treeRoot, p, q, nodeVals));
   }
 
   function runBST() {
@@ -382,9 +439,9 @@ export default function TreeViz() {
 
       {/* Main tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(['traversal', 'bst', 'paths'] as MainTab[]).map(t => (
+        {(['traversal', 'bst', 'paths', 'lca'] as MainTab[]).map(t => (
           <button key={t} onClick={() => switchMainTab(t)} className={mainTab === t ? 'viz-btn viz-btn--primary' : 'viz-btn'}>
-            {t === 'traversal' ? 'Traversal' : t === 'bst' ? 'BST Operations' : 'Path Problems'}
+            {t === 'traversal' ? 'Traversal' : t === 'bst' ? 'BST Operations' : t === 'paths' ? 'Path Problems' : 'LCA'}
           </button>
         ))}
       </div>
@@ -515,6 +572,46 @@ export default function TreeViz() {
           </div>
           <StepControls onNext={paths.next} onBack={paths.back} onPlay={paths.togglePlay} onReset={paths.reset}
             playing={paths.playing} done={paths.stepIdx >= pathSteps.length - 1} histLen={paths.history.length} speed={speed} onSpeed={setSpeed} />
+        </div>
+      )}
+
+      {/* ── LCA ── */}
+      {mainTab === 'lca' && (
+        <div className="space-y-4">
+          <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>Lowest Common Ancestor — deepest node that is an ancestor of both p and q.</p>
+          <div className="flex flex-wrap gap-3 items-end">
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>Node p (value)</label>
+              <input style={{ ...inputSm, width: '5rem' }} value={lcaInputP} onChange={e => setLcaInputP(e.target.value)} onKeyDown={e => e.key === 'Enter' && runLCA()} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>Node q (value)</label>
+              <input style={{ ...inputSm, width: '5rem' }} value={lcaInputQ} onChange={e => setLcaInputQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && runLCA()} />
+            </div>
+            <button onClick={runLCA} className="viz-btn viz-btn--primary">Find LCA</button>
+          </div>
+          {(() => {
+            const lcaStep = lca.stepIdx >= 0 && lca.stepIdx < lcaSteps.length ? lcaSteps[lca.stepIdx] : null;
+            const isFound = lcaStep?.lcaIdx !== undefined && lcaStep.lcaIdx >= 0;
+            return (
+              <>
+                <TreeSVG positions={positions} edges={edges}
+                  highlighted={lcaStep?.highlighted ?? []}
+                  current={lcaStep?.current ?? -1}
+                  nodeVals={nodeVals}
+                />
+                <div className="viz-info" style={isFound ? { color: 'var(--tier-3)' } : {}}>
+                  {lcaSteps.length === 0 ? 'Enter two node values and press Find LCA.'
+                    : lcaStep ? lcaStep.msg
+                    : 'Press Next Step.'}
+                </div>
+                {lcaSteps.length > 0 && (
+                  <StepControls onNext={lca.next} onBack={lca.back} onPlay={lca.togglePlay} onReset={lca.reset}
+                    playing={lca.playing} done={lca.stepIdx >= lcaSteps.length - 1} histLen={lca.history.length} speed={speed} onSpeed={setSpeed} />
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 

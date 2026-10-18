@@ -625,12 +625,205 @@ function UnionFindTab() {
   );
 }
 
+// ── Topological Sort (Kahn's) ─────────────────────────────────────────────────
+
+const TOPO_N = 6;
+const TOPO_EDGES: [number, number][] = [[5,0],[5,2],[4,0],[4,1],[2,3],[3,1]];
+// Static SVG positions for nodes 0-5
+const TOPO_POS: [number, number][] = [
+  [170,120], // 0
+  [280,120], // 1
+  [170, 40], // 2
+  [280, 40], // 3
+  [ 60,120], // 4
+  [ 60, 40], // 5
+];
+
+interface TopoStep {
+  inDegree: number[];
+  queue: number[];
+  result: number[];
+  processing: number;
+  highlighted: number[]; // neighbor nodes being decremented
+  msg: string;
+}
+
+function buildTopoSteps(): TopoStep[] {
+  const steps: TopoStep[] = [];
+  const adj: number[][] = Array.from({length: TOPO_N}, () => []);
+  const deg = Array(TOPO_N).fill(0);
+  for (const [u, v] of TOPO_EDGES) { adj[u].push(v); deg[v]++; }
+
+  const initDeg = [...deg];
+  const initQ = deg.map((d, i) => d === 0 ? i : -1).filter(i => i >= 0);
+  steps.push({ inDegree: [...initDeg], queue: [...initQ], result: [], processing: -1, highlighted: [],
+    msg: `Init: in-degrees computed. Enqueue nodes with in-degree 0: [${initQ.join(',')}]` });
+
+  const q = [...initQ];
+  const result: number[] = [];
+  const curDeg = [...deg];
+
+  while (q.length) {
+    const node = q.shift()!;
+    result.push(node);
+    const neighbors = adj[node];
+    const newlyZero: number[] = [];
+    for (const nb of neighbors) {
+      curDeg[nb]--;
+      if (curDeg[nb] === 0) { q.push(nb); newlyZero.push(nb); }
+    }
+    const isDone = result.length === TOPO_N && q.length === 0;
+    steps.push({
+      inDegree: [...curDeg], queue: [...q], result: [...result],
+      processing: node, highlighted: neighbors,
+      msg: isDone
+        ? `Done! Topological order: [${result.join(' → ')}]`
+        : `Process node ${node}: decrement neighbors [${neighbors.join(',')}].${newlyZero.length ? ` Node(s) [${newlyZero.join(',')}] reach in-degree 0 → enqueue.` : ''}`,
+    });
+  }
+  return steps;
+}
+
+const TOPO_STEPS = buildTopoSteps();
+
+function TopoSortTab() {
+  const [stepIdx, setStepIdx] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [speed, setSpeed] = useState(3);
+  const mountedRef = useRef(false);
+  const nextRef = useRef(() => {});
+
+  const step = TOPO_STEPS[stepIdx];
+  const isDone = stepIdx === TOPO_STEPS.length - 1;
+
+  function stopPlay() {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setPlaying(false);
+  }
+  function nextStep() { if (isDone) { stopPlay(); return; } setStepIdx(s => Math.min(TOPO_STEPS.length - 1, s + 1)); }
+  function stepBack() { if (playing) stopPlay(); setStepIdx(s => Math.max(0, s - 1)); }
+  function togglePlay() {
+    if (playing) { stopPlay(); return; }
+    setPlaying(true);
+    timerRef.current = setInterval(() => nextRef.current(), 1100 - speed * 200);
+  }
+
+  useEffect(() => { nextRef.current = nextStep; });
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!playing) return;
+    stopPlay(); setPlaying(true);
+    timerRef.current = setInterval(() => nextRef.current(), 1100 - speed * 200);
+  }, [speed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="space-y-6">
+      <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>Kahn's Algorithm: repeatedly remove nodes with in-degree 0. Detects cycles.</p>
+
+      {/* DAG SVG */}
+      <div style={{background:'var(--surface-sunken)',borderRadius:'0.5rem',padding:'0.75rem'}}>
+        <svg viewBox="0 0 370 165" style={{width:'100%',maxHeight:'165px'}}>
+          <defs>
+            <marker id="topo-arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="var(--text-faint)" />
+            </marker>
+          </defs>
+          {/* Edges */}
+          {TOPO_EDGES.map(([u, v], ei) => {
+            const [x1,y1] = TOPO_POS[u], [x2,y2] = TOPO_POS[v];
+            const dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy);
+            const R = 18;
+            const ex1 = x1 + dx/len*R, ey1 = y1 + dy/len*R;
+            const ex2 = x2 - dx/len*R*1.8, ey2 = y2 - dy/len*R*1.8;
+            const isHl = step.highlighted.includes(v) && step.processing === u;
+            return <line key={ei} x1={ex1} y1={ey1} x2={ex2} y2={ey2}
+              stroke={isHl ? 'var(--accent)' : 'var(--border)'} strokeWidth={isHl ? 2.5 : 1.5}
+              markerEnd="url(#topo-arr)" />;
+          })}
+          {/* Nodes */}
+          {TOPO_POS.map(([cx,cy], i) => {
+            const inResult = step.result.includes(i);
+            const isProcessing = step.processing === i;
+            const inQueue = step.queue.includes(i);
+            let fill = 'var(--surface-raised)', stroke = 'var(--border)';
+            if (isProcessing) { fill = 'var(--accent-soft)'; stroke = 'var(--accent)'; }
+            else if (inResult) { fill = 'color-mix(in srgb, var(--tier-3) 25%, transparent)'; stroke = 'var(--tier-3)'; }
+            else if (inQueue) { fill = 'color-mix(in srgb, #eab308 20%, transparent)'; stroke = '#eab308'; }
+            return (
+              <g key={i}>
+                <circle cx={cx} cy={cy} r={18} fill={fill} stroke={stroke} strokeWidth={2} />
+                <text x={cx} y={cy+5} textAnchor="middle" fill="var(--text)" fontSize="13" fontWeight="bold">{i}</text>
+                {/* in-degree badge */}
+                <text x={cx+14} y={cy-12} textAnchor="middle" fill={step.inDegree[i] === 0 ? '#eab308' : 'var(--text-faint)'} fontSize="10">
+                  {step.inDegree[i]}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 flex-wrap text-xs" style={{color:'var(--text-faint)'}}>
+        <span className="flex items-center gap-1"><span style={{width:'0.7rem',height:'0.7rem',borderRadius:'50%',background:'var(--accent)',display:'inline-block'}}/>processing</span>
+        <span className="flex items-center gap-1"><span style={{width:'0.7rem',height:'0.7rem',borderRadius:'50%',background:'#eab308',display:'inline-block'}}/>in queue</span>
+        <span className="flex items-center gap-1"><span style={{width:'0.7rem',height:'0.7rem',borderRadius:'50%',background:'var(--tier-3)',display:'inline-block'}}/>done</span>
+        <span style={{marginLeft:'auto'}}>small number = in-degree</span>
+      </div>
+
+      {/* Queue + Result */}
+      <div className="flex gap-6 flex-wrap">
+        <div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem',fontFamily:'var(--mono)'}}>Queue</div>
+          <div className="flex gap-1">
+            {step.queue.length === 0
+              ? <span style={{color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'0.875rem'}}>[ ]</span>
+              : step.queue.map((n, i) => (
+                  <span key={i} style={{background:'color-mix(in srgb, #eab308 20%, transparent)',border:'1px solid #eab308',borderRadius:'0.25rem',padding:'0.2rem 0.5rem',fontFamily:'var(--mono)',fontSize:'0.875rem',color:'var(--text)'}}>{n}</span>
+                ))}
+          </div>
+        </div>
+        <div>
+          <div style={{color:'var(--text-faint)',fontSize:'0.75rem',marginBottom:'0.25rem',fontFamily:'var(--mono)'}}>Result</div>
+          <div className="flex gap-1 items-center">
+            {step.result.length === 0
+              ? <span style={{color:'var(--text-faint)',fontFamily:'var(--mono)',fontSize:'0.875rem'}}>[ ]</span>
+              : step.result.map((n, i) => (
+                  <span key={i} className="flex items-center gap-1">
+                    {i > 0 && <span style={{color:'var(--text-faint)'}}>→</span>}
+                    <span style={{background:'color-mix(in srgb, var(--tier-3) 20%, transparent)',border:'1px solid var(--tier-3)',borderRadius:'0.25rem',padding:'0.2rem 0.5rem',fontFamily:'var(--mono)',fontSize:'0.875rem',color:'var(--text)'}}>{n}</span>
+                  </span>
+                ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="viz-info">{step.msg}</div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button onClick={nextStep} disabled={isDone} className="viz-btn viz-btn--primary disabled:opacity-40">Next Step</button>
+        <button onClick={stepBack} disabled={stepIdx === 0} className="viz-btn disabled:opacity-40">← Back</button>
+        <button onClick={togglePlay} disabled={isDone} className="viz-btn viz-btn--primary disabled:opacity-40">{playing ? 'Pause' : '▶ Play'}</button>
+        <button onClick={() => { stopPlay(); setStepIdx(0); }} className="viz-btn">Reset</button>
+        <div className="flex items-center gap-2">
+          <span style={{color:'var(--text-faint)',fontSize:'0.75rem'}}>Speed</span>
+          <input type="range" min={1} max={5} value={speed} onChange={e => setSpeed(Number(e.target.value))} className="speed-slider w-24" />
+          <span style={{color:'var(--text-dim)',fontSize:'0.75rem'}}>{speed}x</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ───────────────────────────────────────────────────────────
-type Tab = 'grid' | 'dijkstra' | 'unionfind';
+type Tab = 'grid' | 'dijkstra' | 'unionfind' | 'topo';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'grid', label: 'Grid BFS/DFS' },
   { id: 'dijkstra', label: 'Dijkstra' },
   { id: 'unionfind', label: 'Union-Find' },
+  { id: 'topo', label: 'Topo Sort' },
 ];
 
 export default function BFSViz() {
@@ -640,7 +833,7 @@ export default function BFSViz() {
     <div className="panel p-6 space-y-6">
       <div>
         <h3 style={{color:'var(--text)',fontSize:'1.05rem',fontWeight:600,marginBottom:'0.25rem'}}>Graph Traversal</h3>
-        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>BFS, DFS, Dijkstra's shortest path, and Union-Find</p>
+        <p style={{color:'var(--text-dim)',fontSize:'0.875rem'}}>BFS, DFS, Dijkstra's shortest path, Union-Find, and Topological Sort</p>
       </div>
 
       {/* Tab bar */}
@@ -653,7 +846,7 @@ export default function BFSViz() {
         ))}
       </div>
 
-      {tab === 'grid' ? <GridTab /> : tab === 'dijkstra' ? <DijkstraTab /> : <UnionFindTab />}
+      {tab === 'grid' ? <GridTab /> : tab === 'dijkstra' ? <DijkstraTab /> : tab === 'unionfind' ? <UnionFindTab /> : <TopoSortTab />}
     </div>
   );
 }
