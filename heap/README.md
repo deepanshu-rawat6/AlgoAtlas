@@ -47,11 +47,11 @@ mindmap
 ```mermaid
 flowchart TD
     A[Heap Problem] --> B{"What do you need?"}
-    B -- Kth largest<br>or top-K smallest --> C[Min Heap of size K<br>heapq in Python]
-    B -- Kth smallest<br>or top-K largest --> D[Max Heap of size K<br>negate values in Python]
-    B -- Always need<br>smallest next --> E[Min Heap<br>LC 1834 CPU, 1094 Car Pooling]
-    B -- Always need<br>largest next --> F[Max Heap<br>LC 1046 Last Stone, 767 Reorganize]
-    B -- Need both halves --> G[Two Heaps<br>LC 295 Median]
+    B -- Kth largest or top-K smallest --> C[Min Heap of size K heapq in Python]
+    B -- Kth smallest or top-K largest --> D[Max Heap of size K negate values in Python]
+    B -- Always need smallest next --> E[Min Heap LC 1834 CPU, 1094 Car Pooling]
+    B -- Always need largest next --> F[Max Heap LC 1046 Last Stone, 767 Reorganize]
+    B -- Need both halves --> G[Two Heaps LC 295 Median]
 ```
 
 ### Top-K Pattern Flow
@@ -77,12 +77,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Add number n] --> B{"n <= max_heap top?"}
-    B -- Yes --> C[Push to max_heap<br>lower half]
-    B -- No --> D[Push to min_heap<br>upper half]
+    B -- Yes --> C[Push to max_heap lower half]
+    B -- No --> D[Push to min_heap upper half]
     C --> E{"Balance heaps size diff > 1?"}
     D --> E
-    E -- max_heap bigger --> F[Move top of max_heap<br>to min_heap]
-    E -- min_heap bigger --> G[Move top of min_heap<br>to max_heap]
+    E -- max_heap bigger --> F[Move top of max_heap to min_heap]
+    E -- min_heap bigger --> G[Move top of min_heap to max_heap]
     E -- balanced --> H[Done]
     F --> I[Get Median]
     G --> I
@@ -97,12 +97,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Greedy + Heap Problems] --> B{"Pattern type"}
-    B -- Always pick most frequent --> C[Max Heap by frequency<br>LC 767 Reorganize, 1405 Happy String]
-    C --> D[Pop max freq char<br>append to result<br>decrement and re-push]
-    B -- Unlock tasks by capital --> E[Two heaps: available vs locked<br>LC 502 IPO]
-    E --> F[Min heap on cost<br>Max heap on profit<br>Unlock affordable, pick best profit]
-    B -- Cooldown scheduling --> G[Max heap + cooldown queue<br>LC 621 Task Scheduler]
-    G --> H[Pop most frequent<br>wait cooldown<br>re-add to heap]
+    B -- Always pick most frequent --> C[Max Heap by frequency LC 767 Reorganize, 1405 Happy String]
+    C --> D[Pop max freq char append to result decrement and re-push]
+    B -- Unlock tasks by capital --> E[Two heaps: available vs locked LC 502 IPO]
+    E --> F[Min heap on cost Max heap on profit Unlock affordable, pick best profit]
+    B -- Cooldown scheduling --> G[Max heap + cooldown queue LC 621 Task Scheduler]
+    G --> H[Pop most frequent wait cooldown re-add to heap]
 ```
 
 ### Event-Driven Simulation with Heap
@@ -110,10 +110,10 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Event Simulation] --> B[Sort events by start time]
-    B --> C[Min heap tracks active events<br>by end time or priority]
+    B --> C[Min heap tracks active events by end time or priority]
     C --> D[Process next event]
     D --> E{"Any events ended before current start?"}
-    E -- Yes --> F[Pop from heap<br>free resources]
+    E -- Yes --> F[Pop from heap free resources]
     E -- No --> G[All slots busy]
     F --> H[Assign to freed slot]
     G --> I[Wait / queue]
@@ -148,10 +148,10 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    W1["Week 1: Heap Basics<br>703 → 1046 → 215 → 973"]
-    W2["Week 2: Greedy + Heap<br>767 → 1405 → 621 → 502"]
-    W3["Week 3: Simulation<br>355 → 1834 → 1094"]
-    W4["Week 4: Hard<br>295"]
+    W1["Week 1: Heap Basics 703 → 1046 → 215 → 973"]
+    W2["Week 2: Greedy + Heap 767 → 1405 → 621 → 502"]
+    W3["Week 3: Simulation 355 → 1834 → 1094"]
+    W4["Week 4: Hard 295"]
     W1 --> W2 --> W3 --> W4
 ```
 

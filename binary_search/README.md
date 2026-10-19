@@ -59,7 +59,7 @@ flowchart TD
     D -->|arr-mid > target| G[r = mid - 1]
     F --> B
     G --> B
-    B -->|No| H[Return -1 or l<br>depends on variant]
+    B -->|No| H[Return -1 or l depends on variant]
 ```
 
 ### 2. Search Space Categories
@@ -67,12 +67,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Binary Search Problem] --> B{"What are we searching?"}
-    B -->|Index in sorted array| C[Array Index Space<br>l=0, r=n-1]
-    B -->|Optimal value / answer| D[Answer Space<br>l=min_possible, r=max_possible]
-    C --> C1[LC 704, LC 35, LC 74<br>LC 33, LC 81, LC 153]
-    D --> D1[LC 69, LC 875, LC 1011<br>LC 410]
-    D --> D2[Key: define feasibility<br>function f-x is monotone]
-    C --> C2[Key: sorted array<br>or rotated sorted array]
+    B -->|Index in sorted array| C[Array Index Space l=0, r=n-1]
+    B -->|Optimal value / answer| D[Answer Space l=min_possible, r=max_possible]
+    C --> C1[LC 704, LC 35, LC 74 LC 33, LC 81, LC 153]
+    D --> D1[LC 69, LC 875, LC 1011 LC 410]
+    D --> D2[Key: define feasibility function f-x is monotone]
+    C --> C2[Key: sorted array or rotated sorted array]
 ```
 
 ### 3. Rotated Array Binary Search Logic (LC 33 / LC 153)
@@ -92,11 +92,11 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Identify answer range<br>l=lo, r=hi] --> B[mid = l + r // 2]
+    A[Identify answer range l=lo, r=hi] --> B[mid = l + r // 2]
     B --> C{"feasible-mid ?"}
     C -->|Yes - try smaller/larger| D{"Minimize or Maximize?"}
-    D -->|Minimize answer| E[ans=mid<br>r=mid-1]
-    D -->|Maximize answer| F[ans=mid<br>l=mid+1]
+    D -->|Minimize answer| E[ans=mid r=mid-1]
+    D -->|Maximize answer| F[ans=mid l=mid+1]
     C -->|No| G{"Minimize or Maximize?"}
     G -->|Minimize| H[l=mid+1]
     G -->|Maximize| I[r=mid-1]

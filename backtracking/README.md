@@ -70,11 +70,11 @@ mindmap
 ```mermaid
 flowchart TD
     A[backtrack state] --> B{"Base case met?"}
-    B -- Yes --> C[Add to results<br>or count]
+    B -- Yes --> C[Add to results or count]
     B -- No --> D[Loop over choices]
-    D --> E[CHOOSE:<br>add choice to state]
-    E --> F[EXPLORE:<br>backtrack next state]
-    F --> G[UNCHOOSE:<br>remove choice from state]
+    D --> E[CHOOSE: add choice to state]
+    E --> F[EXPLORE: backtrack next state]
+    F --> G[UNCHOOSE: remove choice from state]
     G --> D
     C --> H[Return]
 ```
@@ -86,11 +86,11 @@ flowchart TD
     A[What are you building?] --> B{"Order matters?"}
     B -- No --> C{"Repetition allowed?"}
     B -- Yes --> D{"Duplicates in input?"}
-    C -- No, pick any subset --> E[Subsets<br>LC 78, 90<br>start index moves forward]
-    C -- Yes, reuse elements --> F[Combination Sum<br>LC 39<br>start index stays]
-    C -- No, pick exactly k --> G[Combinations<br>LC 77<br>start index moves forward]
-    D -- No --> H[Permutations<br>LC 46<br>use visited array]
-    D -- Yes --> I[Permutations II<br>LC 47<br>sort + skip duplicates]
+    C -- No, pick any subset --> E[Subsets LC 78, 90 start index moves forward]
+    C -- Yes, reuse elements --> F[Combination Sum LC 39 start index stays]
+    C -- No, pick exactly k --> G[Combinations LC 77 start index moves forward]
+    D -- No --> H[Permutations LC 46 use visited array]
+    D -- Yes --> I[Permutations II LC 47 sort + skip duplicates]
 ```
 
 ### Duplicate Handling Pattern
@@ -100,13 +100,13 @@ flowchart TD
     A[Input has duplicates] --> B[Sort the array first]
     B --> C[In the loop at each level]
     C --> D{"i > start AND nums i == nums i-1?"}
-    D -- Yes --> E[Skip: continue<br>avoids duplicate branches]
+    D -- Yes --> E[Skip: continue avoids duplicate branches]
     D -- No --> F[Choose nums i]
-    F --> G[Recurse with i+1<br>or i for reuse]
+    F --> G[Recurse with i+1 or i for reuse]
     G --> H[Unchoose]
     H --> C
     E --> C
-    C --> I[LC 40 Combo Sum II<br>LC 90 Subsets II<br>LC 47 Permutations II]
+    C --> I[LC 40 Combo Sum II LC 90 Subsets II LC 47 Permutations II]
 ```
 
 ### Constraint Satisfaction — N-Queens Flow
@@ -118,9 +118,9 @@ flowchart TD
     B -- No --> D[Try each column c in row r]
     D --> E{"Is c safe? check col, diag, anti-diag"}
     E -- No --> F[Try next column]
-    E -- Yes --> G[Place queen at r,c<br>mark col, diag, anti-diag]
+    E -- Yes --> G[Place queen at r,c mark col, diag, anti-diag]
     G --> H[Recurse row r+1]
-    H --> I[Remove queen<br>unmark sets]
+    H --> I[Remove queen unmark sets]
     I --> F
     F --> D
 ```
@@ -130,12 +130,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Pruning Type] --> B{"When to prune?"}
-    B -- Sum exceeds target --> C[Combination Sum<br>if curr_sum > target: return]
-    B -- Remaining elements<br>not enough --> D[Combinations<br>if n-i+1 < k-len: return]
-    B -- Partition impossible --> E[Matchsticks / K Subsets<br>if bucket_sum > target: skip<br>sort descending first]
-    B -- Invalid constraint --> F[N-Queens<br>if col or diag used: skip]
-    B -- Word mismatch --> G[Word Search<br>if board char != word char: return]
-    B -- Parentheses invalid --> H[Generate Parens<br>if close > open: return<br>if open > n: return]
+    B -- Sum exceeds target --> C[Combination Sum if curr_sum > target: return]
+    B -- Remaining elements not enough --> D[Combinations if n-i+1 < k-len: return]
+    B -- Partition impossible --> E[Matchsticks / K Subsets if bucket_sum > target: skip sort descending first]
+    B -- Invalid constraint --> F[N-Queens if col or diag used: skip]
+    B -- Word mismatch --> G[Word Search if board char != word char: return]
+    B -- Parentheses invalid --> H[Generate Parens if close > open: return if open > n: return]
 ```
 
 ---

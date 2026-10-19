@@ -54,26 +54,26 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A([slow=head<br>fast=head]) --> B{"fast and fast.next exist?"}
-    B -->|Yes| C[slow = slow.next<br>fast = fast.next.next]
+    A([slow=head fast=head]) --> B{"fast and fast.next exist?"}
+    B -->|Yes| C[slow = slow.next fast = fast.next.next]
     C --> D{"Cycle detection? slow == fast?"}
-    D -->|Yes - cycle found| E[Floyd's: reset one to head<br>move both by 1 to find entry]
+    D -->|Yes - cycle found| E[Floyd's: reset one to head move both by 1 to find entry]
     D -->|No| B
-    B -->|No - fast reached end| F[slow = middle node<br>Use for: find mid, remove nth]
-    F --> G[LC 141 Cycle<br>LC 19 Remove Nth<br>LC 143 Reorder<br>LC 287 Duplicate]
+    B -->|No - fast reached end| F[slow = middle node Use for: find mid, remove nth]
+    F --> G[LC 141 Cycle LC 19 Remove Nth LC 143 Reorder LC 287 Duplicate]
 ```
 
 ### 3. Reverse Linked List Iterative Flow (LC 206)
 
 ```mermaid
 flowchart LR
-    A([prev=None<br>curr=head]) --> B{"curr != None?"}
+    A([prev=None curr=head]) --> B{"curr != None?"}
     B -->|Yes| C[next_node = curr.next]
     C --> D[curr.next = prev]
     D --> E[prev = curr]
     E --> F[curr = next_node]
     F --> B
-    B -->|No| G[Return prev<br>new head]
+    B -->|No| G[Return prev new head]
 ```
 
 ### 4. Merge Pattern (LC 21 / LC 23)
@@ -81,16 +81,16 @@ flowchart LR
 ```mermaid
 flowchart TD
     A[Two sorted lists L1, L2] --> B{"L1.val <= L2.val?"}
-    B -->|Yes| C[Append L1.val<br>L1 = L1.next]
-    B -->|No| D[Append L2.val<br>L2 = L2.next]
+    B -->|Yes| C[Append L1.val L1 = L1.next]
+    B -->|No| D[Append L2.val L2 = L2.next]
     C --> E{"Both lists have nodes?"}
     D --> E
     E -->|Yes| B
     E -->|No| F[Append remaining list]
     F --> G[Return merged]
 
-    H[K sorted lists] --> I[Use Min Heap<br>push head of each list]
-    I --> J[Pop min node<br>push node.next if exists]
+    H[K sorted lists] --> I[Use Min Heap push head of each list]
+    I --> J[Pop min node push node.next if exists]
     J --> K{"Heap empty?"}
     K -->|No| J
     K -->|Yes| L[Return merged]
@@ -104,18 +104,18 @@ flowchart TD
         M[key → node reference]
     end
     subgraph DLL [Doubly Linked List - MRU to LRU]
-        H2[HEAD<br>dummy] <-->|most recent| N1[node1]
+        H2[HEAD dummy] <-->|most recent| N1[node1]
         N1 <--> N2[node2]
-        N2 <-->|least recent| T[TAIL<br>dummy]
+        N2 <-->|least recent| T[TAIL dummy]
     end
     A[get-key] --> B{"key in map?"}
-    B -->|Yes| C[Move node to HEAD<br>Return val]
+    B -->|Yes| C[Move node to HEAD Return val]
     B -->|No| D[Return -1]
     E[put-key,val] --> F{"key in map?"}
-    F -->|Yes| G[Update val<br>Move to HEAD]
-    F -->|No| H[Create node<br>Insert at HEAD<br>Add to map]
+    F -->|Yes| G[Update val Move to HEAD]
+    F -->|No| H[Create node Insert at HEAD Add to map]
     H --> I{"capacity exceeded?"}
-    I -->|Yes| J[Remove TAIL.prev<br>Delete from map]
+    I -->|Yes| J[Remove TAIL.prev Delete from map]
 ```
 
 ---
@@ -145,19 +145,19 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A[LC 206<br>Reverse] --> B[LC 21<br>Merge Two]
-    B --> C[LC 141<br>Cycle]
-    C --> D[LC 19<br>Remove Nth]
-    D --> E[LC 143<br>Reorder]
-    E --> F[LC 92<br>Reverse II]
-    F --> G[LC 2<br>Add Numbers]
-    G --> H[LC 138<br>Copy Random]
-    H --> I[LC 287<br>Duplicate]
-    I --> J[LC 622<br>Circular Q]
-    J --> K[LC 146<br>LRU Cache]
-    K --> L[LC 23<br>Merge K]
-    L --> M[LC 25<br>K-Group]
-    M --> N[LC 460<br>LFU Cache]
+    A[LC 206 Reverse] --> B[LC 21 Merge Two]
+    B --> C[LC 141 Cycle]
+    C --> D[LC 19 Remove Nth]
+    D --> E[LC 143 Reorder]
+    E --> F[LC 92 Reverse II]
+    F --> G[LC 2 Add Numbers]
+    G --> H[LC 138 Copy Random]
+    H --> I[LC 287 Duplicate]
+    I --> J[LC 622 Circular Q]
+    J --> K[LC 146 LRU Cache]
+    K --> L[LC 23 Merge K]
+    L --> M[LC 25 K-Group]
+    M --> N[LC 460 LFU Cache]
 ```
 
 **Recommended order:** Basic ops → Fast/slow pointer → In-place reversal → Design → Hard

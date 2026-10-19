@@ -30,11 +30,11 @@ mindmap
 
 ```mermaid
 flowchart TD
-    A["TrieNode<br>─────────────<br>children: dict[char → TrieNode]<br>is_end: bool"] --> B["Example: insert 'cat'"]
-    B --> C["root<br> children: c → ..."]
-    C --> D["c-node<br> children: a → ..."]
-    D --> E["a-node<br> children: t → ..."]
-    E --> F["t-node<br> is_end = True"]
+    A["TrieNode ───────────── children: dict[char → TrieNode] is_end: bool"] --> B["Example: insert 'cat'"]
+    B --> C["root  children: c → ..."]
+    C --> D["c-node  children: a → ..."]
+    D --> E["a-node  children: t → ..."]
+    E --> F["t-node  is_end = True"]
 ```
 
 ### Insert / Search / StartsWith Operations
@@ -49,7 +49,7 @@ flowchart TD
     E -- Yes --> G[Move to child]
     F --> G
     G --> D
-    D --> H[Mark last node<br>is_end = True]
+    D --> H[Mark last node is_end = True]
     B -- search word --> I[node = root]
     I --> J[For each char in word]
     J --> K{"char in node.children?"}
@@ -57,7 +57,7 @@ flowchart TD
     K -- Yes --> M[Move to child]
     M --> J
     J --> N[Return node.is_end]
-    B -- startsWith prefix --> O[Same as search<br>but return True<br>if all chars found]
+    B -- startsWith prefix --> O[Same as search but return True if all chars found]
 ```
 
 ### Wildcard Search with DFS — LC 211
@@ -67,7 +67,7 @@ flowchart TD
     A[search word with dots] --> B[DFS from root]
     B --> C[For each char in word]
     C --> D{"char == dot?"}
-    D -- Yes --> E[Recurse into ALL<br>children nodes]
+    D -- Yes --> E[Recurse into ALL children nodes]
     D -- No --> F{"char in node.children?"}
     F -- No --> G[Return False]
     F -- Yes --> H[Move to child]
@@ -87,13 +87,13 @@ flowchart TD
     C -- No --> D[Prune: return early]
     C -- Yes --> E[Move to trie child node]
     E --> F{"node.is_end?"}
-    F -- Yes --> G[Add word to results<br>mark node.is_end = False<br>to avoid duplicates]
+    F -- Yes --> G[Add word to results mark node.is_end = False to avoid duplicates]
     F -- No --> H[Continue DFS]
     G --> H
-    H --> I[Mark cell visited<br>explore 4 neighbors]
-    I --> J[Unmark cell<br>backtrack]
+    H --> I[Mark cell visited explore 4 neighbors]
+    I --> J[Unmark cell backtrack]
     J --> K{"Trie node has no children left?"}
-    K -- Yes --> L[Prune trie branch<br>for efficiency]
+    K -- Yes --> L[Prune trie branch for efficiency]
     K -- No --> B
 ```
 
@@ -103,15 +103,15 @@ flowchart TD
 flowchart TD
     A[String lookup problem] --> B{"Need prefix operations?"}
     B -- Yes --> C{"How many words?"}
-    C -- Many, shared prefixes --> D[Trie<br>space-efficient<br>LC 208, 211, 212]
+    C -- Many, shared prefixes --> D[Trie space-efficient LC 208, 211, 212]
     C -- Few words --> E[HashSet is fine]
     B -- No --> F{"Exact match only?"}
-    F -- Yes --> G[HashMap / HashSet<br>simpler, O1 lookup]
-    F -- No, need wildcard --> H[Trie + DFS<br>LC 211]
+    F -- Yes --> G[HashMap / HashSet simpler, O1 lookup]
+    F -- No, need wildcard --> H[Trie + DFS LC 211]
     A --> I{"Need to find all words in a grid?"}
-    I -- Yes --> J[Trie + Backtracking<br>LC 212<br>better than running<br>search per word]
+    I -- Yes --> J[Trie + Backtracking LC 212 better than running search per word]
     A --> K{"DP with word boundary checks?"}
-    K -- Yes --> L[Trie speeds up<br>boundary lookup<br>LC 2707]
+    K -- Yes --> L[Trie speeds up boundary lookup LC 2707]
 ```
 
 ---
@@ -135,10 +135,10 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    S1["Step 1<br>Implement Trie 208<br>Build the data structure"]
-    S2["Step 2<br>Add & Search Words 211<br>Add wildcard DFS"]
-    S3["Step 3<br>Extra Characters 2707<br>Trie + DP"]
-    S4["Step 4<br>Word Search II 212<br>Trie + Backtracking"]
+    S1["Step 1 Implement Trie 208 Build the data structure"]
+    S2["Step 2 Add & Search Words 211 Add wildcard DFS"]
+    S3["Step 3 Extra Characters 2707 Trie + DP"]
+    S4["Step 4 Word Search II 212 Trie + Backtracking"]
     S1 --> S2 --> S3 --> S4
 ```
 

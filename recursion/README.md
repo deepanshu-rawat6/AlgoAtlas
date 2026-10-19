@@ -64,9 +64,9 @@ mindmap
 flowchart TD
     A[solve args] --> B{"Base case?"}
     B -- Yes --> C[Return base value]
-    B -- No --> D[Reduce problem<br>smaller input / index+1]
+    B -- No --> D[Reduce problem smaller input / index+1]
     D --> E[Recurse on smaller problem]
-    E --> F[Combine result with<br>current element]
+    E --> F[Combine result with current element]
     F --> G[Return up]
 ```
 

@@ -60,14 +60,14 @@
 ```mermaid
 flowchart TD
     A[Tree Problem] --> B{"Need level-by-level or shortest path?"}
-    B -- Yes --> C[BFS with Queue<br>LC 102, 199]
+    B -- Yes --> C["BFS with Queue — LC 102, 199"]
     B -- No --> D{"Need to explore all paths?"}
     D -- Yes --> E[DFS]
     E --> F{"Order matters?"}
-    F -- Pre --> G[Preorder: root→left→right<br>LC 144, 105]
-    F -- In --> H[Inorder: left→root→right<br>LC 94, 230]
-    F -- Post --> I[Postorder: left→right→root<br>LC 145, 124]
-    F -- No specific --> J[Any DFS<br>LC 104, 543, 110]
+    F -- Pre --> G["Preorder: root to left to right — LC 144, 105"]
+    F -- In --> H["Inorder: left to root to right — LC 94, 230"]
+    F -- Post --> I["Postorder: left to right to root — LC 145, 124"]
+    F -- No specific --> J["Any DFS — LC 104, 543, 110"]
 ```
 
 ### Tree Traversal Orders
@@ -98,10 +98,10 @@ flowchart TD
     G --> H{"Children?"}
     H -- No child --> I[Remove node]
     H -- One child --> J[Replace with child]
-    H -- Two children --> K[Replace with<br>inorder successor<br>min of right subtree]
-    B -- Validate --> L[Pass min/max bounds<br>down recursively]
+    H -- Two children --> K["Replace with inorder successor (min of right subtree)"]
+    B -- Validate --> L["Pass min/max bounds recursively"]
     L --> M{"node.val in range?"}
-    M -- Yes --> N[Check children<br>with updated bounds]
+    M -- Yes --> N["Check children with updated bounds"]
     M -- No --> O[Invalid BST]
 ```
 
@@ -170,11 +170,11 @@ mindmap
 ```mermaid
 flowchart TD
     A[solve node] --> B{"Base case: node is None?"}
-    B -- Yes --> C[Return base value<br>0, True, None, etc.]
-    B -- No --> D[Recurse left<br>left = solve node.left]
-    D --> E[Recurse right<br>right = solve node.right]
-    E --> F[Combine results<br>with current node]
-    F --> G[Return result<br>up to parent]
+    B -- Yes --> C["Return base value: 0, True, None"]
+    B -- No --> D["Recurse left: left = solve(node.left)"]
+    D --> E["Recurse right: right = solve(node.right)"]
+    E --> F["Combine results with current node"]
+    F --> G["Return result up to parent"]
 ```
 
 ---

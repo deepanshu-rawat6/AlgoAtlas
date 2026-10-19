@@ -102,15 +102,15 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Grid Problem] --> B[Define directions<br>4-dir or 8-dir]
+    A[Grid Problem] --> B[Define directions 4-dir or 8-dir]
     B --> C{"Multi-source start?"}
-    C -->|Yes - Walls&Gates, Rotting| D[Enqueue ALL sources at once<br>before BFS loop]
+    C -->|Yes - Walls&Gates, Rotting| D[Enqueue ALL sources at once before BFS loop]
     C -->|No - single source| E[Enqueue/push single cell]
     D --> F[BFS/DFS loop]
     E --> F
-    F --> G[For each neighbor<br>check bounds + visited]
+    F --> G[For each neighbor check bounds + visited]
     G --> H{"Valid & unvisited?"}
-    H -->|Yes| I[Mark visited<br>Add to queue/stack]
+    H -->|Yes| I[Mark visited Add to queue/stack]
     H -->|No| J[Skip]
     I --> F
     J --> F
@@ -121,10 +121,10 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["Build adjacency list + in-degree map"] --> B[Enqueue all nodes<br>with in-degree = 0]
+    A["Build adjacency list + in-degree map"] --> B[Enqueue all nodes with in-degree = 0]
     B --> C{"Queue empty?"}
-    C -->|No| D[Dequeue node u<br>Append to result]
-    D --> E[For each neighbor v<br>of u]
+    C -->|No| D[Dequeue node u Append to result]
+    D --> E[For each neighbor v of u]
     E --> F["in-degree[v] -= 1"]
     F --> G{"in-degree[v] == 0?"}
     G -->|Yes| H[Enqueue v]
@@ -145,9 +145,9 @@ flowchart TD
     C -->|Yes| D[Return x]
     C -->|No| E["Path compression: parent[x] = find(parent[x])"]
     E --> D
-    B -->|union x,y| F[rx = find x<br>ry = find y]
+    B -->|union x,y| F[rx = find x ry = find y]
     F --> G{"rx == ry?"}
-    G -->|Yes| H[Already connected<br>return False]
+    G -->|Yes| H[Already connected return False]
     G -->|No| I{"rank[rx] vs rank[ry]"}
     I -->|rx higher| J["parent[ry] = rx"]
     I -->|ry higher| K["parent[rx] = ry"]
@@ -161,7 +161,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Identify ALL source nodes] --> B[Add all sources to queue<br>Mark all as visited/distance=0]
+    A[Identify ALL source nodes] --> B[Add all sources to queue Mark all as visited/distance=0]
     B --> C[BFS level by level]
     C --> D[Process current level]
     D --> E[Expand to neighbors]

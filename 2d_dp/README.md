@@ -57,10 +57,10 @@ mindmap
 ```mermaid
 flowchart TD
     A[2D DP Problem] --> B{"What are the two dimensions?"}
-    B -->|Row & col of grid| C[Grid DP<br>62 63 64 329]
-    B -->|Two string indices| D[String Matching DP<br>1143 72 115 97 10]
-    B -->|Left & right bounds of array| E[Interval DP<br>312 Burst Balloons]
-    B -->|Index & state/capacity| F[State Machine / Knapsack<br>309 518 494 877 1140]
+    B -->|Row & col of grid| C[Grid DP 62 63 64 329]
+    B -->|Two string indices| D[String Matching DP 1143 72 115 97 10]
+    B -->|Left & right bounds of array| E[Interval DP 312 Burst Balloons]
+    B -->|Index & state/capacity| F[State Machine / Knapsack 309 518 494 877 1140]
 ```
 
 ### 2. Grid DP State Transition
@@ -72,7 +72,7 @@ flowchart TD
     C --> D["For i=1..m, j=1..n"]
     D --> E{"Obstacle at i,j?"}
     E -->|Yes| F["dp[i][j] = ∞ or 0"]
-    E -->|No| G["dp[i][j] = min/+ of<br>dp[i-1][j] and dp[i][j-1]"]
+    E -->|No| G["dp[i][j] = min/+ of dp[i-1][j] and dp[i][j-1]"]
     G --> D
     F --> D
     D --> H["Answer at dp[m-1][n-1]"]
@@ -84,9 +84,9 @@ flowchart TD
 flowchart TD
     A["dp[i][j] = ?"] --> B{"s1[i-1] == s2[j-1]?"}
     B -->|Yes — LCS| C["dp[i][j] = dp[i-1][j-1] + 1"]
-    B -->|Yes — Edit Distance| D["dp[i][j] = dp[i-1][j-1]<br>no operation needed"]
+    B -->|Yes — Edit Distance| D["dp[i][j] = dp[i-1][j-1] no operation needed"]
     B -->|No — LCS| E["dp[i][j] = max(dp[i-1][j], dp[i][j-1])"]
-    B -->|No — Edit Distance| F["dp[i][j] = 1 + min(<br>  dp[i-1][j],   // delete<br>  dp[i][j-1],   // insert<br>  dp[i-1][j-1]  // replace<br>)"]
+    B -->|No — Edit Distance| F["dp[i][j] = 1 + min(   dp[i-1][j],   // delete   dp[i][j-1],   // insert   dp[i-1][j-1]  // replace )"]
 ```
 
 ### 4. Interval DP Pattern — Burst Balloons
@@ -96,8 +96,8 @@ flowchart TD
     A["Interval DP: dp[l][r]"] --> B[Iterate length = 2 to n]
     B --> C[For each left bound l]
     C --> D[r = l + length - 1]
-    D --> E[For each k in l..r<br>k = last balloon to burst]
-    E --> F["dp[l][r] = max(<br>  dp[l][k-1] +<br>  nums[l-1]*nums[k]*nums[r+1] +<br>  dp[k+1][r]<br>)"]
+    D --> E[For each k in l..r k = last balloon to burst]
+    E --> F["dp[l][r] = max(   dp[l][k-1] +   nums[l-1]*nums[k]*nums[r+1] +   dp[k+1][r] )"]
     F --> E
     E --> C
     C --> B

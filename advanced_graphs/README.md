@@ -70,8 +70,8 @@ flowchart TD
     B -->|No| C[BFS — O V+E]
     B -->|Yes| D{"Negative weights?"}
     D -->|Yes| E{"K-step constraint?"}
-    E -->|Yes| F[Bellman-Ford<br>K relaxation rounds]
-    E -->|No| G[Bellman-Ford<br>full V-1 rounds]
+    E -->|Yes| F[Bellman-Ford K relaxation rounds]
+    E -->|No| G[Bellman-Ford full V-1 rounds]
     D -->|No| H{"All weights equal?"}
     H -->|Yes| C
     H -->|No| I{"Single source?"}
@@ -84,11 +84,11 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Minimum Spanning Tree] --> B{"Dense or sparse graph?"}
-    B -->|Dense — E ≈ V²| C[Prim's with min-heap<br>O E log V]
-    B -->|Sparse — E ≈ V| D[Kruskal's with Union-Find<br>O E log E]
-    C --> E[Start from any node<br>Greedily pick min edge<br>to unvisited node]
-    D --> F[Sort all edges by weight<br>Add edge if no cycle<br>Union-Find for cycle check]
-    E --> G[MST complete when<br>all V nodes visited]
+    B -->|Dense — E ≈ V²| C[Prim's with min-heap O E log V]
+    B -->|Sparse — E ≈ V| D[Kruskal's with Union-Find O E log E]
+    C --> E[Start from any node Greedily pick min edge to unvisited node]
+    D --> F[Sort all edges by weight Add edge if no cycle Union-Find for cycle check]
+    E --> G[MST complete when all V nodes visited]
     F --> G
 ```
 
@@ -102,7 +102,7 @@ flowchart TD
     D -->|Yes — stale| B
     D -->|No| E[For each neighbor v, w]
     E --> F{"dist[u]+w < dist[v]?"}
-    F -->|Yes| G[dist[v] = dist[u]+w<br>Push v, dist[v] to heap]
+    F -->|Yes| G[dist[v] = dist[u]+w Push v, dist[v] to heap]
     F -->|No| H[Skip]
     G --> B
     H --> B
@@ -114,7 +114,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["Init dist[src]=0, All others=∞"] --> B[For round = 1 to K+1]
-    B --> C[Copy dist as prev_dist<br>to avoid using same-round updates]
+    B --> C[Copy dist as prev_dist to avoid using same-round updates]
     C --> D[For each edge u→v, w]
     D --> E{"prev_dist[u] + w < dist[v]?"}
     E -->|Yes| F[dist[v] = prev_dist[u] + w]
@@ -131,15 +131,15 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[Build adjacency list<br>sort neighbors for lex order] --> B[Start DFS from source]
+    A[Build adjacency list sort neighbors for lex order] --> B[Start DFS from source]
     B --> C{"Current node has unvisited edges?"}
-    C -->|Yes| D[Take next edge<br>Move to neighbor]
+    C -->|Yes| D[Take next edge Move to neighbor]
     D --> C
     C -->|No — dead end| E[Prepend node to result]
     E --> F[Backtrack to previous node]
     F --> C
     F --> G{"Back at start with no edges left?"}
-    G -->|Yes| H[Result is Euler path<br>reversed = itinerary]
+    G -->|Yes| H[Result is Euler path reversed = itinerary]
     G -->|No| F
 ```
 

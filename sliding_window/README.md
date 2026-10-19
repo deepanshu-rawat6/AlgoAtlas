@@ -64,11 +64,11 @@ mindmap
 flowchart TD
     A["Problem involves contiguous subarray/substring?"] -->|No| B[Not sliding window]
     A -->|Yes| C[Is window size fixed?]
-    C -->|Yes| D[Fixed Window<br>LC 567, LC 219]
+    C -->|Yes| D[Fixed Window LC 567, LC 219]
     C -->|No| E[Need to find min/max window?]
-    E -->|Min window meeting condition| F[Shrinkable Window<br>LC 76, LC 209]
-    E -->|Max window meeting condition| G[Expandable Window<br>LC 3, LC 424]
-    E -->|Max in each window| H[Monotonic Deque<br>LC 239]
+    E -->|Min window meeting condition| F[Shrinkable Window LC 76, LC 209]
+    E -->|Max window meeting condition| G[Expandable Window LC 3, LC 424]
+    E -->|Max in each window| H[Monotonic Deque LC 239]
 ```
 
 ### 2. Fixed vs Variable Window Decision Tree
@@ -78,22 +78,22 @@ flowchart TD
     A["Subarray/Substring Problem"] --> B{"Window size given?"}
     B -->|Yes - size k| C[Fixed Window]
     B -->|No| D{"Optimize for?"}
-    C --> C1[Slide: remove left, add right<br>Maintain window invariant]
-    D -->|Minimum length| E[Variable - Shrink when valid<br>LC 76, LC 209]
-    D -->|Maximum length| F[Variable - Shrink when invalid<br>LC 3, LC 424]
-    D -->|Max element per window| G[Monotonic Deque<br>LC 239]
+    C --> C1[Slide: remove left, add right Maintain window invariant]
+    D -->|Minimum length| E[Variable - Shrink when valid LC 76, LC 209]
+    D -->|Maximum length| F[Variable - Shrink when invalid LC 3, LC 424]
+    D -->|Max element per window| G[Monotonic Deque LC 239]
 ```
 
 ### 3. Expand/Shrink Window Pattern Flow
 
 ```mermaid
 flowchart LR
-    A([Start<br>l=0, r=0]) --> B[Expand: add arr-r to window]
+    A([Start l=0, r=0]) --> B[Expand: add arr-r to window]
     B --> C{"Window valid?"}
     C -->|Yes| D[Update answer]
     D --> E[r++]
     E --> B
-    C -->|No - shrink needed| F[Remove arr-l from window<br>l++]
+    C -->|No - shrink needed| F[Remove arr-l from window l++]
     F --> C
     E --> G{"r == n?"}
     G -->|Yes| H([Return answer])

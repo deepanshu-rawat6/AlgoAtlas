@@ -53,14 +53,14 @@ mindmap
 ```mermaid
 flowchart TD
     A[For each element arr-i] --> B{"Stack not empty AND condition met?"}
-    B -->|Next Greater: arr-i > stack.top| C[Pop top<br>result-top = i]
+    B -->|Next Greater: arr-i > stack.top| C[Pop top result-top = i]
     B -->|Next Smaller: arr-i < stack.top| C
     C --> B
     B -->|Condition not met| D[Push i onto stack]
     D --> E[Next element]
     E --> A
     D --> F{"End of array?"}
-    F -->|Yes, remaining in stack| G[No next greater/smaller<br>result = -1 or 0]
+    F -->|Yes, remaining in stack| G[No next greater/smaller result = -1 or 0]
 ```
 
 ### 3. Parentheses Matching Flow (LC 20)
@@ -88,12 +88,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Need temporary storage?] --> B{"Access order?"}
-    B -->|Last In First Out<br>Undo, backtrack, nested| C[Stack]
-    B -->|First In First Out<br>BFS, scheduling, order| D[Queue]
-    C --> C1[Monotonic problems<br>Matching brackets<br>Expression eval]
-    D --> D1[BFS traversal<br>Sliding window<br>Task scheduling]
+    B -->|Last In First Out Undo, backtrack, nested| C[Stack]
+    B -->|First In First Out BFS, scheduling, order| D[Queue]
+    C --> C1[Monotonic problems Matching brackets Expression eval]
+    D --> D1[BFS traversal Sliding window Task scheduling]
     C --> C2{"Need O-1 min/max?"}
-    C2 -->|Yes| C3[Auxiliary stack<br>Min Stack LC155]
+    C2 -->|Yes| C3[Auxiliary stack Min Stack LC155]
     C2 -->|No| C4[Regular stack]
 ```
 
@@ -124,17 +124,17 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A[LC 20<br>Matching] --> B[LC 682<br>Simulation]
-    B --> C[LC 225 / 232<br>Design Basics]
-    C --> D[LC 155<br>Min Stack]
-    D --> E[LC 150<br>RPN]
-    E --> F[LC 739<br>Monotonic]
-    F --> G[LC 901<br>Stock Span]
-    G --> H[LC 735<br>Collision]
-    H --> I[LC 853<br>Car Fleet]
-    I --> J[LC 394<br>Decode]
-    J --> K[LC 84<br>Histogram]
-    K --> L[LC 895<br>Freq Stack]
+    A[LC 20 Matching] --> B[LC 682 Simulation]
+    B --> C[LC 225 / 232 Design Basics]
+    C --> D[LC 155 Min Stack]
+    D --> E[LC 150 RPN]
+    E --> F[LC 739 Monotonic]
+    F --> G[LC 901 Stock Span]
+    G --> H[LC 735 Collision]
+    H --> I[LC 853 Car Fleet]
+    I --> J[LC 394 Decode]
+    J --> K[LC 84 Histogram]
+    K --> L[LC 895 Freq Stack]
 ```
 
 **Recommended order:** Matching → Simulation → Design → Monotonic → Hard

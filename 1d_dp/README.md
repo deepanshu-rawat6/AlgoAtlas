@@ -62,9 +62,9 @@ flowchart TD
     B -->|No| C[Greedy or divide & conquer]
     B -->|Yes| D{"1D or 2D state?"}
     D -->|1D — index or value| E{"What varies?"}
-    E -->|Position in array| F[Linear DP<br>Climbing Stairs, House Robber]
-    E -->|Target sum / capacity| G[Knapsack DP<br>Coin Change, Partition Sum]
-    E -->|Subsequence length| H[Subsequence DP<br>LIS, Word Break]
+    E -->|Position in array| F[Linear DP Climbing Stairs, House Robber]
+    E -->|Target sum / capacity| G[Knapsack DP Coin Change, Partition Sum]
+    E -->|Subsequence length| H[Subsequence DP LIS, Word Break]
     D -->|2D — two sequences or grid| I[2D DP — see 2D DP sheet]
 ```
 
@@ -101,13 +101,13 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Knapsack-style DP] --> B{"Each item used how many times?"}
-    B -->|Once| C[0/1 Knapsack<br>Iterate items outer<br>target inner REVERSE]
+    B -->|Once| C[0/1 Knapsack Iterate items outer target inner REVERSE]
     B -->|Unlimited| D{"Does order matter?"}
-    D -->|No — combinations| E[Unbounded Knapsack<br>Iterate items outer<br>target inner FORWARD]
-    D -->|Yes — permutations| F[Combination Sum IV style<br>Iterate target outer<br>items inner]
+    D -->|No — combinations| E[Unbounded Knapsack Iterate items outer target inner FORWARD]
+    D -->|Yes — permutations| F[Combination Sum IV style Iterate target outer items inner]
 
     C --> G[Partition Equal Subset Sum 416]
-    E --> H[Coin Change 322<br>Perfect Squares 279]
+    E --> H[Coin Change 322 Perfect Squares 279]
     F --> I[Combination Sum IV 377]
 ```
 
